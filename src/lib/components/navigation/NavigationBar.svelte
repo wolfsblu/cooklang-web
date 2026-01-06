@@ -8,9 +8,8 @@
 		{ label: 'Pantry', href: '/pantry', icon: RefrigeratorIcon },
 	];
 </script>
-
 	
-<Navigation layout="bar">
+<Navigation layout="bar" class="shadow-[0px_-20px_20px_-15px_rgba(0,0,0,0.1)]">
 	<Navigation.Menu class="grid grid-cols-3 gap-2">
 		{#each links as link (link)}
 			{@const Icon = link.icon}

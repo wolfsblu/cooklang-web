@@ -10,8 +10,8 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<div class="h-screen flex flex-col justify-between">
-	<main>
+<div class="h-screen max-h-screen flex flex-col justify-between">
+	<main class="grow overflow-y-auto p-3">
 		{@render children()}
 	</main>
 	<NavigationBar />
