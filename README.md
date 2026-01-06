@@ -1,38 +1,69 @@
-# sv
+# Cook
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A web server for managing [Cooklang](https://cooklang.org/) recipes, shopping lists, and pantries. Built with SvelteKit and designed to help you organize your cooking workflow. Cooklang is a markup language for cooking recipes that allows you to define ingredients, cookware, and timers in a structured format.
 
-## Creating a project
+### Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Recipe Management**: Store, view, and manage your cooklang recipes
+- **Shopping Lists**: Generate and manage shopping lists from your recipes
+- **Pantry Tracking**: Keep track of ingredients you have on hand
+
+## Tech Stack
+
+- **Framework**: [SvelteKit](https://kit.svelte.dev/) - Full-stack web framework
+- **UI Components**: [Skeleton UI](https://www.skeleton.dev/) - Tailwind-based component library
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) v4
+- **Icons**: [Lucide Svelte](https://lucide.dev/)
+- **i18n**: [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) - Type-safe internationalization
+- **Deployment**: Node.js adapter for production deployment
+
+## Development
+
+### Prerequisites
+
+- Node.js (LTS version recommended)
+- npm, pnpm, or yarn
+
+### Setup
+
+Install dependencies:
 
 ```sh
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
+npm install
 ```
 
-## Developing
+### Running the Development Server
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Start the development server with hot module replacement:
 
 ```sh
 npm run dev
+```
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+### Type Checking
+
+Run TypeScript and Svelte type checking:
+
+```sh
+npm run check
+```
+
+Or run in watch mode:
+
+```sh
+npm run check:watch
 ```
 
 ## Building
 
-To create a production version of your app:
+Create a production build:
 
 ```sh
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
+Preview the production build locally:
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+```sh
+npm run preview
+```
