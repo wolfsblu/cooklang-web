@@ -1,0 +1,290 @@
+<script lang="ts">
+    import { page } from '$app/stores'
+    import { goto } from '$app/navigation'
+    import type { RecipeDisplay, StepDisplay, ActiveTimer } from '$lib/types/recipe'
+    import { parseTimerQuantity } from '$lib/utils/timer'
+    import { playAlertSound } from '$lib/utils/audio'
+    import RecipeHeader from './RecipeHeader.svelte'
+    import RecipeIngredients from './RecipeIngredients.svelte'
+    import RecipeCookware from './RecipeCookware.svelte'
+    import RecipeSteps from './RecipeSteps.svelte'
+    import ServingsControl from './ServingsControl.svelte'
+    import CookControlBar from './cook/CookControlBar.svelte'
+    import ActiveTimersPanel from './cook/ActiveTimersPanel.svelte'
+
+    interface Props {
+        recipe: RecipeDisplay
+        scale: number
+        slug: string
+    }
+
+    const { recipe, scale, slug }: Props = $props()
+
+    // URL-derived state
+    const cookMode = $derived($page.url.searchParams.has('cook'))
+
+    // Get step from URL or default to 1
+    function getStepFromURL(): number {
+        const stepParam = $page.url.searchParams.get('step')
+        return stepParam ? parseInt(stepParam, 10) || 1 : 1
+    }
+
+    let currentStep = $state(getStepFromURL())
+
+    // Sync currentStep with URL when URL changes
+    $effect(() => {
+        currentStep = getStepFromURL()
+    })
+
+    // Ephemeral hover state
+    let hoveredIngredientIndex = $state<number | null>(null)
+    let hoveredCookwareIndex = $state<number | null>(null)
+
+    // Timer state
+    let activeTimers = $state<ActiveTimer[]>([])
+    let audioEnabled = $state(true)
+    let showTimersPanel = $state(false)
+
+    // Timer tick effect
+    $effect(() => {
+        if (activeTimers.length === 0) return
+
+        const interval = setInterval(() => {
+            let shouldAlert = false
+            activeTimers = activeTimers.map(timer => {
+                if (timer.status !== 'running' || timer.remainingSeconds <= 0) return timer
+                const newRemaining = timer.remainingSeconds - 1
+                if (newRemaining === 0) shouldAlert = true
+                return { ...timer, remainingSeconds: newRemaining }
+            })
+            if (shouldAlert && audioEnabled) playAlertSound()
+        }, 1000)
+
+        return () => clearInterval(interval)
+    })
+
+    // Flatten steps for index calculation
+    const allSteps = $derived(
+        recipe.sections.flatMap(section =>
+            section.content.filter((c): c is StepDisplay => c.type === 'step')
+        )
+    )
+
+    const totalSteps = $derived(allSteps.length)
+
+    // Get current step's ingredient/cookware indices
+    const currentStepData = $derived(allSteps[currentStep - 1])
+
+    const currentStepIngredientIndices = $derived(() => {
+        if (!cookMode || !currentStepData) return null
+        const indices = new Set<number>()
+        for (const item of currentStepData.items) {
+            if (item.type === 'ingredient') indices.add(item.index)
+        }
+        return indices
+    })
+
+    const currentStepCookwareIndices = $derived(() => {
+        if (!cookMode || !currentStepData) return null
+        const indices = new Set<number>()
+        for (const item of currentStepData.items) {
+            if (item.type === 'cookware') indices.add(item.index)
+        }
+        return indices
+    })
+
+    // Active timer indices (for highlighting in steps)
+    const activeTimerIndices = $derived(new Set(activeTimers.map(t => t.id).map(id => {
+        const parts = id.split('-')
+        return parseInt(parts[parts.length - 1])
+    })))
+
+    function handleScale(newScale: number) {
+        const url = new URL($page.url)
+        url.searchParams.set('scale', String(newScale))
+        goto(url.toString(), { replaceState: true })
+    }
+
+    function toggleCookMode() {
+        const url = new URL($page.url)
+        if (cookMode) {
+            url.searchParams.delete('cook')
+            url.searchParams.delete('step')
+            // Clear timers when exiting cook mode
+            activeTimers = []
+            showTimersPanel = false
+        } else {
+            url.searchParams.set('cook', '')
+            url.searchParams.set('step', '1')
+        }
+        goto(url.toString(), { replaceState: true })
+    }
+
+    function goToStep(step: number) {
+        const url = new URL($page.url)
+        url.searchParams.set('step', String(step))
+        goto(url.toString(), { replaceState: true })
+    }
+
+    function goToPreviousStep() {
+        if (currentStep > 1) {
+            goToStep(currentStep - 1)
+        }
+    }
+
+    function goToNextStep() {
+        if (currentStep < totalSteps) {
+            goToStep(currentStep + 1)
+        }
+    }
+
+    function finishCooking() {
+        toggleCookMode()
+    }
+
+    // Timer controls
+    function startTimer(index: number, name: string, quantity: string, stepNumber: number) {
+        const totalSeconds = parseTimerQuantity(quantity)
+        if (totalSeconds <= 0) return
+
+        const id = `timer-${stepNumber}-${index}`
+
+        // Don't add duplicate timers
+        if (activeTimers.some(t => t.id === id)) return
+
+        activeTimers = [...activeTimers, {
+            id,
+            name: name || `Timer (${quantity})`,
+            totalSeconds,
+            remainingSeconds: totalSeconds,
+            status: 'running',
+            stepNumber
+        }]
+
+        // Auto-show panel when first timer starts
+        if (activeTimers.length === 1) {
+            showTimersPanel = true
+        }
+    }
+
+    function pauseTimer(id: string) {
+        activeTimers = activeTimers.map(t =>
+            t.id === id ? { ...t, status: 'paused' as const } : t
+        )
+    }
+
+    function resumeTimer(id: string) {
+        activeTimers = activeTimers.map(t =>
+            t.id === id ? { ...t, status: 'running' as const } : t
+        )
+    }
+
+    function cancelTimer(id: string) {
+        activeTimers = activeTimers.filter(t => t.id !== id)
+    }
+
+    function toggleAudio() {
+        audioEnabled = !audioEnabled
+    }
+
+    function toggleTimersPanel() {
+        showTimersPanel = !showTimersPanel
+    }
+
+    // Keyboard navigation
+    function handleKeydown(e: KeyboardEvent) {
+        if (!cookMode) return
+
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault()
+            goToPreviousStep()
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault()
+            goToNextStep()
+        } else if (e.key === 'Escape') {
+            e.preventDefault()
+            if (showTimersPanel) {
+                showTimersPanel = false
+            } else {
+                toggleCookMode()
+            }
+        }
+    }
+</script>
+
+<svelte:window onkeydown={handleKeydown} />
+
+<article class="mx-auto max-w-4xl space-y-6 p-4 {cookMode ? 'pb-24' : ''}">
+    <RecipeHeader {recipe} />
+
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <ServingsControl
+            baseServings={recipe.servings}
+            {scale}
+            onscale={handleScale}
+        />
+        <button
+            class="btn {cookMode ? 'preset-filled-warning' : 'preset-filled-primary'}"
+            onclick={toggleCookMode}
+        >
+            {cookMode ? 'Exit Cook Mode' : 'Start Cooking'}
+        </button>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-[300px_1fr]">
+        <aside class="space-y-4 lg:sticky lg:top-4 lg:self-start">
+            <RecipeIngredients
+                ingredients={recipe.ingredients}
+                hoveredIndex={hoveredIngredientIndex}
+                activeIndices={currentStepIngredientIndices()}
+                onhover={(i) => hoveredIngredientIndex = i}
+            />
+            <RecipeCookware
+                cookware={recipe.cookware}
+                hoveredIndex={hoveredCookwareIndex}
+                activeIndices={currentStepCookwareIndices()}
+                onhover={(i) => hoveredCookwareIndex = i}
+            />
+        </aside>
+
+        <main>
+            <RecipeSteps
+                sections={recipe.sections}
+                {cookMode}
+                {currentStep}
+                {hoveredIngredientIndex}
+                {hoveredCookwareIndex}
+                activeIngredientIndices={currentStepIngredientIndices()}
+                activeCookwareIndices={currentStepCookwareIndices()}
+                {activeTimerIndices}
+                onhoverIngredient={(i) => hoveredIngredientIndex = i}
+                onhoverCookware={(i) => hoveredCookwareIndex = i}
+                onstartTimer={startTimer}
+            />
+        </main>
+    </div>
+</article>
+
+{#if cookMode}
+    <CookControlBar
+        {currentStep}
+        {totalSteps}
+        activeTimerCount={activeTimers.length}
+        onprevious={goToPreviousStep}
+        onnext={goToNextStep}
+        onfinish={finishCooking}
+        ontoggletimers={toggleTimersPanel}
+    />
+{/if}
+
+{#if showTimersPanel}
+    <ActiveTimersPanel
+        timers={activeTimers}
+        {audioEnabled}
+        onclose={() => showTimersPanel = false}
+        ontoggleaudio={toggleAudio}
+        onpause={pauseTimer}
+        onresume={resumeTimer}
+        oncancel={cancelTimer}
+    />
+{/if}
