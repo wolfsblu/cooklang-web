@@ -27,7 +27,7 @@
 </svelte:head>
 
 <div class="min-h-screen {isCookMode ? '' : 'pb-20'}">
-	<main class="p-3">
+	<main>
 		{@render children()}
 	</main>
 </div>
