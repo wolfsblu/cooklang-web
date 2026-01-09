@@ -40,7 +40,7 @@ const imgSrc =
 
 		<!-- Servings overlay -->
 		{#if recipe.parsed.servings}
-			<div class="absolute top-2 left-2 flex items-center gap-1 bg-surface-900/80 text-white px-2 py-1 rounded text-xs">
+			<div class="absolute top-2 left-2 flex items-center gap-1 bg-surface-900/80 text-white px-2 py-1 rounded rounded-tl-lg text-xs">
 				<UsersIcon class="size-3" />
 				<span>{recipe.parsed.servings}</span>
 			</div>
@@ -48,14 +48,14 @@ const imgSrc =
 
 		<!-- Time overlay -->
 		{#if timeDisplay()}
-			<div class="absolute top-2 right-2 flex items-center gap-1 bg-surface-900/80 text-white px-2 py-1 rounded text-xs">
+			<div class="absolute top-2 right-2 flex items-center gap-1 bg-surface-900/80 text-white px-2 py-1 rounded rounded-tr-lg text-xs">
 				<ClockIcon class="size-3" />
 				<span>{timeDisplay()}</span>
 			</div>
 		{/if}
 	</header>
 
-    <article class="space-y-2 p-2">
+    <article class="space-y-2 p-4">
         <h1 class="h5">{recipe.parsed.title}</h1>
 	</article>
 
