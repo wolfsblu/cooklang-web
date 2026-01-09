@@ -75,6 +75,7 @@ export interface RecipeDisplay {
     ingredients: IngredientDisplay[]
     cookware: CookwareDisplay[]
     sections: SectionDisplay[]
+    imageUrl?: string
 }
 
 export interface ActiveTimer {
