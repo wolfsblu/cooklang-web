@@ -21,7 +21,7 @@
     }
 </script>
 
-<div class="sticky top-0 z-10 py-4 px-3" style="background-color: light-dark(var(--body-background-color), var(--body-background-color-dark))">
+<div class="sticky top-0 z-10 py-4 px-3 backdrop-blur-md" style="background-color: light-dark(color-mix(in srgb, var(--body-background-color) 90%, transparent), color-mix(in srgb, var(--body-background-color-dark) 90%, transparent))">
         <div class="flex gap-3">
             <!-- Search Input Container -->
             <div class="relative flex-1">
