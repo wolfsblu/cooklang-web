@@ -1,5 +1,14 @@
-<script>
+<script lang="ts">
+    import type { PageProps } from './$types'
+    import RecipeCard from "$lib/components/recipes/RecipeCard.svelte";
+
+    const {
+        data
+    }: PageProps = $props()
 </script>
 
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    {#each data.recipes as recipe}
+        <RecipeCard {recipe} />
+    {/each}
+</div>

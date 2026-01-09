@@ -24,11 +24,11 @@ export const load: PageServerLoad = async () => {
     const recipes = recipeFiles.map(file => {
         const [recipe, report] = parser.parse(file.content)
         const markup = renderer.render(recipe)
-        
+
         return {
             filename: file.filename,
             content: file.content,
-            markup, 
+            markup,
             report,
             parsed: structuredClone(recipe),
         }
