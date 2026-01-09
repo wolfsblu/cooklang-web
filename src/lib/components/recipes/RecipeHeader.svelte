@@ -6,9 +6,17 @@
     }
 
     const { recipe }: Props = $props()
+
+    const imgSrc = 'https://images.unsplash.com/photo-1463171515643-952cee54d42a?q=80&w=1200&h=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
 </script>
 
 <header class="space-y-4">
+    <img
+        src={imgSrc}
+        alt={recipe.title ?? 'Recipe'}
+        class="w-full rounded-lg aspect-[3/1] object-cover grayscale hue-rotate-90"
+    />
+
     <h1 class="h1">{recipe.title ?? 'Untitled Recipe'}</h1>
 
     {#if recipe.description}
