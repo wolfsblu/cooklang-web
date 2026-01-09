@@ -1,38 +1,30 @@
 # Build stage
-FROM node:lts-alpine AS builder
-
+FROM node:24-alpine AS builder
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
 
-# Copy source files
 COPY . .
-
-# Build the application
 RUN npm run build
 
 # Production stage
-FROM node:lts-alpine
-
+FROM node:24-alpine
 WORKDIR /app
 
-# Copy built application
+COPY package*.json ./
+RUN npm ci --omit=dev
+
 COPY --from=builder /app/build ./build
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/recipes ./recipes
 
-# Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV RECIPE_PATH=./recipes
+ENV RECIPE_PATH=/app/recipes
 
-# Expose port
+RUN addgroup -S app && adduser -S app -G app
+USER app
+
 EXPOSE 3000
-
-# Start the application
-CMD ["node", "build"]
+STOPSIGNAL SIGTERM
+CMD ["node", "build/index.js"]
