@@ -22,11 +22,9 @@ WORKDIR /app
 
 # Copy built application
 COPY --from=builder /app/build ./build
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/recipes ./recipes
-
-# Install production dependencies only
-RUN npm ci --omit=dev
 
 # Set environment variables
 ENV NODE_ENV=production
