@@ -55,6 +55,19 @@
             onstartTimer(index, name, quantity, stepNumber)
         }
     }
+
+    // Scroll current step into view when it changes
+    $effect(() => {
+        if (cookMode && currentStep) {
+            // Use requestAnimationFrame to ensure DOM is updated
+            requestAnimationFrame(() => {
+                const stepElement = document.querySelector(`[data-step="${currentStep}"]`)
+                if (stepElement) {
+                    stepElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+            })
+        }
+    })
 </script>
 
 <div class="card preset-outlined-surface-200-800 p-4">
@@ -74,6 +87,7 @@
                 {:else}
                     {@const status = getStepStatus(content.number)}
                     <div
+                        data-step={content.number}
                         class="flex gap-4 rounded-lg p-3 transition-all {
                             status === 'completed' ? 'opacity-50' :
                             status === 'current' && cookMode ? 'preset-tonal-primary ring-2 ring-primary-500' :

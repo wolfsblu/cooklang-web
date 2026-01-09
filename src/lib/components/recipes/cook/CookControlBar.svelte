@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ChevronLeft, ChevronRight, Timer, Check } from '@lucide/svelte'
+    import { ChevronLeft, ChevronRight, Timer, Check, X } from '@lucide/svelte'
 
     interface Props {
         currentStep: number
@@ -40,8 +40,17 @@
             <span class="hidden sm:inline">Previous</span>
         </button>
 
-        <!-- Center section: Step counter and timer badge -->
+        <!-- Center section: Exit button, step counter and timer badge -->
         <div class="flex items-center gap-4">
+            <button
+                type="button"
+                class="btn preset-tonal-surface size-9 p-0"
+                onclick={onfinish}
+                aria-label="Exit cook mode"
+            >
+                <X class="size-5" />
+            </button>
+
             <span class="font-medium text-sm">
                 Step {currentStep} of {totalSteps}
             </span>
@@ -49,21 +58,21 @@
             {#if activeTimerCount > 0}
                 <button
                     type="button"
-                    class="badge preset-filled-warning flex items-center gap-1 cursor-pointer"
+                    class="btn preset-filled-warning size-9 p-0 relative"
                     onclick={ontoggletimers}
                     aria-label="Show active timers"
                 >
-                    <Timer class="size-3" />
-                    <span>{activeTimerCount}</span>
+                    <Timer class="size-5" />
+                    <span class="absolute -top-1 -right-1 bg-error-500 text-white text-xs rounded-full size-4 flex items-center justify-center">{activeTimerCount}</span>
                 </button>
             {:else}
                 <button
                     type="button"
-                    class="badge preset-tonal-surface flex items-center gap-1 cursor-pointer opacity-60"
+                    class="btn preset-tonal-surface size-9 p-0 opacity-60"
                     onclick={ontoggletimers}
                     aria-label="Show timers panel"
                 >
-                    <Timer class="size-3" />
+                    <Timer class="size-5" />
                 </button>
             {/if}
         </div>

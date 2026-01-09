@@ -123,7 +123,7 @@
     function goToStep(step: number) {
         const url = new URL($page.url)
         url.searchParams.set('step', String(step))
-        goto(url.toString(), { replaceState: true })
+        goto(url.toString(), { replaceState: true, noScroll: true })
     }
 
     function goToPreviousStep() {
