@@ -1,9 +1,6 @@
 <script lang="ts">
     import type { CooklangRecipe } from "@cooklang/cooklang";
-    import { UsersIcon, ClockIcon } from '@lucide/svelte';
-
-const imgSrc =
-	'https://images.unsplash.com/photo-1463171515643-952cee54d42a?q=80&w=450&h=190&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+    import { UsersIcon, ClockIcon, ImageIcon } from '@lucide/svelte';
 
 	interface Props {
 		recipe: {
@@ -12,12 +9,16 @@ const imgSrc =
 			markup: string
 			report: string
 			parsed: CooklangRecipe
+			imageUrl?: string
 		}
 	}
 
 	const {
 		recipe
 	}: Props = $props()
+
+	let imgError = $state(false);
+	const showImage = $derived(recipe.imageUrl && !imgError)
 
 	const url = `/${recipe.filename}`
 
@@ -33,10 +34,17 @@ const imgSrc =
 </script>
 <a
 	href={url}
-	class="card preset-filled-surface-100-900 border border-surface-200-800 card-hover divide-surface-200-800 block divide-y overflow-hidden"
+	class="card preset-filled-surface-100-900 border border-surface-200-800 card-hover divide-surface-200-800 flex flex-col divide-y overflow-hidden shadow-lg"
 >
 	<header class="relative">
-		<img src={imgSrc} class="aspect-21/9 w-full grayscale hue-rotate-90" alt="banner" />
+		{#if showImage}
+			<img src={recipe.imageUrl} onerror={() => imgError = true} class="aspect-21/9 w-full object-cover" alt="banner" />
+		{:else}
+			<div class="aspect-21/9 w-full bg-surface-200-800 flex flex-col items-center justify-center gap-2 text-surface-500-400">
+				<ImageIcon class="size-12" />
+				<span class="text-sm">No image available</span>
+			</div>
+		{/if}
 
 		<!-- Servings overlay -->
 		{#if recipe.parsed.servings}
@@ -55,22 +63,24 @@ const imgSrc =
 		{/if}
 	</header>
 
-    <article class="space-y-2 p-4">
-        <h1 class="h5">{recipe.parsed.title}</h1>
+    <article class="space-y-2 px-4 py-2 flex-1">
+        <h1 class="h5">{recipe.parsed.title || recipe.filename.replace('.cook', '')}</h1>
 	</article>
 
-    <footer class="flex items-center justify-between gap-2 p-2">
-		{#if recipe.parsed.tags.size > 0}
-            <div class="flex gap-1 overflow-x-auto flex-1 min-w-0">
-                {#each Array.from(recipe.parsed.tags) as tag}
-                    <span class="badge preset-filled-surface-200-800 text-xs whitespace-nowrap">{tag}</span>
-                {/each}
-            </div>
-        {:else}
-            <span></span>
-        {/if}
-		{#if recipe.parsed.course}
-			<small class="opacity-60 whitespace-nowrap capitalize">{recipe.parsed.course}</small>
-		{/if}
-	</footer>
+	{#if recipe.parsed.tags.size > 0 || recipe.parsed.course}
+		<footer class="flex items-center justify-between gap-2 p-2">
+			{#if recipe.parsed.tags.size > 0}
+				<div class="flex gap-1 overflow-x-auto flex-1 min-w-0">
+					{#each Array.from(recipe.parsed.tags) as tag}
+						<span class="badge preset-filled-surface-200-800 text-xs whitespace-nowrap">{tag}</span>
+					{/each}
+				</div>
+			{:else}
+				<span></span>
+			{/if}
+			{#if recipe.parsed.course}
+				<small class="opacity-60 whitespace-nowrap capitalize">{recipe.parsed.course}</small>
+			{/if}
+		</footer>
+	{/if}
 </a>
