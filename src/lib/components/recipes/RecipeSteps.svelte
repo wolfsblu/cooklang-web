@@ -94,7 +94,7 @@
                             status === 'upcoming' ? 'opacity-70' : ''
                         }"
                     >
-                        <span class="font-bold text-lg min-w-[2rem]">
+                        <span class="font-bold text-lg min-w-1rem">
                             {#if status === 'completed' && cookMode}
                                 <span class="text-success-500">✓</span>
                             {:else}
