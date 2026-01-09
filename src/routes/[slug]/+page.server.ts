@@ -1,10 +1,12 @@
 import { CooklangParser, ingredient_display_name, ingredient_should_be_listed, cookware_display_name, cookware_should_be_listed, grouped_quantity_display, grouped_quantity_is_empty, quantity_display } from "@cooklang/cooklang";
 import type { PageServerLoad } from "./$types";
 import fs from 'node:fs/promises'
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ params, url }) => {
+    const recipePath = env.RECIPE_PATH || './recipes';
     const scale = Number(url.searchParams.get('scale')) || 1
-    const recipeFile = await fs.readFile(`./recipes/${params.slug}`, 'utf8')
+    const recipeFile = await fs.readFile(`${recipePath}/${params.slug}`, 'utf8')
 
     const parser = new CooklangParser()
     const [parsedRecipe, report] = parser.parse(recipeFile, scale)
@@ -93,7 +95,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
             time: parsedRecipe.time,
             ingredients: ingredientsDisplay,
             cookware: cookwareDisplay,
-            sections: sectionsDisplay
+            sections: sectionsDisplay,
+            imageUrl: `/api/recipes/${params.slug}/image`
         },
         scale,
         slug: params.slug
