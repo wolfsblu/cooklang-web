@@ -13,11 +13,6 @@ export default defineConfig({
 		sveltekit(),
 		paraglideVitePlugin({ project: './project.inlang', outdir: './src/lib/paraglide' })
 	],
-	server: {
-		fs: {
-			allow: ['..']
-		}
-	},
 	ssr: {
 		noExternal: ['@cooklang/cooklang']
 	},
