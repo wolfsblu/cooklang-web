@@ -40,9 +40,9 @@
 		{#if showImage}
 			<img src={recipe.imageUrl} onerror={() => imgError = true} class="aspect-21/9 w-full object-cover" alt="banner" />
 		{:else}
-			<div class="aspect-21/9 w-full bg-surface-200-800 flex flex-col items-center justify-center gap-2 text-surface-500-400">
-				<ImageIcon class="size-12" />
-				<span class="text-sm">No image available</span>
+			<div class="aspect-21/9 w-full bg-surface-200-800 flex flex-col items-center justify-center gap-2">
+				<ImageIcon class="size-12 stroke-surface-800-200" />
+				<span class="text-sm text-surface-800-200">No image available</span>
 			</div>
 		{/if}
 
@@ -63,8 +63,8 @@
 		{/if}
 	</header>
 
-    <article class="space-y-2 px-4 py-2 flex-1">
-        <h1 class="h5">{recipe.parsed.title || recipe.filename.replace('.cook', '')}</h1>
+    <article class="space-y-2 p-2 flex-1">
+        <h1 class="h6">{recipe.parsed.title || recipe.filename.replace('.cook', '')}</h1>
 	</article>
 
 	{#if recipe.parsed.tags.size > 0 || recipe.parsed.course}

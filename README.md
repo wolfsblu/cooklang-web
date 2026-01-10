@@ -2,6 +2,8 @@
 
 A web server for managing [Cooklang](https://cooklang.org/) recipes, shopping lists, and pantries. Built with SvelteKit and designed to help you organize your cooking workflow. Cooklang is a markup language for cooking recipes that allows you to define ingredients, cookware, and timers in a structured format.
 
+![Main page screenshot](screenshots/list.png)
+
 ### Features
 
 - **Recipe Management**: Store, view, and manage your cooklang recipes
