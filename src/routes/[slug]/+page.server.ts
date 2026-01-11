@@ -11,6 +11,12 @@ export const load: PageServerLoad = async ({ params, url }) => {
     const parser = new CooklangParser()
     const [parsedRecipe, report] = parser.parse(recipeFile, scale)
 
+    const recipeTitle = parsedRecipe.title ? parsedRecipe.title : params.slug
+        .replace('.cook', '')
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
     // Pre-compute display strings for ingredients
     const ingredientsDisplay = parsedRecipe.groupedIngredients
         .filter(([ing]) => ingredient_should_be_listed(ing))
@@ -86,7 +92,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 
     return {
         recipe: {
-            title: parsedRecipe.title,
+            title: recipeTitle,
             description: parsedRecipe.description,
             tags: Array.from(parsedRecipe.tags),
             author: parsedRecipe.author,

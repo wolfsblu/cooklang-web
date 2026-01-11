@@ -2,6 +2,7 @@
     import { page } from '$app/stores'
     import { goto } from '$app/navigation'
     import type { RecipeDisplay, StepDisplay, ActiveTimer } from '$lib/types/recipe'
+    import { CookingPotIcon } from '@lucide/svelte'
     import { parseTimerQuantity } from '$lib/utils/timer'
     import { playAlertSound } from '$lib/utils/audio'
     import RecipeHeader from './RecipeHeader.svelte'
@@ -11,6 +12,7 @@
     import ServingsControl from './ServingsControl.svelte'
     import CookControlBar from './cook/CookControlBar.svelte'
     import ActiveTimersPanel from './cook/ActiveTimersPanel.svelte'
+    import AddToShoppingListButton from '$lib/components/shopping/AddToShoppingListButton.svelte'
 
     interface Props {
         recipe: RecipeDisplay
@@ -223,12 +225,23 @@
             {scale}
             onscale={handleScale}
         />
-        <button
-            class="btn {cookMode ? 'preset-filled-warning' : 'preset-filled-primary'}"
-            onclick={toggleCookMode}
-        >
-            {cookMode ? 'Exit Cook Mode' : 'Start Cooking'}
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+            <AddToShoppingListButton
+                recipe={{
+                    slug,
+                    title: recipe.title,
+                    servings: recipe.servings,
+                    imageUrl: recipe.imageUrl
+                }}
+            />
+            <button
+                class="btn preset-filled-primary-500"
+                onclick={toggleCookMode}
+            >
+                <CookingPotIcon size={16} />
+                {cookMode ? 'Exit Cook Mode' : 'Start Cooking'}
+            </button>
+        </div>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-[300px_1fr]">
