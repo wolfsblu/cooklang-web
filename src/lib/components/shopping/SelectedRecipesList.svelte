@@ -32,7 +32,7 @@
 
 <div class="card preset-outlined-surface-200-800 p-4 space-y-4">
 	<div class="flex items-center justify-between">
-		<h2 class="h4">Selected Recipes ({recipes.length})</h2>
+		<h2 class="h4">Recipes ({recipes.length})</h2>
 		{#if onclear && recipes.length > 0}
 			<button class="btn preset-tonal-error btn-sm" onclick={handleClear}>
 				<Trash2 size={16} />
@@ -48,9 +48,9 @@
 	{:else}
 		<ul class="space-y-2">
 			{#each recipes as recipe (recipe.slug)}
-				<li class="flex items-center justify-between gap-2 p-2 rounded hover:preset-tonal-surface-200-800">
+				<li class="flex items-center justify-between gap-2">
 					<div class="flex-1 min-w-0">
-						<a href="/{recipe.slug.replace('.cook', '')}" class="anchor text-sm truncate block">
+						<a href="/{recipe.slug}" class="anchor text-sm truncate block">
 							{recipe.title}
 						</a>
 						{#if recipe.servings}
@@ -85,11 +85,11 @@
 
 						<!-- Remove button -->
 						<button
-							class="btn-icon btn-icon-sm preset-tonal-error"
+							class="btn-icon preset-tonal-error"
 							onclick={() => onremove(recipe.slug)}
 							title="Remove from list"
 						>
-							<Trash2 size={16} />
+							<Trash2 />
 						</button>
 					</div>
 				</li>

@@ -10,7 +10,7 @@
 	let { shoppingList, loading = false }: Props = $props();
 </script>
 
-<div class="card preset-outlined-surface-200-800 p-6 space-y-6">
+<div class="card preset-outlined-surface-200-800 p-4 space-y-4">
 	{#if loading}
 		<!-- Loading state -->
 		<div class="flex items-center justify-center py-12">
@@ -26,8 +26,8 @@
 		</div>
 	{:else}
 		<!-- Shopping list header -->
-		<div class="flex items-center justify-between">
-			<h2 class="h3">Shopping List</h2>
+		<div class="flex items-start justify-between">
+			<h1 class="h4">Shopping List</h1>
 			<div class="text-sm text-surface-600-400">
 				{shoppingList.totalItems} items from {shoppingList.recipeCount}
 				{shoppingList.recipeCount === 1 ? 'recipe' : 'recipes'}

@@ -4,12 +4,10 @@
 	import SelectedRecipesList from '$lib/components/shopping/SelectedRecipesList.svelte';
 	import ShoppingListDisplay from '$lib/components/shopping/ShoppingListDisplay.svelte';
 
-	// Load from server file on mount
 	onMount(() => {
 		shoppingListStore.load();
 	});
 
-	// Handlers for recipe list actions
 	async function handleUpdateScale(slug: string, scale: number) {
 		await shoppingListStore.updateScale(slug, scale);
 	}
