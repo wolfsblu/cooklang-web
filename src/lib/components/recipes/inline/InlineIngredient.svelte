@@ -12,6 +12,8 @@
 </script>
 
 <span
+    role="button"
+    tabindex="0"
     class="ingredient cursor-pointer rounded px-1 transition-colors {highlighted ? 'preset-tonal-primary' : active ? 'preset-tonal-secondary' : ''}"
     onmouseenter={() => onhover(index)}
     onmouseleave={() => onhover(null)}

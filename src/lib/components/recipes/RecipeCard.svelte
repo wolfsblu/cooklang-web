@@ -20,7 +20,7 @@
 	let imgError = $state(false);
 	const showImage = $derived(recipe.imageUrl && !imgError)
 
-	const url = `/${recipe.filename}`
+	const url = $derived(`/${recipe.filename}`)
 
 	// Format time for display
 	const timeDisplay = $derived(() => {

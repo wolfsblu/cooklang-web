@@ -12,6 +12,8 @@
 </script>
 
 <span
+    role="button"
+    tabindex="0"
     class="cookware cursor-pointer rounded px-1 transition-colors {highlighted ? 'preset-tonal-secondary' : active ? 'preset-tonal-tertiary' : ''}"
     onmouseenter={() => onhover(index)}
     onmouseleave={() => onhover(null)}

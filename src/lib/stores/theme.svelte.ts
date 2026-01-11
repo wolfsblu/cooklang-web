@@ -10,8 +10,10 @@ function createModeStore() {
         const stored = localStorage.getItem('mode') as Mode | null;
         if (stored) {
             mode = stored;
+            applyMode(stored);
+        } else {
+            applyMode('light');
         }
-        applyMode(mode);
     }
 
     function applyMode(newMode: Mode) {
