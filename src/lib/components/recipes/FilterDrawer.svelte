@@ -5,6 +5,7 @@
 	import { getAvailableTags, getAvailableCourses } from '$lib/utils/recipe-filters';
 	import { parseFilterParams, buildFilterUrl } from '$lib/utils/url-params';
 	import Sidebar from '$lib/components/ui/Sidebar.svelte';
+	import TagCombobox from '$lib/components/recipes/TagCombobox.svelte';
 
 	type Props = {
 		isOpen: boolean;
@@ -55,14 +56,6 @@
 		}
 	});
 
-	function toggleTag(tag: string) {
-		if (selectedTags.includes(tag)) {
-			selectedTags = selectedTags.filter((t) => t !== tag);
-		} else {
-			selectedTags = [...selectedTags, tag];
-		}
-	}
-
 	function applyFilters() {
 		const searchQuery = page.url.searchParams.get('q') || '';
 		const sortField = page.url.searchParams.get('sort') || 'name';
@@ -107,18 +100,7 @@
 				{#if availableTags.length > 0}
 					<div>
 						<h3 class="font-medium mb-2">Tags</h3>
-						<div class="flex flex-wrap gap-2">
-							{#each availableTags as tag}
-								<button
-									onclick={() => toggleTag(tag)}
-									class="chip {selectedTags.includes(tag)
-										? 'preset-filled-primary-500'
-										: 'preset-tonal-surface'}"
-								>
-									{tag}
-								</button>
-							{/each}
-						</div>
+						<TagCombobox bind:selectedTags availableTags={availableTags} />
 					</div>
 				{/if}
 
