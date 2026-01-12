@@ -160,3 +160,95 @@ export async function generateShoppingList(recipes: RecipeInput[]): Promise<Cook
 	const args = buildCLIArgs(recipes);
 	return executeCookCLI(args);
 }
+
+/**
+ * Search for recipes using the Cook CLI search command
+ *
+ * @param query - Search query string
+ * @param basePath - Base directory containing recipes
+ * @returns Promise resolving to array of matching recipe filenames
+ * @throws {CookCLIError} If CLI execution fails
+ *
+ * @example
+ * const matches = await searchRecipes('chicken', '/path/to/recipes');
+ * // Returns: ['chicken-soup.cook', 'roasted-chicken.cook']
+ */
+export async function searchRecipes(query: string, basePath: string): Promise<string[]> {
+	if (!query.trim()) {
+		return [];
+	}
+
+	return new Promise((resolve, reject) => {
+		const absolutePath = path.resolve(basePath);
+
+		// Spawn the Cook CLI search process
+		const proc = spawn(config.COOK_CLI_PATH, ['search', query, '--base-dir', absolutePath], {
+			env: process.env
+		});
+
+		let stdout = '';
+		let stderr = '';
+
+		// Collect stdout
+		proc.stdout.on('data', (data) => {
+			stdout += data.toString();
+		});
+
+		// Collect stderr
+		proc.stderr.on('data', (data) => {
+			stderr += data.toString();
+		});
+
+		// Set timeout
+		const timeout = setTimeout(() => {
+			proc.kill('SIGTERM');
+			reject(
+				new CookCLIError(
+					`Cook CLI search timed out after ${config.COOK_CLI_TIMEOUT}ms`,
+					stderr
+				)
+			);
+		}, config.COOK_CLI_TIMEOUT);
+
+		// Handle process completion
+		proc.on('close', (code) => {
+			clearTimeout(timeout);
+
+			if (code !== 0) {
+				reject(
+					new CookCLIError(
+						`Cook CLI search exited with code ${code}`,
+						stderr,
+						code || undefined
+					)
+				);
+				return;
+			}
+
+			// Parse stdout (newline-separated filenames, with quotes)
+			const filenames = stdout
+				.split('\n')
+				.map((line) => line.trim())
+				.filter((line) => line.length > 0 && line.includes('.cook'))
+				.map((line) => {
+					// Remove quotes and extract filename
+					const cleaned = line.replace(/^["']|["']$/g, '');
+					return path.basename(cleaned);
+				})
+				.filter((line) => line.endsWith('.cook')); // Only .cook files, not .menu files
+
+			resolve(filenames);
+		});
+
+		// Handle process errors (e.g., command not found)
+		proc.on('error', (error) => {
+			clearTimeout(timeout);
+			reject(
+				new CookCLIError(
+					`Failed to execute Cook CLI search: ${error.message}. Is Cook CLI installed and in PATH?`,
+					stderr
+				)
+			);
+		});
+	});
+}
