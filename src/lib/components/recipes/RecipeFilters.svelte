@@ -1,23 +1,71 @@
 <script lang="ts">
+    import { goto } from '$app/navigation';
+    import { page } from '$app/state';
     import { FunnelIcon, SearchIcon, XIcon, ArrowUp, ArrowDown } from '@lucide/svelte';
 
-    // Search state
-    let searchQuery = $state('');
+    type Props = {
+        allRecipes: any[];
+        isDrawerOpen: boolean;
+    };
+
+    let { allRecipes, isDrawerOpen = $bindable() }: Props = $props();
+
+    // Search state (synced with URL)
+    let searchQuery = $state(page.url.searchParams.get('q') || '');
     let searchInputRef: HTMLInputElement | null = $state(null);
 
-    // Sort state
-    let sortField = $state('name');
-    let sortOrder = $state<'asc' | 'desc'>('asc');
+    // Sort state (synced with URL)
+    let sortField = $state(page.url.searchParams.get('sort') || 'name');
+    let sortOrder = $state<'asc' | 'desc'>((page.url.searchParams.get('order') || 'asc') as 'asc' | 'desc');
 
-    // Clear search
+    // Debounced search
+    let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    function handleSearchInput() {
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            updateUrl();
+        }, 300);
+    }
+
     function clearSearch() {
         searchQuery = '';
+        updateUrl();
         searchInputRef?.focus();
     }
 
-    // Toggle sort order
     function toggleSortOrder() {
         sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+        updateUrl();
+    }
+
+    function handleSortFieldChange() {
+        updateUrl();
+    }
+
+    function updateUrl() {
+        const params = new URLSearchParams(page.url.searchParams);
+
+        if (searchQuery) {
+            params.set('q', searchQuery);
+        } else {
+            params.delete('q');
+        }
+
+        if (sortField !== 'name') {
+            params.set('sort', sortField);
+        } else {
+            params.delete('sort');
+        }
+
+        if (sortOrder !== 'asc') {
+            params.set('order', sortOrder);
+        } else {
+            params.delete('order');
+        }
+
+        const queryString = params.toString();
+        goto(queryString ? `?${queryString}` : '/', { keepFocus: true, noScroll: true });
     }
 </script>
 
@@ -35,6 +83,7 @@
                     <input
                         bind:this={searchInputRef}
                         bind:value={searchQuery}
+                        oninput={handleSearchInput}
                         type="text"
                         placeholder="Search recipes"
                         class="input w-full pl-10 pr-10 py-3"
@@ -55,6 +104,7 @@
                 </div>
             
                 <button
+                    onclick={() => isDrawerOpen = true}
                     class="btn preset-tonal-primary px-4 py-3"
                     aria-label="Filter recipes"
                 >
@@ -66,6 +116,7 @@
                 <!-- Sort Field Dropdown -->
                 <select
                     bind:value={sortField}
+                    onchange={handleSortFieldChange}
                     class="input py-3 px-4"
                     aria-label="Sort by field"
                 >

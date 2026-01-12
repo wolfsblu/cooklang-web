@@ -26,13 +26,19 @@
 	</script>
 </svelte:head>
 
-<div class="min-h-screen {isCookMode ? '' : 'pb-20'}">
-	<main>
-		{@render children()}
-	</main>
-</div>
-{#if !isCookMode}
-	<div class="fixed bottom-0 left-0 right-0 z-50">
-		<NavigationBar />
+{#if isCookMode}
+	<div class="h-dvh">
+		<main class="h-full overflow-auto">
+			{@render children()}
+		</main>
+	</div>
+{:else}
+	<div class="h-dvh grid grid-rows-[1fr_auto]">
+		<main class="overflow-auto">
+			{@render children()}
+		</main>
+		<nav>
+			<NavigationBar />
+		</nav>
 	</div>
 {/if}
