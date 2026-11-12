@@ -36,6 +36,16 @@ describe('highlightCooklang', () => {
 		expect(texts('Add @ground black pepper{2%tsp}.', 'ingredient-quantity')).toEqual(['{2%tsp}']);
 	});
 
+	it('highlights notes after the quantity or name', () => {
+		expect(texts('Add @onion{1}(diced) now.', 'note')).toEqual(['(diced)']);
+		expect(texts('Add @onion(diced) now.', 'note')).toEqual(['(diced)']);
+		expect(texts('Use #pan{1}(large) now.', 'note')).toEqual(['(large)']);
+	});
+
+	it('keeps nested parentheses in a note', () => {
+		expect(texts('Add @onion{1}(diced (finely)) now.', 'note')).toEqual(['(diced (finely))']);
+	});
+
 	it('does not swallow a following sentence after an unbraced ingredient', () => {
 		expect(texts('Add @salt, then stir.', 'ingredient')).toEqual(['@salt']);
 	});

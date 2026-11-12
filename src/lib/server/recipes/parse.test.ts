@@ -24,6 +24,13 @@ describe('previewRecipe', () => {
 		expect(items.some((item) => item.type === 'timer')).toBe(true);
 	});
 
+	it('keeps ingredient and cookware notes in the preview model', () => {
+		const preview = previewRecipe('Add @onion{1}(diced) to the #pan{1}(large).');
+
+		expect(preview.display.ingredients[0].note).toBe('diced');
+		expect(preview.display.cookware[0].note).toBe('large');
+	});
+
 	it('surfaces parser warnings as diagnostics', () => {
 		const preview = previewRecipe('>> servings: 2\n\nAdd @flour{}.');
 		expect(preview.diagnostics.some((diagnostic) => diagnostic.severity === 'warning')).toBe(true);

@@ -24,7 +24,8 @@ export type CooklangTokenKind =
 	| 'cookware'
 	| 'cookware-quantity'
 	| 'timer'
-	| 'timer-quantity';
+	| 'timer-quantity'
+	| 'note';
 
 export interface CooklangToken {
 	text: string;
@@ -66,6 +67,32 @@ function braceEnd(line: string, start: number): number {
 
 	// An unclosed brace highlights to the end of the line, which is the useful
 	// signal while the user is still typing it.
+	return line.length;
+}
+
+/**
+ * Consume a balanced `(...)` starting at `start`, respecting backslash escapes.
+ *
+ * Cooklang places an optional note after the quantity: `@onion{1}(diced)`.
+ */
+function parenEnd(line: string, start: number): number {
+	let depth = 0;
+
+	for (let i = start; i < line.length; i++) {
+		const char = line[i];
+
+		if (char === '\\') {
+			i++;
+			continue;
+		}
+
+		if (char === '(') depth++;
+		else if (char === ')') {
+			depth--;
+			if (depth === 0) return i + 1;
+		}
+	}
+
 	return line.length;
 }
 
@@ -137,16 +164,22 @@ function highlightInline(line: string, tokens: CooklangToken[]): void {
 
 		push(tokens, line.slice(i, nameEnd), kinds.name);
 
-		if (line[nameEnd] === '{') {
-			const end = braceEnd(line, nameEnd);
-			push(tokens, line.slice(nameEnd, end), kinds.quantity);
-			i = end;
-			continue;
+		let entityEnd = nameEnd;
+
+		if (line[entityEnd] === '{') {
+			entityEnd = braceEnd(line, entityEnd);
+			push(tokens, line.slice(nameEnd, entityEnd), kinds.quantity);
+		}
+
+		if (line[entityEnd] === '(') {
+			const noteEnd = parenEnd(line, entityEnd);
+			push(tokens, line.slice(entityEnd, noteEnd), 'note');
+			entityEnd = noteEnd;
 		}
 
 		// Empty name and no brace: highlight the trigger as the entity anyway,
 		// so an incomplete token is visible while it is being typed.
-		i = nameEnd;
+		i = entityEnd;
 	}
 }
 

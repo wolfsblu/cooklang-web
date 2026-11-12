@@ -165,7 +165,8 @@
 		cookware: 'text-accent2 font-semibold',
 		'cookware-quantity': 'text-accent2/75',
 		timer: 'text-warn-soft-fg font-semibold',
-		'timer-quantity': 'text-warn-soft-fg/80'
+		'timer-quantity': 'text-warn-soft-fg/80',
+		note: 'text-fg-subtle italic'
 	};
 
 	const statusLabel = $derived(

@@ -220,7 +220,14 @@
 							<ul class="space-y-1">
 								{#each recipe.ingredients as ingredient (ingredient.index)}
 									<li class="flex items-baseline justify-between gap-2 text-sm">
-										<span>{ingredient.name}</span>
+										<span>
+											{ingredient.name}
+											{#if ingredient.note}
+												<span class="text-fg-subtle text-xs italic">
+													({ingredient.note})
+												</span>
+											{/if}
+										</span>
 										{#if ingredient.quantity}
 											<span class="text-fg-muted shrink-0 text-xs tabular-nums">
 												{ingredient.quantity}
@@ -233,7 +240,12 @@
 							<ul class="space-y-1">
 								{#each recipe.cookware as item (item.index)}
 									<li class="flex items-baseline justify-between gap-2 text-sm">
-										<span>{item.name}</span>
+										<span>
+											{item.name}
+											{#if item.note}
+												<span class="text-fg-subtle text-xs italic">({item.note})</span>
+											{/if}
+										</span>
 										{#if item.quantity}
 											<span class="text-fg-muted shrink-0 text-xs tabular-nums">
 												{item.quantity}
