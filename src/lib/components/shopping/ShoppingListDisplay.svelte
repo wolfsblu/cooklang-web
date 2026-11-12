@@ -8,7 +8,6 @@
 	} from '$lib/types/shopping-list';
 	import ShoppingAislePicker from './ShoppingAislePicker.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 
@@ -187,27 +186,25 @@
 </script>
 
 {#if loading}
-	<Card variant="outline" class="p-4">
-		<div class="flex items-center justify-center gap-3 py-12">
-			<Spinner label="Generating shopping list" />
-			<span class="text-fg-muted">Generating shopping list…</span>
-		</div>
-	</Card>
+	<div class="flex items-center justify-center gap-3 px-4 py-12">
+		<Spinner label="Generating shopping list" />
+		<span class="text-fg-muted">Generating shopping list…</span>
+	</div>
 {:else if !shoppingList || shoppingList.categories.length === 0}
-	<Card variant="outline" class="p-4">
-		<EmptyState
-			icon={ListChecksIcon}
-			title="Nothing to buy yet"
-			description="Add recipes to generate a shopping list."
-		/>
-	</Card>
+	<EmptyState
+		icon={ListChecksIcon}
+		title="Nothing to buy yet"
+		description="Add recipes to generate a shopping list."
+	/>
 {:else}
-	<div class="space-y-4">
-		<!-- Trip progress: the reason to come back to the page mid-shop. -->
+	<div>
+		<!-- Trip progress: the reason to come back to the page mid-shop. This is
+		     a workbench strip rather than a floating card; the aisle sections
+		     below supply the divider. -->
 		<section
-			class="relative overflow-hidden rounded-lg border p-4 transition-colors duration-300 sm:p-5 {allDone
-				? 'border-ok/60 bg-ok-soft/40'
-				: 'border-border bg-surface'}"
+			class="relative overflow-hidden p-4 transition-colors duration-300 sm:p-5 {allDone
+				? 'bg-ok-soft/40'
+				: 'bg-surface'}"
 			aria-label="Shopping progress"
 		>
 			<div class="flex flex-wrap items-center gap-4">
@@ -258,7 +255,7 @@
 
 				<div class="min-w-0 flex-1">
 					<p class="text-fg text-xl font-semibold tabular-nums">
-						{checkedCount}<span class="text-fg-muted text-base font-medium">{' '}of {total}</span>
+						{checkedCount}<span class="text-fg-muted text-base font-medium">&nbsp;of {total}</span>
 						picked up
 					</p>
 					<p class="text-fg-muted text-sm" aria-live="polite">{message}</p>
@@ -297,7 +294,7 @@
 		-->
 		<div class="@container">
 			<div
-				class="columns-1 gap-4 @2xl:columns-2 @5xl:columns-3 @7xl:columns-4 @min-[100rem]:columns-5"
+				class="columns-1 [column-gap:0] [column-rule:1px_solid_var(--color-border)] @2xl:columns-2 @5xl:columns-3 @7xl:columns-4 @min-[100rem]:columns-5"
 			>
 				{#each shoppingList.categories as category (category.name)}
 					{@const done = doneIn(category)}
@@ -305,13 +302,10 @@
 					{@const placeable = category.name === UNCATEGORIZED && aisleCategories.length > 0}
 					<!-- A placeable aisle carries a select and a button in every row,
 					     which leaves no room for the name inside a column. -->
-					<Card
-						variant="outline"
-						class="mb-4 break-inside-avoid overflow-hidden transition-colors duration-300 {placeable
-							? '[column-span:all]'
-							: ''} {categoryDone ? 'border-ok/50' : ''}"
+					<section
+						class="border-border break-inside-avoid border-t {placeable ? '[column-span:all]' : ''}"
 					>
-						<header class="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
+						<header class="bg-surface-muted/40 flex items-center justify-between gap-3 px-4 py-2">
 							<h3 class="min-w-0 flex-1 text-sm font-semibold">
 								<!-- The aisle heading doubles as a select-all: an empty circle
 								     when nothing is ticked, a dash when some are, a check when
@@ -372,7 +366,7 @@
 								{@const key = `${category.name}/${item.name}`}
 								{@const isChecked = checked.has(key)}
 								<li
-									class="flex flex-wrap items-center gap-x-2 rounded-md transition-colors duration-200 {isChecked
+									class="flex flex-wrap items-center gap-x-2 rounded-sm transition-colors duration-200 {isChecked
 										? 'bg-ok-soft/60'
 										: 'hover:bg-surface-muted'}"
 								>
@@ -380,7 +374,7 @@
 									     select nested in a label ticks the checkbox on every click
 									     that opens the dropdown. -->
 									<label
-										class="group flex min-w-52 flex-1 cursor-pointer items-center gap-3 rounded-md px-2 py-2"
+										class="group flex min-w-52 flex-1 cursor-pointer items-center gap-3 rounded-sm px-2 py-2"
 									>
 										<input
 											type="checkbox"
@@ -434,10 +428,29 @@
 								</li>
 							{/each}
 						</ul>
-					</Card>
+					</section>
 				{/each}
 			</div>
 		</div>
+
+		<!-- Status bar, in the spirit of the editor's: a quiet summary along the
+		     bottom edge of the workbench. -->
+		<footer
+			class="border-border text-fg-subtle flex flex-wrap items-center gap-x-4 gap-y-1 border-t px-4 py-1.5 text-xs"
+		>
+			<span class="inline-flex items-center gap-1.5 tabular-nums">
+				{#if allDone}
+					<CheckIcon class="text-ok size-3.5" strokeWidth={3} />
+				{/if}
+				{checkedCount}/{total} picked up
+			</span>
+			<span class="tabular-nums">{shoppingList.categories.length} aisles</span>
+			<span class="tabular-nums">
+				{shoppingList.recipeCount}
+				{shoppingList.recipeCount === 1 ? 'recipe' : 'recipes'}
+			</span>
+			<span class="ml-auto tabular-nums">{allDone ? 'All done' : `${remaining} to go`}</span>
+		</footer>
 	</div>
 
 	{#if showCompleteToast}

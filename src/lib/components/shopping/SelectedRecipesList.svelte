@@ -4,7 +4,6 @@
 	import type { ResolvedSelection } from '$lib/server/shopping/store';
 	import { formatScale, stepScaleDown, stepScaleUp } from '$lib/utils/scale';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 
@@ -18,9 +17,9 @@
 	let clearForm = $state<HTMLFormElement | null>(null);
 </script>
 
-<Card variant="outline" class="space-y-3 p-4">
-	<div class="flex items-center justify-between gap-2">
-		<h2 class="text-fg text-lg font-semibold">Recipes ({selections.length})</h2>
+<section class="space-y-3 p-4">
+	<div class="border-border flex items-center justify-between gap-2 border-b pb-2">
+		<h2 class="text-fg text-sm font-semibold">Recipes ({selections.length})</h2>
 
 		{#if selections.length > 0}
 			<form method="POST" action="?/clear" use:enhance bind:this={clearForm}>
@@ -94,7 +93,7 @@
 			</li>
 		{/each}
 	</ul>
-</Card>
+</section>
 
 <ConfirmDialog
 	bind:open={confirmingClear}
