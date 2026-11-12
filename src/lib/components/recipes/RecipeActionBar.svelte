@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CookingPotIcon } from '@lucide/svelte';
+	import { CookingPotIcon, PencilIcon } from '@lucide/svelte';
 	import AddToShoppingListButton from '$lib/components/shopping/AddToShoppingListButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
@@ -41,6 +41,11 @@
 		compact
 		class="h-9 shrink-0"
 	/>
+
+	<Button class="h-9 shrink-0" href="/recipes/edit/{slug}" variant="ghost">
+		<PencilIcon class="size-4" />
+		Edit
+	</Button>
 
 	<Button class="h-9 shrink-0" onclick={onstartcooking}>
 		<CookingPotIcon class="size-4" />

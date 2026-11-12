@@ -17,6 +17,9 @@ whose contents are deducted from that list.
 - **Recipes** — browse, search and filter a directory of `.cook` files,
   including subdirectories, with a cook mode that walks you through the steps
   and runs timers.
+- **Editing** — a Cooklang editor with syntax highlighting, a live preview,
+  parser diagnostics, undo/redo, and ingredient and cookware autocomplete
+  drawn from the whole library.
 - **Shopping lists** — combine recipes at any scale, with quantities merged
   across them and grouped by supermarket aisle.
 - **Aisles** — edit `aisle.conf` from the app: arrange the aisles into the

@@ -11,7 +11,11 @@
  * mount, and recursive watches over SMB/NFS are unreliable and fail silently.
  */
 
-import { CooklangParser, ingredient_should_be_listed } from '@cooklang/cooklang';
+import {
+	CooklangParser,
+	cookware_should_be_listed,
+	ingredient_should_be_listed
+} from '@cooklang/cooklang';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { config } from '../config.js';
@@ -63,6 +67,12 @@ export interface RecipeEntry {
 	 */
 	ingredientNames: string[];
 
+	/**
+	 * Distinct listed cookware names, as written. Used by the editor's
+	 * autocomplete vocabulary. Not sent to the client on list pages.
+	 */
+	cookwareNames: string[];
+
 	/** Lowercased text used by search; not sent to the client. */
 	searchable: {
 		title: string;
@@ -104,6 +114,7 @@ interface ParsedRecipeFields {
 	servings: number | null;
 	timeMinutes: number | null;
 	ingredientNames: string[];
+	cookwareNames: string[];
 	searchable: RecipeEntry['searchable'];
 }
 
@@ -119,6 +130,19 @@ let inflight: Promise<RecipeIndex> | null = null;
  * change is visible immediately rather than after the TTL.
  */
 export function invalidateIndex(): void {
+	cachedIndex = null;
+}
+
+/**
+ * Drop one file from the parse cache and the aggregate index.
+ *
+ * Used after an editor save. Clearing only the aggregate index is not enough:
+ * a save that lands in the same timestamp tick and keeps the same byte count
+ * would otherwise look unchanged to the stat-based file cache and serve the
+ * previous parse.
+ */
+export function invalidateRecipe(relPath: string): void {
+	fileCache.delete(relPath);
 	cachedIndex = null;
 }
 
@@ -292,6 +316,16 @@ function parseRecipe(source: string, relPath: string): ParsedRecipeFields {
 		).values()
 	];
 
+	const cookwareNames = [
+		...new Map(
+			(recipe.cookware ?? [])
+				.filter((item: unknown) => cookware_should_be_listed(item as never))
+				.map((item: { name?: string }) => item?.name ?? '')
+				.filter(Boolean)
+				.map((name: string) => [name.toLowerCase(), name])
+		).values()
+	];
+
 	return {
 		title,
 		description: recipe.description ?? null,
@@ -300,6 +334,7 @@ function parseRecipe(source: string, relPath: string): ParsedRecipeFields {
 		servings: typeof recipe.servings === 'number' ? recipe.servings : null,
 		timeMinutes: totalTimeMinutes(recipe.time),
 		ingredientNames: listed,
+		cookwareNames,
 		searchable: {
 			title: title.toLowerCase(),
 			tags: tags.join(' ').toLowerCase(),
