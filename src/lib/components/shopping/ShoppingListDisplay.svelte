@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { CheckIcon, ListChecksIcon, MinusIcon, RotateCcwIcon } from '@lucide/svelte';
+	import {
+		CheckCheckIcon,
+		CheckIcon,
+		ListChecksIcon,
+		MinusIcon,
+		RotateCcwIcon
+	} from '@lucide/svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import {
 		UNCATEGORIZED,
@@ -7,7 +13,6 @@
 		type ShoppingListDisplay
 	} from '$lib/types/shopping-list';
 	import ShoppingAislePicker from './ShoppingAislePicker.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 
@@ -81,6 +86,18 @@
 		return () => clearTimeout(timer);
 	});
 
+	/**
+	 * The name of the aisle that just became complete, so its check can pop and
+	 * a small burst can fire. Cleared once the animation has played.
+	 */
+	let celebrating = $state<string | null>(null);
+
+	$effect(() => {
+		if (celebrating === null) return;
+		const timer = setTimeout(() => (celebrating = null), 900);
+		return () => clearTimeout(timer);
+	});
+
 	const message = $derived.by(() => {
 		if (allDone) return 'Basket packed — nice work!';
 		if (checkedCount === 0) return 'Tick items off as they go in your basket.';
@@ -110,6 +127,19 @@
 		{ dx: 56, dy: -18, rot: 100, delay: 90, color: 'var(--color-brand-500)' },
 		{ dx: -56, dy: -16, rot: -140, delay: 60, color: 'var(--color-warn-500)' },
 		{ dx: 8, dy: 44, rot: 190, delay: 40, color: 'var(--color-brand-400)' }
+	];
+
+	// A shorter burst for an aisle's header check, so the whole-list finish
+	// stays the bigger moment.
+	const AISLE_CONFETTI = [
+		{ dx: -18, dy: -16, rot: -120, delay: 0, color: 'var(--color-brand-500)' },
+		{ dx: 16, dy: -20, rot: 100, delay: 20, color: 'var(--color-herb-500)' },
+		{ dx: -22, dy: 2, rot: -80, delay: 10, color: 'var(--color-warn-500)' },
+		{ dx: 22, dy: 4, rot: 90, delay: 30, color: 'var(--color-brand-400)' },
+		{ dx: -12, dy: 18, rot: 120, delay: 40, color: 'var(--color-herb-500)' },
+		{ dx: 12, dy: 16, rot: -140, delay: 10, color: 'var(--color-warn-500)' },
+		{ dx: 0, dy: -24, rot: 30, delay: 50, color: 'var(--color-brand-500)' },
+		{ dx: 4, dy: 22, rot: 160, delay: 20, color: 'var(--color-herb-500)' }
 	];
 
 	function readSaved(signature: string): string[] {
@@ -156,7 +186,14 @@
 		return count;
 	}
 
-	function toggle(key: string) {
+	/** Fire the small success moment when an aisle crosses the finish line. */
+	function celebrateAisle(category: ShoppingListCategory) {
+		celebrating = category.name;
+	}
+
+	function toggle(key: string, category: ShoppingListCategory) {
+		const wasDone = doneIn(category) === category.items.length;
+
 		if (checked.has(key)) {
 			checked.delete(key);
 			return;
@@ -166,6 +203,8 @@
 		// The physical half of "done" on phones that support it; desktop
 		// browsers simply ignore the call.
 		navigator.vibrate?.(8);
+
+		if (!wasDone && doneIn(category) === category.items.length) celebrateAisle(category);
 	}
 
 	/**
@@ -181,7 +220,21 @@
 			else checked.add(key);
 		}
 
-		if (!complete) navigator.vibrate?.(8);
+		if (complete) return;
+
+		navigator.vibrate?.(8);
+		celebrateAisle(category);
+	}
+
+	/** The trip count is the list-wide select-all, mirroring the aisle headers. */
+	function toggleAll() {
+		if (allDone) {
+			checked.clear();
+			return;
+		}
+
+		for (const key of allKeys) checked.add(key);
+		navigator.vibrate?.(8);
 	}
 </script>
 
@@ -254,19 +307,31 @@
 				</div>
 
 				<div class="min-w-0 flex-1">
-					<p class="text-fg text-xl font-semibold tabular-nums">
-						{checkedCount}<span class="text-fg-muted text-base font-medium">&nbsp;of {total}</span>
-						picked up
-					</p>
+					<!-- The trip count is also the list-wide select-all. Keeping it
+					     as the only global action means the hero never grows or
+					     shrinks a control, which used to shift the mobile layout. -->
+					<button
+						type="button"
+						aria-label={allDone
+							? `${checkedCount} of ${total} picked up. Uncheck every item`
+							: `${checkedCount} of ${total} picked up. Check off every item`}
+						title={allDone ? 'Uncheck everything' : 'Check off everything'}
+						onclick={toggleAll}
+						class="hover:bg-surface-muted -ml-1 flex max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left transition-colors"
+					>
+						<span class="text-fg text-xl font-semibold tabular-nums">
+							{checkedCount}<span class="text-fg-muted text-base font-medium">&nbsp;of {total}</span
+							>
+							picked up
+						</span>
+						{#if allDone}
+							<RotateCcwIcon class="text-fg-subtle size-4 shrink-0" aria-hidden="true" />
+						{:else}
+							<CheckCheckIcon class="text-fg-subtle size-4 shrink-0" aria-hidden="true" />
+						{/if}
+					</button>
 					<p class="text-fg-muted text-sm" aria-live="polite">{message}</p>
 				</div>
-
-				{#if checkedCount > 0}
-					<Button variant="ghost" size="sm" onclick={() => checked.clear()}>
-						<RotateCcwIcon class="size-4" />
-						Uncheck all
-					</Button>
-				{/if}
 			</div>
 
 			<div
@@ -304,6 +369,7 @@
 					     which leaves no room for the name inside a column. -->
 					<section
 						class="border-border break-inside-avoid border-t {placeable ? '[column-span:all]' : ''}"
+						class:aisle-complete={celebrating === category.name}
 					>
 						<header class="bg-surface-muted/40 flex items-center justify-between gap-3 px-4 py-2">
 							<h3 class="min-w-0 flex-1 text-sm font-semibold">
@@ -321,18 +387,36 @@
 									onclick={() => toggleCategory(category)}
 									class="group/all hover:bg-surface-muted -ml-1 flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-left transition-colors"
 								>
-									<span
-										class="group-hover/all:border-ok flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ease-out group-active/all:scale-90 {categoryDone
-											? 'border-ok bg-ok text-ok-fg'
-											: done > 0
-												? 'border-ok bg-surface text-ok'
-												: 'border-border-strong bg-surface'}"
-										aria-hidden="true"
-									>
-										{#if categoryDone}
-											<CheckIcon class="size-3.5" strokeWidth={3.5} />
-										{:else if done > 0}
-											<MinusIcon class="size-3.5" strokeWidth={3.5} />
+									<span class="relative flex size-5 shrink-0 items-center justify-center">
+										<span
+											class="group-hover/all:border-ok flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ease-out group-active/all:scale-90 {categoryDone
+												? 'border-ok bg-ok text-ok-fg'
+												: done > 0
+													? 'border-ok bg-surface text-ok'
+													: 'border-border-strong bg-surface'}"
+											aria-hidden="true"
+										>
+											{#if categoryDone}
+												<span
+													class="flex items-center justify-center"
+													class:aisle-check-pop={celebrating === category.name}
+												>
+													<CheckIcon class="size-3.5" strokeWidth={3.5} />
+												</span>
+											{:else if done > 0}
+												<MinusIcon class="size-3.5" strokeWidth={3.5} />
+											{/if}
+										</span>
+
+										{#if celebrating === category.name}
+											<span class="pointer-events-none absolute inset-0" aria-hidden="true">
+												{#each AISLE_CONFETTI as piece, index (index)}
+													<span
+														class="confetti-piece"
+														style="--dx: {piece.dx}px; --dy: {piece.dy}px; --rot: {piece.rot}deg; --delay: {piece.delay}ms; background-color: {piece.color}"
+													></span>
+												{/each}
+											</span>
 										{/if}
 									</span>
 									<span class="min-w-0">{category.displayName}</span>
@@ -380,7 +464,7 @@
 											type="checkbox"
 											class="peer sr-only"
 											checked={isChecked}
-											onchange={() => toggle(key)}
+											onchange={() => toggle(key, category)}
 										/>
 
 										<!-- The native box is hidden, so this is the visible one; the
@@ -483,6 +567,44 @@
 
 	.strike.struck {
 		background-size: 100% 1.5px;
+	}
+
+	/* A green pulse around the finished aisle's header, paired with the check
+	   popping in and a short burst from the circle. */
+	.aisle-complete > header {
+		animation: aisle-flash 900ms ease-out;
+	}
+
+	@keyframes aisle-flash {
+		0% {
+			box-shadow: inset 0 0 0 0 transparent;
+		}
+		18% {
+			box-shadow: inset 0 0 0 3px var(--color-ok);
+		}
+		100% {
+			box-shadow: inset 0 0 0 0 transparent;
+		}
+	}
+
+	.aisle-check-pop {
+		animation: aisle-check-pop 500ms cubic-bezier(0.2, 0.8, 0.3, 1.4);
+		transform-origin: center;
+	}
+
+	@keyframes aisle-check-pop {
+		0% {
+			transform: scale(0.2) rotate(-30deg);
+			opacity: 0;
+		}
+		60% {
+			transform: scale(1.12) rotate(4deg);
+			opacity: 1;
+		}
+		100% {
+			transform: scale(1) rotate(0deg);
+			opacity: 1;
+		}
 	}
 
 	.confetti-piece {
