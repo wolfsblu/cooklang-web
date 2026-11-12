@@ -11,16 +11,25 @@
 		actions?: Snippet;
 		/** Widen for content that benefits from it, such as the recipe grid. */
 		wide?: boolean;
+		/** Fill the content area, for pages whose layout is built to stretch. */
+		full?: boolean;
 		class?: string;
 		children: Snippet;
 	};
 
-	const { title, actions, wide = false, class: className, children }: Props = $props();
+	const {
+		title,
+		actions,
+		wide = false,
+		full = false,
+		class: className,
+		children
+	}: Props = $props();
+
+	const width = $derived(full ? 'max-w-none' : wide ? 'max-w-[110rem]' : 'max-w-6xl');
 </script>
 
-<div
-	class="mx-auto w-full px-4 py-6 sm:px-6 {wide ? 'max-w-[110rem]' : 'max-w-6xl'} {className ?? ''}"
->
+<div class="mx-auto w-full px-4 py-6 sm:px-6 {width} {className ?? ''}">
 	{#if title || actions}
 		<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 			{#if title}

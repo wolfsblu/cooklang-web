@@ -15,7 +15,8 @@
 	<title>Shopping list</title>
 </svelte:head>
 
-<Page title="Shopping">
+<Page full>
+	<h1 class="sr-only">Shopping</h1>
 	{#if data.selections.length === 0}
 		<EmptyState
 			icon={ShoppingCartIcon}
@@ -33,7 +34,7 @@
 				class="border-warn bg-warn-soft text-warn-soft-fg mb-6 flex items-start gap-3 p-4"
 			>
 				<TerminalIcon class="mt-0.5 size-5 shrink-0" />
-				<div>
+				<div class="max-w-4xl">
 					<p class="font-semibold">
 						{data.cliMissing ? 'Combined list unavailable' : 'Could not generate the list'}
 					</p>
@@ -53,7 +54,7 @@
 				class="border-warn bg-warn-soft text-warn-soft-fg mb-6 flex items-start gap-3 p-4"
 			>
 				<TriangleAlertIcon class="mt-0.5 size-5 shrink-0" />
-				<div class="min-w-0">
+				<div class="max-w-4xl min-w-0">
 					<p class="font-semibold">Some pantry items could not be applied</p>
 					<ul class="mt-1 list-disc space-y-0.5 pl-4 text-sm">
 						{#each data.warnings as warning (warning)}
@@ -70,11 +71,11 @@
 		{/if}
 
 		<div class="grid gap-6 lg:grid-cols-[22rem_1fr]">
-			<aside>
+			<aside class="order-2 lg:order-1">
 				<SelectedRecipesList selections={data.selections} />
 			</aside>
 
-			<div>
+			<div class="order-1 lg:order-2">
 				<ShoppingListDisplay shoppingList={data.list} aisleCategories={data.aisleCategories} />
 			</div>
 		</div>
