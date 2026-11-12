@@ -3,7 +3,6 @@
 	import { GripVerticalIcon, PencilIcon, PlusIcon, Trash2Icon } from '@lucide/svelte';
 	import { flip } from 'svelte/animate';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 
 	interface Props {
@@ -131,37 +130,52 @@
 	on one pointer path (mouse, touch and pen alike) with keyboard arrows on the
 	focused handle as an accessible, no-pointer fallback.
 -->
-<Card variant="outline" class="p-4">
-	<h2 class="text-fg font-semibold">Aisles</h2>
-	<p class="text-fg-muted mt-1 mb-3 text-sm">
-		Your <a href="/shopping" class="link">shopping list</a> groups under these headings, in this order.
-		Drag a handle to arrange them the way you walk the shop.
-	</p>
+<div class="flex h-full min-h-0 flex-col">
+	<div
+		class="border-border flex shrink-0 flex-wrap items-end justify-between gap-3 border-b px-4 py-3"
+	>
+		<div class="min-w-0">
+			<h2 class="text-fg text-sm font-semibold">Aisle order</h2>
+			<p class="text-fg-muted mt-0.5 text-xs">
+				Drag a handle, or use the arrow keys, to arrange them the way you walk the shop.
+			</p>
+		</div>
 
-	<form method="POST" action="?/addCategory" use:enhance class="mb-3 flex items-stretch gap-2">
-		<input
-			name="name"
-			class="field"
-			placeholder="Add an aisle, e.g. frozen"
-			aria-label="New aisle name"
-			required
-		/>
-		<Button type="submit" variant="outline" class="h-auto shrink-0">
-			<PlusIcon class="size-4" />
-			Add
-		</Button>
-	</form>
+		<form
+			method="POST"
+			action="?/addCategory"
+			use:enhance
+			class="flex w-full items-stretch gap-2 sm:w-auto"
+		>
+			<input
+				name="name"
+				class="field min-w-0 flex-1 sm:w-56 sm:flex-none"
+				placeholder="Add an aisle, e.g. frozen"
+				aria-label="New aisle name"
+				required
+			/>
+			<Button type="submit" variant="outline" class="h-auto shrink-0">
+				<PlusIcon class="size-4" />
+				Add
+			</Button>
+		</form>
+	</div>
 
 	{#if order.length === 0}
-		<p class="text-fg-subtle py-3 text-sm">No aisles yet — add your first one above.</p>
+		<p class="text-fg-subtle shrink-0 px-4 py-6 text-sm">
+			No aisles yet — add your first one above.
+		</p>
 	{/if}
 
-	<ol bind:this={listEl} class="divide-border divide-y">
+	<ol bind:this={listEl} class="divide-border min-h-0 flex-1 divide-y overflow-y-auto">
 		{#each order as name (name)}
 			<li
 				data-name={name}
 				animate:flip={{ duration: 180 }}
-				class="flex items-center gap-1 py-1.5 {drag?.name === name ? 'opacity-0' : ''}"
+				class="hover:bg-surface-muted/50 flex items-center gap-1 px-4 py-2 transition-colors {drag?.name ===
+				name
+					? 'opacity-0'
+					: ''}"
 			>
 				<button
 					type="button"
@@ -227,7 +241,7 @@
 	>
 		<input bind:this={orderInput} type="hidden" name="order" />
 	</form>
-</Card>
+</div>
 
 {#if drag}
 	<!-- A preview that follows the finger while the list reflows underneath. -->

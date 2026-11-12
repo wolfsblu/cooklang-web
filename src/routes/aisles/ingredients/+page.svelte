@@ -11,7 +11,6 @@
 	import AisleEntryTable from '$lib/components/aisles/AisleEntryTable.svelte';
 	import AisleGroupedList from '$lib/components/aisles/AisleGroupedList.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
 	const { data }: PageProps = $props();
@@ -61,112 +60,121 @@
 	}
 </script>
 
-{#if data.duplicates.length > 0}
-	<div class="mb-6">
-		<AisleDuplicateWarning duplicates={data.duplicates} />
-	</div>
-{/if}
-
-{#if data.categories.length === 0}
-	<Card variant="outline" class="px-4">
-		<EmptyState
-			icon={SignpostIcon}
-			title="No aisles yet"
-			description="Add an aisle such as fruit and veg, or dairy, to start grouping your shopping list."
-		>
-			{#snippet actions()}
-				<Button href="/aisles">Manage aisles</Button>
-			{/snippet}
-		</EmptyState>
-	</Card>
-{:else}
-	<div class="grid gap-6 lg:grid-cols-[15rem_1fr]">
-		<!-- min-w-0 so the aisle strip can scroll sideways instead of widening the
-		     page: a grid item defaults to min-width:auto. -->
-		<aside class="min-w-0 lg:sticky lg:top-20 lg:self-start">
-			<AisleCategoryList
-				categories={data.categories}
-				counts={data.counts}
-				total={data.total}
-				selected={category}
-			/>
-		</aside>
-
-		<div class="min-w-0">
-			{#if category === null}
-				<AisleGroupedList entries={data.entries} categories={data.categories} onedit={openEdit} />
-			{:else}
-				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-					<h2 class="text-fg text-lg font-semibold">
-						<span class="capitalize">{category}</span>
-						<span class="text-fg-subtle text-sm font-normal tabular-nums">
-							{visibleEntries.length}
-							{visibleEntries.length === 1 ? 'ingredient' : 'ingredients'}
-						</span>
-					</h2>
-
-					<Button size="sm" onclick={openAdd}>
-						<PlusIcon class="size-4" />
-						Add ingredient
-					</Button>
-				</div>
-
-				<Card variant="outline" class="px-4">
-					{#if visibleEntries.length > 0}
-						<AisleEntryTable
-							entries={visibleEntries}
-							showCategory={false}
-							onedit={openEdit}
-							selectable
-							{selected}
-							formId="aisle-bulk-edit"
-						/>
-					{:else}
-						<EmptyState
-							icon={SignpostIcon}
-							title="Nothing in {category} yet"
-							description="Add the ingredients you find in this aisle and they will be grouped here on your shopping list."
-						>
-							{#snippet actions()}
-								<Button variant="outline" onclick={openAdd}>
-									<PlusIcon class="size-4" />
-									Add ingredient
-								</Button>
-							{/snippet}
-						</EmptyState>
-					{/if}
-				</Card>
-
-				<AisleBulkBar
-					formId="aisle-bulk-edit"
-					action="?/bulkMove"
-					count={selected.size}
-					onclear={() => selected.clear()}
-					onsubmitted={() => selected.clear()}
-				>
-					{#snippet controls()}
-						<input type="hidden" name="from" value={category} />
-						{#if moveTargets.length > 0}
-							<select
-								name="category"
-								class="field w-auto capitalize"
-								aria-label="Move selected to aisle"
-							>
-								{#each moveTargets as name (name)}
-									<option value={name}>{name}</option>
-								{/each}
-							</select>
-							<Button type="submit" size="sm" variant="soft" formaction="?/bulkMove">Move</Button>
-						{/if}
-						<Button type="submit" size="sm" variant="dangerSoft" formaction="?/bulkRemove">
-							Remove
-						</Button>
-					{/snippet}
-				</AisleBulkBar>
-			{/if}
+<div class="flex h-full min-h-0 flex-col">
+	{#if data.duplicates.length > 0}
+		<div class="shrink-0">
+			<AisleDuplicateWarning duplicates={data.duplicates} />
 		</div>
-	</div>
-{/if}
+	{/if}
+
+	{#if data.categories.length === 0}
+		<div class="min-h-0 flex-1 overflow-y-auto">
+			<EmptyState
+				icon={SignpostIcon}
+				title="No aisles yet"
+				description="Add an aisle such as fruit and veg, or dairy, to start grouping your shopping list."
+			>
+				{#snippet actions()}
+					<Button href="/aisles">Manage aisles</Button>
+				{/snippet}
+			</EmptyState>
+		</div>
+	{:else}
+		<div class="grid min-h-0 flex-1 grid-rows-[auto_1fr] lg:grid-cols-[15rem_1fr] lg:grid-rows-1">
+			<!-- min-w-0 so the aisle strip can scroll sideways instead of widening the
+			     page: a grid item defaults to min-width:auto. Each pane owns its own
+			     scroll now, so the workbench itself never scrolls. -->
+			<aside
+				class="border-border bg-surface-muted/40 min-h-0 min-w-0 overflow-y-auto border-b lg:border-r lg:border-b-0"
+			>
+				<AisleCategoryList
+					categories={data.categories}
+					counts={data.counts}
+					total={data.total}
+					selected={category}
+				/>
+			</aside>
+
+			<div class="flex min-h-0 min-w-0 flex-col">
+				{#if category === null}
+					<AisleGroupedList entries={data.entries} categories={data.categories} onedit={openEdit} />
+				{:else}
+					<div
+						class="border-border flex shrink-0 flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5"
+					>
+						<h2 class="text-fg flex items-baseline gap-2 text-sm font-semibold">
+							<span class="capitalize">{category}</span>
+							<span class="text-fg-subtle text-xs font-normal tabular-nums">
+								{visibleEntries.length}
+								{visibleEntries.length === 1 ? 'ingredient' : 'ingredients'}
+							</span>
+						</h2>
+
+						<Button size="sm" onclick={openAdd}>
+							<PlusIcon class="size-4" />
+							Add ingredient
+						</Button>
+					</div>
+
+					<div class="min-h-0 flex-1 overflow-y-auto">
+						{#if visibleEntries.length > 0}
+							<div class="px-4">
+								<AisleEntryTable
+									entries={visibleEntries}
+									showCategory={false}
+									onedit={openEdit}
+									selectable
+									{selected}
+									formId="aisle-bulk-edit"
+								/>
+							</div>
+						{:else}
+							<EmptyState
+								icon={SignpostIcon}
+								title="Nothing in {category} yet"
+								description="Add the ingredients you find in this aisle and they will be grouped here on your shopping list."
+							>
+								{#snippet actions()}
+									<Button variant="outline" onclick={openAdd}>
+										<PlusIcon class="size-4" />
+										Add ingredient
+									</Button>
+								{/snippet}
+							</EmptyState>
+						{/if}
+					</div>
+
+					<AisleBulkBar
+						formId="aisle-bulk-edit"
+						action="?/bulkMove"
+						count={selected.size}
+						onclear={() => selected.clear()}
+						onsubmitted={() => selected.clear()}
+					>
+						{#snippet controls()}
+							<input type="hidden" name="from" value={category} />
+							{#if moveTargets.length > 0}
+								<select
+									name="category"
+									class="field w-auto capitalize"
+									aria-label="Move selected to aisle"
+								>
+									{#each moveTargets as name (name)}
+										<option value={name}>{name}</option>
+									{/each}
+								</select>
+								<Button type="submit" size="sm" variant="soft" formaction="?/bulkMove">Move</Button>
+							{/if}
+							<Button type="submit" size="sm" variant="dangerSoft" formaction="?/bulkRemove">
+								Remove
+							</Button>
+						{/snippet}
+					</AisleBulkBar>
+				{/if}
+			</div>
+		</div>
+	{/if}
+</div>
 
 <AisleEntryDialog
 	bind:open={entryDialogOpen}

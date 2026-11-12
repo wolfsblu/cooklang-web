@@ -2,7 +2,6 @@
 	import { enhance } from '$app/forms';
 	import { TriangleAlertIcon } from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
 
 	interface Props {
 		duplicates: { term: string; categories: string[] }[];
@@ -13,17 +12,16 @@
 
 <!--
 	The CLI reads this file leniently: it keeps whichever entry came first, warns
-	on stderr and carries on. Without this card the only symptom is an ingredient
+	on stderr and carries on. Without this strip the only symptom is an ingredient
 	stuck in an aisle you did not put it in, with nothing on the page to explain
 	why.
 -->
-<Card
-	variant="outline"
-	class="border-warn bg-warn-soft text-warn-soft-fg flex items-start gap-3 p-4"
+<div
+	class="border-warn/30 bg-warn-soft text-warn-soft-fg flex items-start gap-3 border-b px-4 py-3"
 >
 	<TriangleAlertIcon class="mt-0.5 size-5 shrink-0" />
 
-	<div class="min-w-0 flex-1">
+	<div class="max-w-4xl min-w-0 flex-1">
 		<p class="font-semibold">
 			{duplicates.length === 1 ? 'An ingredient is' : `${duplicates.length} ingredients are`} in more
 			than one aisle
@@ -50,4 +48,4 @@
 			{/each}
 		</ul>
 	</div>
-</Card>
+</div>

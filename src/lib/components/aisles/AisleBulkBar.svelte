@@ -43,8 +43,7 @@
 			await update();
 			onsubmitted?.();
 		}}
-	class="border-border bg-surface/90 sticky bottom-16 z-40 -mx-4 mt-4 border-t px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:bottom-0 {count >
-	0
+	class="border-border bg-surface shrink-0 border-t px-4 py-3 {count > 0
 		? 'flex flex-wrap items-center gap-2'
 		: 'hidden'}"
 	style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom))"

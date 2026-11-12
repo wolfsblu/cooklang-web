@@ -16,6 +16,10 @@
 	// The editor is a workspace, not a document: it owns the remaining viewport
 	// height so the code area and its bottom panel never make the page scroll.
 	const isEditor = $derived(page.url.pathname.startsWith('/recipes/edit/'));
+
+	// Aisles use the same fixed-height workspace treatment: their panes scroll
+	// internally while the tabs and status bar stay in place.
+	const isWorkspace = $derived(isEditor || page.url.pathname.startsWith('/aisles'));
 </script>
 
 <svelte:head>
@@ -27,13 +31,13 @@
 		{@render children()}
 	</main>
 {:else}
-	<div class="flex {isEditor ? 'h-dvh overflow-hidden' : 'min-h-dvh'}">
+	<div class="flex {isWorkspace ? 'h-dvh overflow-hidden' : 'min-h-dvh'}">
 		<SideRail shoppingCount={data.shoppingCount} />
 
-		<div class="grid min-w-0 flex-1 grid-rows-[auto_1fr_auto] {isEditor ? 'h-dvh min-h-0' : ''}">
+		<div class="grid min-w-0 flex-1 grid-rows-[auto_1fr_auto] {isWorkspace ? 'h-dvh min-h-0' : ''}">
 			<AppHeader />
 
-			<main class="min-w-0 {isEditor ? 'min-h-0 overflow-hidden' : ''}">
+			<main class="min-w-0 {isWorkspace ? 'min-h-0 overflow-hidden' : ''}">
 				{@render children()}
 			</main>
 

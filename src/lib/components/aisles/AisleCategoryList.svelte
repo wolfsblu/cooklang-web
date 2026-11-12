@@ -30,9 +30,7 @@
 <nav aria-label="Aisles" class="min-w-0">
 	<!-- Below `lg` a sideways-scrolling strip of chips, so a long aisle list
 	     never pushes the page wider than the viewport. -->
-	<ul
-		class="no-scrollbar flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-x-visible lg:pb-0"
-	>
+	<ul class="no-scrollbar flex gap-1 overflow-x-auto p-2 lg:flex-col lg:overflow-x-visible">
 		<li class="shrink-0">
 			<a
 				href={href(null)}
