@@ -297,7 +297,7 @@
 			column left empty. Columns rather than a grid so tiles of different
 			heights pack without ragged gaps.
 		-->
-		<div class="min-h-0 flex-1 overflow-y-auto">
+		<div class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
 			<div class="@container flex min-h-full flex-col">
 				<div
 					class="flex-1 columns-1 [column-gap:0] [column-rule:1px_solid_var(--color-border)] @2xl:columns-2 @5xl:columns-3 @7xl:columns-4 @min-[100rem]:columns-5"

@@ -168,6 +168,10 @@
 							{#if stepImages[ordinal]}
 								{@const stepImage = stepImages[ordinal]}
 								{#if stepImage}
+									<!-- `w-auto h-auto` override the reserved width/height attributes.
+								     With only max-width/max-height, the attribute on the other axis
+								     stays fixed and the photo is squashed to fit. Both axes auto lets
+								     the browser keep the real aspect ratio while the caps apply. -->
 									<img
 										src={stepImage.src}
 										srcset={stepImage.srcset}
@@ -176,7 +180,7 @@
 										loading="lazy"
 										decoding="async"
 										alt="Step {ordinal}"
-										class="mt-3 max-h-72 max-w-full rounded-lg"
+										class="mt-3 h-auto max-h-72 w-auto max-w-full rounded-lg"
 									/>
 								{/if}
 							{/if}

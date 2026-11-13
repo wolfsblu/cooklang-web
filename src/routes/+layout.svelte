@@ -43,10 +43,18 @@
 		{@render children()}
 	</main>
 {:else}
-	<div class="flex {isWorkspace ? 'h-dvh overflow-hidden' : 'min-h-dvh'}">
+	<!--
+		Workspaces are pinned to the viewport instead of being a `h-dvh` box in
+		the document. A `dvh` box still leaves the document itself scrollable:
+		when a phone's URL bar collapses, the viewport grows, and scrolling an
+		inner pane past its end hands the gesture to the page, which then shows
+		blank canvas below the workbench. A fixed shell has no document height
+		to scroll, so only the inner panes move.
+	-->
+	<div class="flex {isWorkspace ? 'fixed inset-0 overflow-hidden' : 'min-h-dvh'}">
 		<SideRail shoppingCount={data.shoppingCount} />
 
-		<div class="grid min-w-0 flex-1 grid-rows-[auto_1fr_auto] {isWorkspace ? 'h-dvh min-h-0' : ''}">
+		<div class="grid min-w-0 flex-1 grid-rows-[auto_1fr_auto] {isWorkspace ? 'min-h-0' : ''}">
 			<AppHeader />
 
 			<main class="min-w-0 {isWorkspace ? 'min-h-0 overflow-hidden' : ''}">
