@@ -24,9 +24,25 @@
 	};
 
 	let { open = $bindable(), title, side = 'left', children, footer }: Props = $props();
+
+	// The dialog has no Bits trigger of its own, so remember what was focused
+	// when it opened and put focus back there once the close animation ends.
+	let returnFocus: HTMLElement | null = null;
+
+	$effect(() => {
+		if (!open) return;
+		returnFocus = document.activeElement as HTMLElement | null;
+	});
+
+	function onOpenChangeComplete(value: boolean) {
+		if (value) return;
+
+		returnFocus?.focus();
+		returnFocus = null;
+	}
 </script>
 
-<Dialog.Root bind:open>
+<Dialog.Root bind:open {onOpenChangeComplete}>
 	<Dialog.Portal>
 		<Dialog.Overlay class="bg-overlay anim-fade fixed inset-0 z-40" />
 

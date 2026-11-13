@@ -17,12 +17,16 @@
 	// height so the code area and its bottom panel never make the page scroll.
 	const isEditor = $derived(page.url.pathname.startsWith('/recipes/edit/'));
 
-	// Aisles, the pantry, the shopping list and a recipe's detail page use the
-	// same fixed-height workspace treatment: their panes scroll internally
-	// while the tabs, toolbar strips and status bar stay in place. Cook mode is
-	// handled above and keeps its own full-bleed document layout.
+	// The recipe list joins the aisles, pantry, shopping list and recipe detail
+	// pages in using the same fixed-height workspace treatment: its panes
+	// scroll internally while the title bar, toolbars and status bar stay in
+	// place. Cook mode is handled above and keeps its own full-bleed document
+	// layout.
+	const isRecipeList = $derived(page.url.pathname === '/');
+
 	const isWorkspace = $derived(
 		isEditor ||
+			isRecipeList ||
 			page.url.pathname.startsWith('/aisles') ||
 			page.url.pathname.startsWith('/pantry') ||
 			page.url.pathname.startsWith('/shopping') ||

@@ -14,6 +14,8 @@
 		label: string;
 		/** Chips shown before collapsing the rest into a count. */
 		maxVisible?: number;
+		/** Called whenever the selection changes, including from the chips. */
+		onchange?: (selected: string[]) => void;
 	};
 
 	let {
@@ -21,7 +23,8 @@
 		options,
 		placeholder = 'Search…',
 		label,
-		maxVisible = 5
+		maxVisible = 5,
+		onchange
 	}: Props = $props();
 
 	let search = $state('');
@@ -42,6 +45,7 @@
 	<Combobox.Root
 		type="multiple"
 		bind:value={selected}
+		onValueChange={onchange}
 		onOpenChange={(open) => {
 			if (!open) search = '';
 		}}
