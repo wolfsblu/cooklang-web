@@ -4,6 +4,7 @@
 	import InlineIngredient from './inline/InlineIngredient.svelte';
 	import InlineCookware from './inline/InlineCookware.svelte';
 	import InlineTimer from './inline/InlineTimer.svelte';
+	import StepImage from './StepImage.svelte';
 
 	interface Props {
 		sections: SectionDisplay[];
@@ -168,20 +169,7 @@
 							{#if stepImages[ordinal]}
 								{@const stepImage = stepImages[ordinal]}
 								{#if stepImage}
-									<!-- `w-auto h-auto` override the reserved width/height attributes.
-								     With only max-width/max-height, the attribute on the other axis
-								     stays fixed and the photo is squashed to fit. Both axes auto lets
-								     the browser keep the real aspect ratio while the caps apply. -->
-									<img
-										src={stepImage.src}
-										srcset={stepImage.srcset}
-										width={stepImage.width}
-										height={stepImage.height}
-										loading="lazy"
-										decoding="async"
-										alt="Step {ordinal}"
-										class="mt-3 h-auto max-h-72 w-auto max-w-full rounded-lg"
-									/>
+									<StepImage image={stepImage} {ordinal} />
 								{/if}
 							{/if}
 						</div>
