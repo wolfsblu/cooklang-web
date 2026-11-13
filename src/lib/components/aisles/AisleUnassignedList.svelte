@@ -393,9 +393,11 @@
 								</span>
 
 								<span class="min-w-0 flex-1">
-									<span class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
-										<span class="text-fg font-medium break-words capitalize">{item.name}</span>
-										<span class="text-fg-subtle text-xs tabular-nums">
+									<span class="flex items-baseline justify-between gap-2">
+										<span class="text-fg min-w-0 font-medium break-words capitalize">
+											{item.name}
+										</span>
+										<span class="text-fg-subtle shrink-0 text-xs whitespace-nowrap tabular-nums">
 											{item.recipeCount}
 											{item.recipeCount === 1 ? 'recipe' : 'recipes'}
 										</span>
