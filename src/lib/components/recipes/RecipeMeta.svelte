@@ -88,7 +88,7 @@
 </script>
 
 {#snippet values()}
-	<dl class="divide-border divide-y px-4 py-3 text-sm">
+	<dl class="divide-border divide-y py-3 text-sm [&>div]:px-4">
 		<ServingsControl {baseServings} {scale} {onscale} />
 
 		{#each times as row (row.label)}
