@@ -89,7 +89,7 @@
 
 {#snippet values()}
 	<dl
-		class="divide-border divide-y text-sm [&>div]:px-4 [&>div:first-child]:pt-3 [&>div:last-child]:pt-3 [&>div:last-child]:pb-3"
+		class="divide-border divide-y text-sm [&>div]:px-4 [&>div:first-child]:py-3 [&>div:last-child]:py-3"
 	>
 		<ServingsControl {baseServings} {scale} {onscale} />
 
