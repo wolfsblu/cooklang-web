@@ -88,11 +88,13 @@
 </script>
 
 {#snippet values()}
-	<dl class="divide-border divide-y py-3 text-sm [&>div]:px-4">
+	<dl
+		class="divide-border divide-y text-sm [&>div]:px-4 [&>div:first-child]:pt-3 [&>div:last-child]:pt-3 [&>div:last-child]:pb-3"
+	>
 		<ServingsControl {baseServings} {scale} {onscale} />
 
 		{#each times as row (row.label)}
-			<div class="flex items-center justify-between gap-3 py-1.5 first:pt-0">
+			<div class="flex items-center justify-between gap-3 py-1.5">
 				<dt class="text-fg-muted flex items-center gap-2">
 					<row.icon class="size-4 shrink-0" />
 					{row.label}
@@ -102,7 +104,7 @@
 		{/each}
 
 		{#if recipe.course}
-			<div class="flex items-center justify-between gap-3 py-1.5 first:pt-0">
+			<div class="flex items-center justify-between gap-3 py-1.5">
 				<dt class="text-fg-muted flex items-center gap-2">
 					<SoupIcon class="size-4 shrink-0" />
 					Course
@@ -112,7 +114,7 @@
 		{/if}
 
 		{#if recipe.author?.name}
-			<div class="flex items-center justify-between gap-3 py-1.5 first:pt-0">
+			<div class="flex items-center justify-between gap-3 py-1.5">
 				<dt class="text-fg-muted flex items-center gap-2">
 					<UserIcon class="size-4 shrink-0" />
 					Author
@@ -130,7 +132,7 @@
 		{/if}
 
 		{#if sourceLabel}
-			<div class="flex items-center justify-between gap-3 py-1.5 first:pt-0">
+			<div class="flex items-center justify-between gap-3 py-1.5">
 				<dt class="text-fg-muted flex items-center gap-2">
 					<ExternalLinkIcon class="size-4 shrink-0" />
 					Source
@@ -148,7 +150,7 @@
 		{/if}
 
 		{#if showTags && recipe.tags.length > 0}
-			<div class="pt-3 pb-0">
+			<div class="py-1.5">
 				<dt class="sr-only">Tags</dt>
 				<dd class="flex min-w-0 flex-wrap gap-1">
 					{#each recipe.tags as tag (tag)}

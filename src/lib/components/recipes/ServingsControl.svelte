@@ -61,7 +61,7 @@
 	}
 </script>
 
-<div class="flex items-center justify-between gap-3 py-1.5 first:pt-0">
+<div class="flex items-center justify-between gap-3 py-1.5">
 	<label for={uid} class="text-fg-muted flex items-center gap-2">
 		<UsersIcon class="size-4 shrink-0" />
 		{baseServings ? 'Serves' : 'Scale'}
