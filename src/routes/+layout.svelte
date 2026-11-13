@@ -27,6 +27,7 @@
 	const isWorkspace = $derived(
 		isEditor ||
 			isRecipeList ||
+			page.url.pathname.startsWith('/search') ||
 			page.url.pathname.startsWith('/aisles') ||
 			page.url.pathname.startsWith('/pantry') ||
 			page.url.pathname.startsWith('/shopping') ||
