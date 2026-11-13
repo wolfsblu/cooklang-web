@@ -3,16 +3,18 @@
 		ClockIcon,
 		ExternalLinkIcon,
 		FlameIcon,
+		InfoIcon,
 		SoupIcon,
+		TagIcon,
 		TimerIcon,
 		UserIcon
 	} from '@lucide/svelte';
 	import type { RecipeDisplay } from '$lib/types/recipe';
-	import Card from '$lib/components/ui/Card.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
 	import ServingsControl from './ServingsControl.svelte';
 
 	/**
-	 * The recipe's frontmatter, as a labelled box.
+	 * The recipe's frontmatter, as one pane of the workbench sidebar.
 	 *
 	 * This used to be a single line of muted text under the title, where the
 	 * values ran together and it was not obvious which number was which.
@@ -23,9 +25,16 @@
 		baseServings: number | null;
 		scale: number;
 		onscale: (newScale: number) => void;
+		/**
+		 * Cook mode already shows the tags in RecipeHeader, so it asks for the
+		 * pane without them rather than repeating the row.
+		 */
+		showTags?: boolean;
+		/** When false, the tab strip already names the pane; omit its heading. */
+		header?: boolean;
 	}
 
-	const { recipe, baseServings, scale, onscale }: Props = $props();
+	const { recipe, baseServings, scale, onscale, showTags = true, header = true }: Props = $props();
 
 	function minutes(value: number): string {
 		if (value < 60) return `${value} min`;
@@ -78,14 +87,12 @@
 	});
 
 	// No `hasAnything` guard: the servings control is always worth showing, so the
-	// box always has content. Dropping the guard is also what keeps scaling
+	// pane always has content. Dropping the guard is also what keeps scaling
 	// reachable on a recipe whose frontmatter says nothing at all.
 </script>
 
-<Card variant="outline" class="p-4">
-	<h2 class="text-fg mb-3 text-lg font-semibold">Details</h2>
-
-	<dl class="divide-border divide-y text-sm">
+{#snippet values()}
+	<dl class="divide-border divide-y px-4 pb-3 text-sm">
 		<ServingsControl {baseServings} {scale} {onscale} />
 
 		{#each times as row (row.label)}
@@ -143,5 +150,33 @@
 				</dd>
 			</div>
 		{/if}
+
+		{#if showTags && recipe.tags.length > 0}
+			<div class="flex items-start justify-between gap-3 py-1.5">
+				<dt class="text-fg-muted flex items-center gap-2">
+					<TagIcon class="size-4 shrink-0" />
+					Tags
+				</dt>
+				<dd class="flex min-w-0 flex-wrap justify-end gap-1">
+					{#each recipe.tags as tag (tag)}
+						<Badge>{tag}</Badge>
+					{/each}
+				</dd>
+			</div>
+		{/if}
 	</dl>
-</Card>
+{/snippet}
+
+{#if header}
+	<section class="border-border border-b last:border-b-0">
+		<h2 class="text-fg flex items-center gap-2 px-4 py-2 text-sm font-semibold">
+			<InfoIcon class="text-fg-subtle size-4 shrink-0" />
+			Details
+		</h2>
+		{@render values()}
+	</section>
+{:else}
+	<div class="pt-1">
+		{@render values()}
+	</div>
+{/if}

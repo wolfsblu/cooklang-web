@@ -16,6 +16,7 @@
 	scale={data.scale}
 	baseServings={data.baseServings}
 	slug={data.slug}
+	relPath={data.relPath}
 	inShoppingList={data.inShoppingList}
 	listedScale={data.listedScale}
 />

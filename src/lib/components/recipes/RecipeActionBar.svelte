@@ -2,16 +2,15 @@
 	import { CookingPotIcon, PencilIcon } from '@lucide/svelte';
 	import AddToShoppingListButton from '$lib/components/shopping/AddToShoppingListButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
 
 	/**
-	 * What you can do with the recipe, as one bar on the tag row.
+	 * What you can do with the recipe, as a flat icon toolbar in the title bar.
 	 *
-	 * These were a loose row of buttons before, and briefly a speed-dial FAB,
-	 * which hid the shopping action behind a hover the pointer kept losing.
-	 * Grouping them in a bordered strip says they belong together and keeps both
-	 * a single click away. Servings is not here: it is a property of the recipe
-	 * rather than an action, and it reads better in the Details box beside the
-	 * ingredients it rescales.
+	 * Every action is an icon button with a tooltip, separated from the primary
+	 * action by a hairline rule. This used to be a bordered strip of full-size
+	 * labelled buttons, which read as a segmented control and took enough
+	 * width to truncate the recipe title on a tablet or a phone.
 	 */
 	interface Props {
 		slug: string;
@@ -24,31 +23,23 @@
 	const { slug, scale, inShoppingList, listedScale, onstartcooking }: Props = $props();
 </script>
 
-<!--
-	Padded rather than flush segments: the buttons keep their own radius, so the
-	focus ring is never clipped by the strip's rounded corners. `inline-flex` so
-	the bar is the width of what it holds instead of a mostly-empty rule across
-	the page, and `overflow-x-auto` as the safety valve on a narrow phone.
--->
-<div
-	class="border-border bg-surface no-scrollbar inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-lg border p-1"
->
-	<AddToShoppingListButton
-		{slug}
-		{scale}
-		inList={inShoppingList}
-		{listedScale}
-		compact
-		class="h-9 shrink-0"
-	/>
+<div class="flex shrink-0 items-center gap-0.5" role="toolbar" aria-label="Recipe actions">
+	<AddToShoppingListButton {slug} {scale} inList={inShoppingList} {listedScale} toolbar />
 
-	<Button class="h-9 shrink-0" href="/recipes/edit/{slug}" variant="ghost">
+	<Button
+		href="/recipes/edit/{slug}"
+		variant="toolbar"
+		size="sm"
+		class="size-8 shrink-0 p-0"
+		aria-label="Edit recipe"
+		title="Edit recipe"
+	>
 		<PencilIcon class="size-4" />
-		Edit
 	</Button>
 
-	<Button class="h-9 shrink-0" onclick={onstartcooking}>
+	<span class="bg-border mx-1 h-5 w-px shrink-0" aria-hidden="true"></span>
+
+	<IconButton label="Start cooking" variant="primary" size="sm" onclick={onstartcooking}>
 		<CookingPotIcon class="size-4" />
-		Start cooking
-	</Button>
+	</IconButton>
 </div>

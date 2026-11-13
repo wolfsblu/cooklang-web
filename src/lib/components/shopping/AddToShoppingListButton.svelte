@@ -3,7 +3,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { CheckIcon, ShoppingCartIcon, XIcon } from '@lucide/svelte';
 	import { formatScale } from '$lib/utils/scale';
-	import Button from '$lib/components/ui/Button.svelte';
+	import Button, { type ButtonVariant } from '$lib/components/ui/Button.svelte';
 
 	/**
 	 * Add, update or remove the current recipe.
@@ -24,16 +24,28 @@
 		class?: string;
 		/** Drops the label below `sm`, so the action bar fits a narrow phone. */
 		compact?: boolean;
+		/** Renders as an icon-only button in a flat toolbar. */
+		toolbar?: boolean;
 	}
 
-	const { slug, scale, inList, listedScale, class: className, compact = false }: Props = $props();
+	const {
+		slug,
+		scale,
+		inList,
+		listedScale,
+		class: className,
+		compact = false,
+		toolbar = false
+	}: Props = $props();
 
 	const scaleDiffers = $derived(inList && listedScale !== null && listedScale !== scale);
 
+	const state = $derived(inList && !scaleDiffers ? 'remove' : scaleDiffers ? 'update' : 'add');
+
 	const label = $derived(
-		inList && !scaleDiffers
+		state === 'remove'
 			? 'Remove from list'
-			: scaleDiffers
+			: state === 'update'
 				? `Update to ${formatScale(scale)}×`
 				: 'Add to list'
 	);
@@ -41,6 +53,30 @@
 	// The label is the accessible name whether or not it is on screen, so the
 	// compact button is not an unlabelled icon.
 	const labelClass = $derived(compact ? 'hidden sm:inline' : '');
+
+	const Icon = $derived(
+		state === 'remove' ? XIcon : state === 'update' ? CheckIcon : ShoppingCartIcon
+	);
+
+	const variant: ButtonVariant = $derived(
+		toolbar ? 'toolbar' : state === 'remove' ? 'dangerSoft' : 'soft'
+	);
+
+	// Removing is destructive even as an icon, and updating a listed recipe is
+	// a change worth noticing; both keep their tone in toolbar form.
+	const tone = $derived(
+		!toolbar
+			? ''
+			: state === 'remove'
+				? 'text-danger-soft-fg hover:bg-danger-soft'
+				: state === 'update'
+					? 'text-warn-soft-fg hover:bg-warn-soft'
+					: ''
+	);
+
+	const classes = $derived(
+		[toolbar ? 'size-8 shrink-0 p-0' : '', tone, className ?? ''].filter(Boolean).join(' ')
+	);
 
 	const submit =
 		() =>
@@ -51,28 +87,20 @@
 		};
 </script>
 
-{#if inList && !scaleDiffers}
-	<form method="POST" action="/shopping?/remove" use:enhance={submit}>
-		<input type="hidden" name="slug" value={slug} />
-		<Button type="submit" variant="dangerSoft" class={className} aria-label={label}>
-			<XIcon class="size-4" />
-			<span class={labelClass}>{label}</span>
-		</Button>
-	</form>
-{:else}
-	<form method="POST" action="/shopping?/add" use:enhance={submit}>
-		<input type="hidden" name="slug" value={slug} />
+<form
+	method="POST"
+	action={state === 'remove' ? '/shopping?/remove' : '/shopping?/add'}
+	use:enhance={submit}
+>
+	<input type="hidden" name="slug" value={slug} />
+	{#if state !== 'remove'}
 		<input type="hidden" name="scale" value={scale} />
-		<!-- Soft even in the update state: "Start cooking" is the page's primary
-		     action, and two filled buttons side by side compete rather than
-		     guide. The changed label and icon carry the signal. -->
-		<Button type="submit" variant="soft" class={className} aria-label={label}>
-			{#if scaleDiffers}
-				<CheckIcon class="size-4" />
-			{:else}
-				<ShoppingCartIcon class="size-4" />
-			{/if}
+	{/if}
+
+	<Button type="submit" {variant} class={classes} aria-label={label} title={label}>
+		<Icon class="size-4" />
+		{#if !toolbar}
 			<span class={labelClass}>{label}</span>
-		</Button>
-	</form>
-{/if}
+		{/if}
+	</Button>
+</form>

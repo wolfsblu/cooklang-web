@@ -1,14 +1,26 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import {
+		ArrowLeftIcon,
+		CarrotIcon,
+		ChevronDownIcon,
+		ChevronUpIcon,
+		CookingPotIcon,
+		InfoIcon,
+		ListOrderedIcon
+	} from '@lucide/svelte';
 	import type { ImageRef, RecipeDisplay, StepDisplay, ActiveTimer } from '$lib/types/recipe';
 	import { parseTimerQuantity } from '$lib/utils/timer';
+	import { formatScale } from '$lib/utils/scale';
 	import { playAlertSound } from '$lib/utils/audio';
+	import Page from '$lib/components/ui/Page.svelte';
 	import RecipeHeader from './RecipeHeader.svelte';
 	import RecipeMeta from './RecipeMeta.svelte';
 	import RecipeIngredients from './RecipeIngredients.svelte';
 	import RecipeCookware from './RecipeCookware.svelte';
 	import RecipeSteps from './RecipeSteps.svelte';
+	import RecipeImageStrip from './RecipeImageStrip.svelte';
 	import RecipeActionBar from './RecipeActionBar.svelte';
 	import CookControlBar from './cook/CookControlBar.svelte';
 	import ActiveTimersPanel from './cook/ActiveTimersPanel.svelte';
@@ -19,6 +31,8 @@
 		/** Unscaled, from the index -- `recipe.servings` has the scale applied. */
 		baseServings: number | null;
 		slug: string;
+		/** The recipe's path within the recipe directory, shown in the title bar. */
+		relPath?: string;
 		image?: ImageRef | null;
 		stepImages?: Record<string, ImageRef | null>;
 		inShoppingList?: boolean;
@@ -30,6 +44,7 @@
 		scale,
 		baseServings,
 		slug,
+		relPath = '',
 		image = null,
 		stepImages = {},
 		inShoppingList = false,
@@ -38,6 +53,96 @@
 
 	// URL-derived state
 	const cookMode = $derived(page.url.searchParams.has('cook'));
+
+	// The sidebar is a permanent pane from `lg`; below that it is a collapsed
+	// panel, so the instructions keep the viewport rather than following a long
+	// ingredient list.
+	let detailsOpen = $state(false);
+	let imgError = $state(false);
+	const showImage = $derived(image !== null && !imgError);
+
+	type PanelTab = 'details' | 'ingredients' | 'cookware';
+	let panelTab = $state<PanelTab>('details');
+
+	// Below `lg` the panel shows one of these at a time instead of stacking
+	// everything, so a long ingredient list does not sit between the tabs and
+	// the cookware. Empty panes are left out entirely.
+	const panelTabs = $derived([
+		{ id: 'details' as const, label: 'Details', icon: InfoIcon, count: null as number | null },
+		...(recipe.ingredients.length > 0
+			? [
+					{
+						id: 'ingredients' as const,
+						label: 'Ingredients',
+						icon: CarrotIcon,
+						count: recipe.ingredients.length
+					}
+				]
+			: []),
+		...(recipe.cookware.length > 0
+			? [
+					{
+						id: 'cookware' as const,
+						label: 'Cookware',
+						icon: CookingPotIcon,
+						count: recipe.cookware.length
+					}
+				]
+			: [])
+	]);
+
+	$effect(() => {
+		if (!panelTabs.some((tab) => tab.id === panelTab)) panelTab = 'details';
+	});
+
+	function onTabKeydown(event: KeyboardEvent, index: number) {
+		if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+		event.preventDefault();
+
+		const step = event.key === 'ArrowRight' ? 1 : -1;
+		const next = (index + step + panelTabs.length) % panelTabs.length;
+		panelTab = panelTabs[next].id;
+		detailsOpen = true;
+
+		const tabs = (
+			event.currentTarget as HTMLElement
+		).parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+		tabs?.[next]?.focus();
+	}
+
+	/** A tab opens its pane; tapping the active tab again closes the panel. */
+	function selectPanelTab(tab: PanelTab) {
+		if (panelTab === tab && detailsOpen) {
+			detailsOpen = false;
+			return;
+		}
+
+		panelTab = tab;
+		detailsOpen = true;
+	}
+
+	const servingsSummary = $derived.by(() => {
+		const servings = recipe.servings;
+		if (servings === undefined || servings === null || servings === '') return null;
+		return `${servings} ${servings === 1 || servings === '1' ? 'serving' : 'servings'}`;
+	});
+
+	function minutes(value: number): string {
+		if (value < 60) return `${value} min`;
+
+		const hours = Math.floor(value / 60);
+		const rest = value % 60;
+		return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+	}
+
+	const timeSummary = $derived.by(() => {
+		const time = recipe.time;
+		if (!time) return null;
+		if (typeof time === 'number') return time > 0 ? minutes(time) : null;
+
+		const total = (time.prep_time ?? 0) + (time.cook_time ?? 0);
+		return total > 0 ? minutes(total) : null;
+	});
 
 	// Get step from URL or default to 1
 	function getStepFromURL(): number {
@@ -238,50 +343,323 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<!-- Rendered by the header, which puts it on the tag row. Cook mode passes no
-     actions at all: the control bar there carries Finish. -->
+<!-- Rendered in the workspace title bar. Cook mode has no action bar at all: its
+     fixed control bar carries the only actions needed while cooking. -->
 {#snippet actionBar()}
 	<RecipeActionBar {slug} {scale} {inShoppingList} {listedScale} onstartcooking={toggleCookMode} />
 {/snippet}
 
-<article class="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6 {cookMode ? 'pb-28' : ''}">
-	<RecipeHeader {recipe} {image} actions={cookMode ? undefined : actionBar} />
+{#snippet recipePanes(tags: boolean)}
+	<RecipeMeta {recipe} {baseServings} {scale} onscale={handleScale} showTags={tags} />
+	<RecipeIngredients
+		ingredients={recipe.ingredients}
+		hoveredIndex={hoveredIngredientIndex}
+		activeIndices={currentStepIngredientIndices}
+		onhover={(i) => (hoveredIngredientIndex = i)}
+	/>
+	<RecipeCookware
+		cookware={recipe.cookware}
+		hoveredIndex={hoveredCookwareIndex}
+		activeIndices={currentStepCookwareIndices}
+		onhover={(i) => (hoveredCookwareIndex = i)}
+	/>
+{/snippet}
 
-	<div class="grid gap-6 lg:grid-cols-[300px_1fr]">
-		<aside class="space-y-4 lg:sticky lg:top-20 lg:self-start">
-			<RecipeMeta {recipe} {baseServings} {scale} onscale={handleScale} />
-			<RecipeIngredients
-				ingredients={recipe.ingredients}
-				hoveredIndex={hoveredIngredientIndex}
-				activeIndices={currentStepIngredientIndices}
-				onhover={(i) => (hoveredIngredientIndex = i)}
-			/>
-			<RecipeCookware
-				cookware={recipe.cookware}
-				hoveredIndex={hoveredCookwareIndex}
-				activeIndices={currentStepCookwareIndices}
-				onhover={(i) => (hoveredCookwareIndex = i)}
-			/>
-		</aside>
+{#snippet steps()}
+	<RecipeSteps
+		sections={recipe.sections}
+		{stepImages}
+		{cookMode}
+		{currentStep}
+		{hoveredIngredientIndex}
+		{hoveredCookwareIndex}
+		activeIngredientIndices={currentStepIngredientIndices}
+		activeCookwareIndices={currentStepCookwareIndices}
+		{activeTimerIndices}
+		onhoverIngredient={(i) => (hoveredIngredientIndex = i)}
+		onhoverCookware={(i) => (hoveredCookwareIndex = i)}
+		onstartTimer={startTimer}
+	/>
+{/snippet}
 
-		<main>
-			<RecipeSteps
-				sections={recipe.sections}
-				{stepImages}
-				{cookMode}
-				{currentStep}
-				{hoveredIngredientIndex}
-				{hoveredCookwareIndex}
-				activeIngredientIndices={currentStepIngredientIndices}
-				activeCookwareIndices={currentStepCookwareIndices}
-				{activeTimerIndices}
-				onhoverIngredient={(i) => (hoveredIngredientIndex = i)}
-				onhoverCookware={(i) => (hoveredCookwareIndex = i)}
-				onstartTimer={startTimer}
-			/>
-		</main>
-	</div>
-</article>
+{#if cookMode}
+	<!-- Cook mode stays a document rather than a workbench: it is full-bleed
+	     with no rail or tabs, and nothing should be pinned around a step. -->
+	<article class="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 pb-28 sm:px-6">
+		<RecipeHeader {recipe} {image} />
+
+		<div class="grid gap-6 lg:grid-cols-[300px_1fr]">
+			<aside class="space-y-4 lg:sticky lg:top-20 lg:self-start">
+				{@render recipePanes(false)}
+			</aside>
+
+			<main>
+				{@render steps()}
+			</main>
+		</div>
+	</article>
+{:else}
+	<!--
+		The recipe as a workbench, matching the aisles, pantry, shopping list and
+		editor: a title bar, a details/ingredients sidebar and an instructions
+		pane share one frame with hairline dividers, and a status bar closes the
+		bottom edge. Only the sidebar and the instructions scroll.
+	-->
+	<Page full flush class="flex h-full min-h-0 flex-col">
+		<div
+			class="border-border bg-surface flex min-h-0 flex-1 flex-col overflow-hidden border border-t-0 md:border-l-0"
+		>
+			<!--
+				On mobile the whole workbench scrolls as one column, so the cover
+				image can move out of the way. The title bar sticks to the top.
+			-->
+			<div class="min-h-0 flex-1 overflow-y-auto lg:flex lg:flex-col lg:overflow-hidden">
+				<!--
+					The hero image moves out of the collapsed ingredients panel on
+					phones and tablets. Above the title bar it reads as the recipe's
+					cover; more than one scrolls sideways, never down the page.
+				-->
+				<RecipeImageStrip images={image ? [image] : []} title={recipe.title ?? 'Recipe'} />
+
+				<header
+					class="border-border bg-surface sticky top-0 z-20 flex shrink-0 flex-wrap items-center border-b md:gap-x-3 md:px-4 md:py-2 lg:static"
+				>
+					<div class="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 md:px-0 md:py-0">
+						<a
+							href="/"
+							class="text-fg-muted hover:text-fg inline-flex shrink-0 items-center gap-1 text-sm font-medium transition-colors duration-150"
+						>
+							<ArrowLeftIcon class="size-4" />
+							<span class="hidden sm:inline">Recipes</span>
+							<span class="sr-only sm:hidden">Back to recipes</span>
+						</a>
+
+						<span class="bg-border hidden h-5 w-px sm:block" aria-hidden="true"></span>
+
+						<div class="min-w-0 flex-1">
+							<h1
+								class="text-fg truncate text-base font-semibold"
+								title={recipe.title ?? 'Untitled Recipe'}
+							>
+								{recipe.title ?? 'Untitled Recipe'}
+							</h1>
+							{#if relPath}
+								<p class="text-fg-subtle truncate text-xs" title={relPath}>{relPath}</p>
+							{/if}
+						</div>
+					</div>
+
+					<!--
+					A toolbar strip of its own on phones and tablets, where sharing a
+					row with the title left no room for either. It sits inline at the
+					right of the title bar from `md` up.
+				-->
+					<div
+						class="border-border bg-surface-muted/30 flex w-full min-w-0 items-center justify-end border-t px-3 py-1.5 md:ml-auto md:w-auto md:shrink-0 md:border-t-0 md:bg-transparent md:px-0 md:py-0"
+					>
+						{@render actionBar()}
+					</div>
+				</header>
+
+				<div
+					class="grid min-h-0 flex-1 grid-rows-[auto_auto] lg:grid-cols-[21rem_minmax(0,1fr)] lg:grid-rows-1"
+				>
+					<!-- The sidebar is the permanent pane from `lg`. Below that it collapses
+				     to its tab bar, the way the shopping list's recipe pane does, so a
+				     long ingredient list never stands between you and the first step. -->
+					<aside
+						class="border-border bg-surface-muted/40 order-1 min-h-0 overflow-hidden border-b lg:h-auto lg:border-r lg:border-b-0"
+					>
+						<div class="flex h-full min-h-0 flex-col">
+							<!--
+							The tab strip replaces the old "Ingredients & details" bar. It
+							mirrors the preview bar in the recipe editor: tabs choose the
+							pane, and the active tab, the chevron or the empty strip all
+							collapse it.
+						-->
+							<div
+								class="border-border bg-surface-muted/40 hover:bg-surface-muted/70 relative flex items-center gap-1 px-1 transition-colors duration-100 lg:hidden"
+							>
+								<button
+									type="button"
+									tabindex="-1"
+									aria-hidden="true"
+									class="absolute inset-0 z-0 cursor-pointer"
+									onclick={() => (detailsOpen = !detailsOpen)}
+								></button>
+
+								<div
+									class="no-scrollbar relative z-10 flex min-w-0 items-center gap-0.5 overflow-x-auto"
+									role="tablist"
+									aria-label="Recipe details"
+								>
+									{#each panelTabs as tab, index (tab.id)}
+										<button
+											type="button"
+											role="tab"
+											id="recipe-tab-{tab.id}"
+											aria-selected={panelTab === tab.id}
+											aria-controls="recipe-panel"
+											tabindex={panelTab === tab.id ? 0 : -1}
+											class="flex shrink-0 items-center gap-1.5 border-b-2 px-2 py-2 text-xs font-medium transition-colors duration-100 {panelTab ===
+											tab.id
+												? 'border-accent text-fg'
+												: 'text-fg-muted hover:text-fg border-transparent'}"
+											onclick={() => selectPanelTab(tab.id)}
+											onkeydown={(event) => onTabKeydown(event, index)}
+										>
+											<tab.icon class="size-3.5" />
+											{tab.label}
+											{#if tab.count !== null}
+												<span class="text-fg-subtle tabular-nums">{tab.count}</span>
+											{/if}
+										</button>
+									{/each}
+								</div>
+
+								<button
+									type="button"
+									class="text-fg-subtle hover:text-fg relative z-10 ml-auto shrink-0 rounded p-1.5 transition-colors duration-100"
+									aria-expanded={detailsOpen}
+									aria-controls="recipe-panel"
+									aria-label={detailsOpen
+										? 'Collapse ingredients and details'
+										: 'Expand ingredients and details'}
+									onclick={() => (detailsOpen = !detailsOpen)}
+								>
+									{#if detailsOpen}
+										<ChevronDownIcon class="size-3.5" aria-hidden="true" />
+									{:else}
+										<ChevronUpIcon class="size-3.5" aria-hidden="true" />
+									{/if}
+								</button>
+							</div>
+
+							<div
+								id="recipe-panel"
+								class="border-border max-h-64 overflow-y-auto border-t lg:hidden {detailsOpen
+									? 'block'
+									: 'hidden'}"
+								role="tabpanel"
+								aria-labelledby="recipe-tab-{panelTab}"
+							>
+								{#if panelTab === 'details'}
+									{#if recipe.description}
+										<div class="border-border border-b px-4 py-3">
+											<p class="text-fg-muted text-sm">{recipe.description}</p>
+										</div>
+									{/if}
+									<RecipeMeta
+										{recipe}
+										{baseServings}
+										{scale}
+										onscale={handleScale}
+										header={false}
+									/>
+								{:else if panelTab === 'ingredients'}
+									<RecipeIngredients
+										ingredients={recipe.ingredients}
+										hoveredIndex={hoveredIngredientIndex}
+										activeIndices={currentStepIngredientIndices}
+										onhover={(i) => (hoveredIngredientIndex = i)}
+										header={false}
+									/>
+								{:else}
+									<RecipeCookware
+										cookware={recipe.cookware}
+										hoveredIndex={hoveredCookwareIndex}
+										activeIndices={currentStepCookwareIndices}
+										onhover={(i) => (hoveredCookwareIndex = i)}
+										header={false}
+									/>
+								{/if}
+							</div>
+
+							<!-- Desktop keeps all three panes stacked, as before. -->
+							<div class="hidden min-h-0 flex-1 overflow-y-auto lg:block">
+								{#if showImage && image}
+									<img
+										src={image.src}
+										srcset={image.srcset}
+										width={image.width}
+										height={image.height}
+										onerror={() => (imgError = true)}
+										fetchpriority="high"
+										decoding="async"
+										alt={recipe.title ?? 'Recipe'}
+										class="border-border block aspect-[16/9] w-full border-b object-cover"
+									/>
+								{/if}
+
+								{#if recipe.description}
+									<div class="border-border border-b px-4 py-3">
+										<p class="text-fg-muted text-sm">{recipe.description}</p>
+									</div>
+								{/if}
+
+								{@render recipePanes(true)}
+							</div>
+						</div>
+					</aside>
+
+					<section class="order-2 flex min-h-0 min-w-0 flex-col" aria-label="Instructions">
+						<div
+							class="border-border flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2"
+						>
+							<h2 class="text-fg flex items-baseline gap-2 text-sm font-semibold">
+								<ListOrderedIcon class="text-fg-subtle size-4 self-center" />
+								Instructions
+								<span class="text-fg-subtle text-xs font-normal tabular-nums">
+									{totalSteps}
+									{totalSteps === 1 ? 'step' : 'steps'}
+								</span>
+							</h2>
+
+							{#if timeSummary}
+								<span class="text-fg-subtle ml-auto text-xs tabular-nums">{timeSummary}</span>
+							{/if}
+						</div>
+
+						<div class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+							{@render steps()}
+						</div>
+					</section>
+				</div>
+			</div>
+
+			<footer
+				class="border-border text-fg-subtle flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-t px-4 py-1.5 text-xs"
+			>
+				{#if servingsSummary}
+					<span class="tabular-nums">{servingsSummary}</span>
+					<span class="text-border" aria-hidden="true">·</span>
+				{/if}
+				{#if timeSummary}
+					<span class="tabular-nums">{timeSummary}</span>
+					<span class="text-border" aria-hidden="true">·</span>
+				{/if}
+				<span class="tabular-nums">
+					{recipe.ingredients.length}
+					{recipe.ingredients.length === 1 ? 'ingredient' : 'ingredients'}
+				</span>
+				<span class="text-border" aria-hidden="true">·</span>
+				<span class="tabular-nums">
+					{recipe.cookware.length}
+					cookware
+				</span>
+				<span class="text-border" aria-hidden="true">·</span>
+				<span class="tabular-nums">
+					{totalSteps}
+					{totalSteps === 1 ? 'step' : 'steps'}
+				</span>
+
+				{#if scale !== 1}
+					<span class="ml-auto tabular-nums">{formatScale(scale)}× scale</span>
+				{/if}
+			</footer>
+		</div>
+	</Page>
+{/if}
 
 {#if cookMode}
 	<CookControlBar

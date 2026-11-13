@@ -14,6 +14,7 @@
 				soft: 'bg-accent-soft text-accent-soft-fg hover:bg-accent-soft/70',
 				ghost: 'bg-surface-muted text-fg hover:bg-border',
 				outline: 'border border-border bg-surface text-fg hover:border-border-strong',
+				toolbar: 'bg-transparent text-fg-muted hover:bg-surface-muted hover:text-fg',
 				danger: 'bg-danger text-danger-fg hover:bg-danger/90',
 				dangerSoft: 'bg-danger-soft text-danger-soft-fg hover:bg-danger-soft/70'
 			},

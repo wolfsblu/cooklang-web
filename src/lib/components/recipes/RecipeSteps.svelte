@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { CheckIcon } from '@lucide/svelte';
 	import type { ImageRef, SectionDisplay, StepDisplay } from '$lib/types/recipe';
-	import Card from '$lib/components/ui/Card.svelte';
 	import InlineIngredient from './inline/InlineIngredient.svelte';
 	import InlineCookware from './inline/InlineCookware.svelte';
 	import InlineTimer from './inline/InlineTimer.svelte';
@@ -92,9 +91,7 @@
 	});
 </script>
 
-<Card variant="outline" class="p-4">
-	<h2 class="text-fg mb-4 text-lg font-semibold">Instructions</h2>
-
+<div class="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6">
 	{#each sections as section, sectionIndex (sectionIndex)}
 		{#if section.name}
 			<h3 class="text-fg mt-6 mb-3 text-base font-semibold">{section.name}</h3>
@@ -175,7 +172,7 @@
 										loading="lazy"
 										decoding="async"
 										alt="Step {ordinal}"
-										class="mt-3 max-w-full rounded-lg"
+										class="mt-3 max-h-72 max-w-full rounded-lg"
 									/>
 								{/if}
 							{/if}
@@ -191,4 +188,4 @@
 			<p class="text-lg font-semibold">Recipe complete</p>
 		</div>
 	{/if}
-</Card>
+</div>
