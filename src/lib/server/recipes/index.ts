@@ -22,7 +22,7 @@ import { config } from '../config.js';
 import { assignSlugs } from './slug.js';
 
 /** Image extensions probed for recipe artwork, in preference order. */
-const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'] as const;
+export const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'] as const;
 
 /** Directories that never hold recipes, skipped during the walk. */
 const IGNORED_DIRS = new Set(['config', 'db', 'reports', 'node_modules']);

@@ -137,6 +137,7 @@ compose network, so it cannot be used as an open image resizer.
 | `COOK_CLI_PATH`       | `cook`      | Cook CLI binary, used for shopping lists                       |
 | `COOK_CLI_TIMEOUT`    | `30000`     | Cook CLI timeout in ms                                         |
 | `RECIPE_INDEX_TTL_MS` | `30000`     | How long the index serves before re-stat'ing (`0` in dev)      |
+| `BODY_SIZE_LIMIT`     | `25M`       | Largest request body; cover image uploads need headroom        |
 | `IMGPROXY_BASE_URL`   | _unset_     | Where imgproxy is mounted. Unset serves originals from the app |
 | `IMGPROXY_KEY`        | _unset_     | Hex URL-signing key                                            |
 | `IMGPROXY_SALT`       | _unset_     | Hex URL-signing salt                                           |

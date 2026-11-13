@@ -29,10 +29,16 @@
 
 <AlertDialog.Root bind:open>
 	<AlertDialog.Portal>
-		<AlertDialog.Overlay class="bg-overlay anim-fade fixed inset-0 z-40" />
+		<!--
+			A confirmation may be raised from inside another dialog (as the cover
+			image editor is). At the ordinary dialog z-index its overlay would sit
+			below that dialog's content, leaving the content clickable through the
+			confirmation. Being topmost is the whole job of a confirmation.
+		-->
+		<AlertDialog.Overlay class="bg-overlay anim-fade fixed inset-0 z-[60]" />
 
 		<AlertDialog.Content
-			class="bg-surface border-border shadow-pop anim-pop fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6"
+			class="bg-surface border-border shadow-pop anim-pop fixed top-1/2 left-1/2 z-[70] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6"
 		>
 			<AlertDialog.Title class="text-fg text-lg font-semibold">{title}</AlertDialog.Title>
 			<AlertDialog.Description class="text-fg-muted mt-2 text-sm">

@@ -52,7 +52,7 @@ export interface AtomicWriteOptions {
  */
 export async function writeFileAtomic(
 	target: string,
-	contents: string,
+	contents: string | Uint8Array,
 	options: AtomicWriteOptions = {}
 ): Promise<void> {
 	const directory = path.dirname(target);
