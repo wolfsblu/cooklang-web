@@ -45,7 +45,14 @@
 						<Button {...props} variant="ghost">{cancelLabel}</Button>
 					{/snippet}
 				</AlertDialog.Cancel>
-				<AlertDialog.Action onclick={onconfirm}>
+				<AlertDialog.Action
+					onclick={() => {
+						// Bits UI's AlertDialog.Action does not close the dialog on its
+						// own, so a confirmed action used to leave it open on screen.
+						open = false;
+						onconfirm();
+					}}
+				>
 					{#snippet child({ props })}
 						<Button {...props} variant={destructive ? 'danger' : 'primary'}>
 							{confirmLabel}
