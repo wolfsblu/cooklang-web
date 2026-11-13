@@ -139,8 +139,10 @@
 								tabindex={activeTab === tab.id ? 0 : -1}
 								class="flex shrink-0 items-center gap-1.5 border-b-2 px-2 py-2 text-xs font-medium transition-colors duration-100 {activeTab ===
 								tab.id
-									? 'border-accent text-fg'
-									: 'text-fg-muted hover:text-fg border-transparent'}"
+									? 'text-fg'
+									: 'text-fg-muted hover:text-fg'} {activeTab === tab.id && detailsOpen
+									? 'border-accent'
+									: 'border-transparent'}"
 								onclick={() => {
 									if (activeTab === tab.id) {
 										detailsOpen = !detailsOpen;
