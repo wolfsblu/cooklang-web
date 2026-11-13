@@ -148,7 +148,7 @@
 		{/if}
 
 		{#if showTags && recipe.tags.length > 0}
-			<div class="py-1.5">
+			<div class="pt-3 pb-0">
 				<dt class="sr-only">Tags</dt>
 				<dd class="flex min-w-0 flex-wrap gap-1">
 					{#each recipe.tags as tag (tag)}
