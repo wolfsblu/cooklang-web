@@ -1,7 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { findItem, parsePantry, removeItem, serializePantry, upsertItem } from './format';
+import {
+	findItem,
+	parsePantry,
+	removeItem,
+	removeSection,
+	renameSection,
+	serializePantry,
+	upsertItem
+} from './format';
 
 const REAL_PANTRY = fs.readFileSync(
 	path.resolve(process.cwd(), 'recipes/config/pantry.conf'),
@@ -210,5 +218,71 @@ describe('editing', () => {
 		// Everything else survives.
 		expect(text).toContain('"vegetable oil" = "1%L"');
 		expect(text).toContain('# flour = "400%g"');
+	});
+});
+
+describe('folders', () => {
+	const SOURCE = [
+		'[fridge]',
+		'# things I usually keep',
+		'eggs = "6"',
+		'milk = "1%L"',
+		'',
+		'[pantry]',
+		'salt = "500%g"',
+		''
+	].join('\n');
+
+	it('renames a folder and moves its items with it', () => {
+		const doc = parsePantry(SOURCE);
+		renameSection(doc, 'fridge', 'freezer');
+
+		const text = serializePantry(doc);
+		expect(text).toContain('[freezer]');
+		expect(text).not.toContain('[fridge]');
+		expect(findItem(doc, 'freezer', 'eggs')).toMatchObject({ quantity: '6' });
+		expect(findItem(doc, 'fridge', 'eggs')).toBeUndefined();
+		expect(doc.sections).toEqual(['freezer', 'pantry']);
+		// Items in other folders are untouched.
+		expect(findItem(doc, 'pantry', 'salt')).toBeDefined();
+	});
+
+	it('allows renaming a folder to a different case', () => {
+		const doc = parsePantry(SOURCE);
+		renameSection(doc, 'fridge', 'Fridge');
+
+		expect(serializePantry(doc)).toContain('[Fridge]');
+		expect(doc.sections).toEqual(['Fridge', 'pantry']);
+	});
+
+	it('renames every header when a section is repeated', () => {
+		const doc = parsePantry('[fridge]\neggs = "6"\n\n[fridge]\nmilk = "1%L"\n');
+		renameSection(doc, 'fridge', 'cold');
+
+		const text = serializePantry(doc);
+		expect(text).not.toContain('[fridge]');
+		expect(text.match(/\[cold\]/g)).toHaveLength(2);
+		expect(findItem(doc, 'cold', 'milk')).toBeDefined();
+	});
+
+	it('deletes a folder with all of its items and leaves the rest', () => {
+		const doc = parsePantry(SOURCE);
+		const removed = removeSection(doc, 'fridge');
+
+		const text = serializePantry(doc);
+		expect(removed).toBe(2);
+		expect(text).not.toContain('[fridge]');
+		expect(text).not.toContain('eggs = "6"');
+		expect(text).not.toContain('milk = "1%L"');
+		expect(text).toContain('[pantry]');
+		expect(text).toContain('salt = "500%g"');
+		expect(doc.sections).toEqual(['pantry']);
+		expect(doc.items).toHaveLength(1);
+	});
+
+	it('deletes a folder with no items', () => {
+		const doc = parsePantry('[fridge]\n\n[pantry]\nsalt = "500%g"\n');
+		expect(removeSection(doc, 'fridge')).toBe(0);
+		expect(serializePantry(doc)).not.toContain('[fridge]');
 	});
 });

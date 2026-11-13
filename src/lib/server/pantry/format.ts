@@ -230,3 +230,47 @@ export function findItem(doc: PantryDoc, section: string, name: string): PantryI
 		(item) => item.section === section && item.name.toLowerCase() === name.toLowerCase()
 	);
 }
+
+/**
+ * Rename a section, taking its items with it.
+ *
+ * A section can appear more than once in a hand-edited file; every header for
+ * it is rewritten so the file never ends up with two names for one folder.
+ */
+export function renameSection(doc: PantryDoc, from: string, to: string): PantryDoc {
+	for (const line of doc.lines) {
+		if (line.kind === 'section' && line.name === from) {
+			line.name = to;
+			line.raw = `[${to}]`;
+		} else if (line.kind === 'item' && line.item.section === from) {
+			line.item.section = to;
+		}
+	}
+
+	for (const item of doc.items) {
+		if (item.section === from) item.section = to;
+	}
+
+	doc.sections = doc.sections.map((section) => (section === from ? to : section));
+	return doc;
+}
+
+/**
+ * Delete a section together with every item in it, returning the number of
+ * items removed. Unrecognised lines (free-text comments, blank lines) are left
+ * where they are -- the parser cannot tell which section they belong to, and
+ * dropping them would lose content the user wrote.
+ */
+export function removeSection(doc: PantryDoc, name: string): number {
+	const before = doc.items.length;
+
+	doc.lines = doc.lines.filter((line) => {
+		if (line.kind === 'section') return line.name !== name;
+		if (line.kind === 'item') return line.item.section !== name;
+		return true;
+	});
+	doc.items = doc.items.filter((item) => item.section !== name);
+	doc.sections = doc.sections.filter((section) => section !== name);
+
+	return before - doc.items.length;
+}

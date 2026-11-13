@@ -3,13 +3,15 @@
 	import { PlusIcon, RefrigeratorIcon } from '@lucide/svelte';
 	import type { PageProps } from './$types';
 	import type { PantryItemView } from '$lib/types/pantry';
+	import PantryActionBar from '$lib/components/pantry/PantryActionBar.svelte';
+	import PantryFolderDialog from '$lib/components/pantry/PantryFolderDialog.svelte';
 	import PantryFolderList from '$lib/components/pantry/PantryFolderList.svelte';
+	import PantryFilters, { type PantryFilter } from '$lib/components/pantry/PantryFilters.svelte';
 	import PantryItemDialog from '$lib/components/pantry/PantryItemDialog.svelte';
 	import PantryItemTable, {
 		type SortDirection,
 		type SortKey
 	} from '$lib/components/pantry/PantryItemTable.svelte';
-	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
@@ -17,8 +19,7 @@
 
 	const { data }: PageProps = $props();
 
-	type Filter = 'all' | 'low' | 'expiring';
-	let filter = $state<Filter>('all');
+	let filter = $state<PantryFilter>('all');
 
 	// Sort stays out of the URL: switching folders navigates within the same
 	// route, so the component is not remounted and the choice survives anyway.
@@ -28,6 +29,8 @@
 	let dialogOpen = $state(false);
 	let editing = $state<PantryItemView | null>(null);
 	let dialogSection = $state('');
+
+	let renameOpen = $state(false);
 
 	/** The folder being browsed, or null for "All items". */
 	const folder = $derived.by(() => {
@@ -143,50 +146,73 @@
 						/>
 					</div>
 				{:else}
-					<div
-						class="border-border flex shrink-0 flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5"
+					<!-- The folder title and its toolbar share a row from `md` up; on
+					     phones the toolbar gets a strip of its own, as on the recipe
+					     detail page, rather than squeezing the folder name. -->
+					<header
+						class="border-border flex shrink-0 flex-wrap items-center border-b md:gap-x-3 md:px-4 md:py-2"
 					>
-						<h2 class="text-fg flex min-w-0 items-baseline gap-2 text-sm font-semibold">
-							<!-- capitalize is for folder names as written in the file; the
-							     literal label is already spelled the way it should read. -->
-							<span class="truncate" class:capitalize={folder}>
-								{folder ?? 'All items'}
-							</span>
-							<span class="text-fg-subtle shrink-0 text-xs font-normal tabular-nums">
-								{countLabel(visibleItems.length, 'item')}
-							</span>
-						</h2>
+						<div class="flex min-w-0 flex-1 items-center gap-2 px-4 py-2.5 md:px-0 md:py-0">
+							<h2 class="text-fg flex min-w-0 items-baseline gap-2 text-sm font-semibold">
+								<!-- capitalize is for folder names as written in the file; the
+								     literal label is already spelled the way it should read. -->
+								<span class="truncate" class:capitalize={folder}>
+									{folder ?? 'All items'}
+								</span>
+								<span class="text-fg-subtle shrink-0 text-xs font-normal tabular-nums">
+									{countLabel(visibleItems.length, 'item')}
+								</span>
+							</h2>
+						</div>
 
-						<Button size="sm" onclick={openAdd}>
-							<PlusIcon class="size-4" />
-							Add item
-						</Button>
-					</div>
+						<!-- Phones: the filters scroll sideways when they do not fit, while
+						     the folder actions stay pinned at the right so every action
+						     remains reachable without scrolling. -->
+						<div
+							class="border-border bg-surface-muted/30 flex w-full min-w-0 items-center gap-2 border-t px-3 py-1.5 md:hidden"
+						>
+							<div class="no-scrollbar min-w-0 flex-1 overflow-x-auto">
+								<PantryFilters
+									{filter}
+									lowCount={data.lowCount}
+									expiringCount={data.expiringCount}
+									onchange={(next) => (filter = next)}
+								/>
+							</div>
 
-					<div class="border-border flex shrink-0 flex-wrap items-center gap-2 border-b px-4 py-2">
-						<Button
-							variant={filter === 'all' ? 'primary' : 'ghost'}
-							size="sm"
-							onclick={() => (filter = 'all')}
-						>
-							All
-						</Button>
-						<Button
-							variant={filter === 'low' ? 'primary' : 'ghost'}
-							size="sm"
-							onclick={() => (filter = 'low')}
-						>
-							Low stock
-							{#if data.lowCount > 0}<Badge tone="warn">{data.lowCount}</Badge>{/if}
-						</Button>
-						<Button
-							variant={filter === 'expiring' ? 'primary' : 'ghost'}
-							size="sm"
-							onclick={() => (filter = 'expiring')}
-						>
-							Expiring soon
-							{#if data.expiringCount > 0}<Badge tone="warn">{data.expiringCount}</Badge>{/if}
-						</Button>
+							<span class="bg-border h-5 w-px shrink-0" aria-hidden="true"></span>
+
+							<div class="shrink-0">
+								<PantryActionBar
+									{folder}
+									itemCount={folder ? (counts[folder] ?? 0) : 0}
+									onadd={openAdd}
+									onrename={() => (renameOpen = true)}
+									compact
+								/>
+							</div>
+						</div>
+
+						<!-- From `md` up the actions sit inline with the folder title. -->
+						<div class="hidden md:ml-auto md:flex md:shrink-0 md:items-center">
+							<PantryActionBar
+								{folder}
+								itemCount={folder ? (counts[folder] ?? 0) : 0}
+								onadd={openAdd}
+								onrename={() => (renameOpen = true)}
+							/>
+						</div>
+					</header>
+
+					<div
+						class="border-border hidden shrink-0 flex-wrap items-center gap-2 border-b px-4 py-2 md:flex"
+					>
+						<PantryFilters
+							{filter}
+							lowCount={data.lowCount}
+							expiringCount={data.expiringCount}
+							onchange={(next) => (filter = next)}
+						/>
 					</div>
 
 					<!-- The only scrolling region: the workbench chrome above and
@@ -251,3 +277,7 @@
 	section={dialogSection}
 	sections={data.sections}
 />
+
+{#if folder}
+	<PantryFolderDialog bind:open={renameOpen} {folder} />
+{/if}
