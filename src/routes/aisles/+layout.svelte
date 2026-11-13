@@ -4,6 +4,7 @@
 	import type { LayoutProps } from './$types';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
+	import { countLabel } from '$lib/utils/pluralize';
 
 	const { data, children }: LayoutProps = $props();
 
@@ -64,15 +65,9 @@
 		<footer
 			class="border-border text-fg-subtle flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-t px-4 py-1.5 text-xs"
 		>
-			<span class="tabular-nums">
-				{data.categories.length}
-				{data.categories.length === 1 ? 'aisle' : 'aisles'}
-			</span>
+			<span class="tabular-nums">{countLabel(data.categories.length, 'aisle')}</span>
 			<span class="text-border" aria-hidden="true">·</span>
-			<span class="tabular-nums">
-				{data.total}
-				{data.total === 1 ? 'ingredient' : 'ingredients'}
-			</span>
+			<span class="tabular-nums">{countLabel(data.total, 'ingredient')}</span>
 			<span class="text-border" aria-hidden="true">·</span>
 			<span class="tabular-nums">{data.unassignedCount} unassigned</span>
 		</footer>

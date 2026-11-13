@@ -8,20 +8,15 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import type { RecipeSelection } from '$lib/types/shopping-list.js';
 import { config } from '../config.js';
 import { getIndex } from '../recipes/index.js';
+import { createLock, writeFileAtomic } from '../storage.js';
 
 /** A recipe in the list, as stored. */
 export interface StoredSelection {
 	slug: string;
 	scale: number;
-}
-
-/** A selection joined against the index, as the UI needs it. */
-export interface ResolvedSelection extends StoredSelection {
-	title: string;
-	relPath: string;
-	servings: number | null;
 }
 
 interface ShoppingListFileV2 {
@@ -36,23 +31,12 @@ function filePath(): string {
 }
 
 /**
- * Serializes read-modify-write cycles within this process.
+ * Serializes read-modify-write cycles for this file.
  *
- * Two quick submissions previously raced: both read the file, both wrote it,
- * and whichever finished second silently discarded the other's change. The
- * atomic rename made each write whole but did nothing about the interleaving.
+ * Reads do not take it: writes go through an atomic rename, so a read either
+ * sees the old file or the new one, never a partial one.
  */
-let queue: Promise<unknown> = Promise.resolve();
-
-function withLock<T>(fn: () => Promise<T>): Promise<T> {
-	const run = queue.then(fn, fn);
-	// Keep the chain alive even if this operation rejects.
-	queue = run.then(
-		() => undefined,
-		() => undefined
-	);
-	return run;
-}
+const withLock = createLock();
 
 function clampScale(value: unknown): number {
 	const scale = Number(value);
@@ -121,26 +105,17 @@ async function readFile(): Promise<StoredSelection[]> {
 
 /** Atomic write: a crash mid-write cannot leave a truncated file behind. */
 async function writeFile(recipes: StoredSelection[]): Promise<void> {
-	const target = filePath();
-	const temp = `${target}.${process.pid}.tmp`;
 	const payload: ShoppingListFileV2 = { version: 2, recipes };
-
-	try {
-		await fs.writeFile(temp, JSON.stringify(payload, null, 2), 'utf8');
-		await fs.rename(temp, target);
-	} catch (error) {
-		await fs.unlink(temp).catch(() => {});
-		throw error;
-	}
+	await writeFileAtomic(filePath(), JSON.stringify(payload, null, 2));
 }
 
 /** Selections as stored, without touching the recipe index. */
 export async function readSelections(): Promise<StoredSelection[]> {
-	return withLock(readFile);
+	return readFile();
 }
 
 /** Selections joined against the index. Recipes that no longer exist are omitted. */
-export async function resolveSelections(): Promise<ResolvedSelection[]> {
+export async function resolveSelections(): Promise<RecipeSelection[]> {
 	const [stored, index] = await Promise.all([readSelections(), getIndex()]);
 
 	return stored.flatMap((selection) => {

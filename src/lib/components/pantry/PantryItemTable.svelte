@@ -5,7 +5,7 @@
 
 <script lang="ts">
 	import { ArrowDownIcon, ArrowUpIcon } from '@lucide/svelte';
-	import type { PantryItemView } from '../../../routes/pantry/+page.server';
+	import type { PantryItemView } from '$lib/types/pantry';
 	import PantryRow from './PantryRow.svelte';
 
 	interface Props {

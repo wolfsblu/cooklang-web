@@ -11,6 +11,7 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
 	import { parseFilterParams } from '$lib/utils/url-params';
+	import { countLabel } from '$lib/utils/pluralize';
 
 	const { data }: PageProps = $props();
 
@@ -92,10 +93,7 @@
 					<div class="min-w-0 flex-1">
 						<h1 class="text-fg truncate text-base font-semibold">Recipes</h1>
 						<p class="text-fg-subtle truncate text-xs">
-							<span class="tabular-nums">
-								{data.totalRecipes}
-								{data.totalRecipes === 1 ? 'recipe' : 'recipes'}
-							</span>
+							<span class="tabular-nums">{countLabel(data.totalRecipes, 'recipe')}</span>
 							{#if activeFilterSummary.length > 0}
 								<span class="text-border" aria-hidden="true">·</span>
 								<span>{activeFilterSummary.join(', ')}</span>
@@ -196,10 +194,7 @@
 		<footer
 			class="border-border text-fg-subtle flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-t px-3 py-1.5 text-xs sm:px-4"
 		>
-			<span class="tabular-nums">
-				{data.totalRecipes}
-				{data.totalRecipes === 1 ? 'recipe' : 'recipes'}
-			</span>
+			<span class="tabular-nums">{countLabel(data.totalRecipes, 'recipe')}</span>
 			<span class="text-border" aria-hidden="true">·</span>
 			<span class="tabular-nums">page {data.pageNumber} of {data.totalPages}</span>
 

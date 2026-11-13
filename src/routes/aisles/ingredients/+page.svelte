@@ -3,7 +3,7 @@
 	import { PlusIcon, SignpostIcon } from '@lucide/svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { PageProps } from './$types';
-	import type { AisleEntryView } from './+page.server';
+	import type { AisleEntryView } from '$lib/types/aisle';
 	import AisleBulkBar from '$lib/components/aisles/AisleBulkBar.svelte';
 	import AisleCategoryList from '$lib/components/aisles/AisleCategoryList.svelte';
 	import AisleDuplicateWarning from '$lib/components/aisles/AisleDuplicateWarning.svelte';
@@ -12,6 +12,7 @@
 	import AisleGroupedList from '$lib/components/aisles/AisleGroupedList.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import { countLabel } from '$lib/utils/pluralize';
 
 	const { data }: PageProps = $props();
 
@@ -106,8 +107,7 @@
 							<h2 class="text-fg flex items-baseline gap-2 text-sm font-semibold">
 								<span class="capitalize">{category}</span>
 								<span class="text-fg-subtle text-xs font-normal tabular-nums">
-									{visibleEntries.length}
-									{visibleEntries.length === 1 ? 'ingredient' : 'ingredients'}
+									{countLabel(visibleEntries.length, 'ingredient')}
 								</span>
 							</h2>
 

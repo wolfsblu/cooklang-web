@@ -185,11 +185,15 @@ describe('editing entries', () => {
 
 	it('inserts after the category’s last entry, not after the blank separator', () => {
 		const doc = parseAisle(REAL_AISLE);
+		// Derive the expectation from the fixture: the sample config is
+		// user-editable and gains ingredients over time.
+		const lastInCategory = doc.entries.filter((entry) => entry.category === 'fruit and veg').at(-1);
+		expect(lastInCategory).toBeDefined();
 
 		upsertEntry(doc, { name: 'kohlrabi', aliases: [], category: 'fruit and veg', comment: null });
 
 		const after = lines(serializeAisle(doc));
-		expect(after[after.indexOf('kohlrabi') - 1]).toBe('tomatoes');
+		expect(after[after.indexOf('kohlrabi') - 1]).toBe(lastInCategory?.name);
 	});
 
 	it('renders an edited line canonically without reformatting its siblings', () => {

@@ -115,12 +115,23 @@ export function daysUntilExpiry(
 	const expiry = new Date(item.expire);
 	if (Number.isNaN(expiry.getTime())) return null;
 
-	// Compare whole days in UTC so a time-of-day difference cannot make
-	// something read as expiring "in 0 days" when it expires tomorrow.
-	const toDay = (date: Date) =>
-		Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000);
+	const DAY_MS = 86_400_000;
+	const dayNumber = (year: number, month: number, date: number) =>
+		Math.floor(Date.UTC(year, month, date) / DAY_MS);
 
-	return toDay(expiry) - toDay(now);
+	// A date-only value ("2026-08-10") is a calendar date, not an instant.
+	// Reading its Y/M/D back with local getters shifts it a day earlier for
+	// anyone west of UTC, because the Date is midnight UTC. Take the written
+	// date parts directly when they are there.
+	const written = /^(\d{4})-(\d{2})-(\d{2})/.exec(item.expire);
+	const expiryDay = written
+		? dayNumber(Number(written[1]), Number(written[2]) - 1, Number(written[3]))
+		: dayNumber(expiry.getUTCFullYear(), expiry.getUTCMonth(), expiry.getUTCDate());
+
+	// "Today" is the server's own calendar day, matching how the badge reads.
+	const today = dayNumber(now.getFullYear(), now.getMonth(), now.getDate());
+
+	return expiryDay - today;
 }
 
 /** Expiring within a week, or already past. */

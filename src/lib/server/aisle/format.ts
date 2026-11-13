@@ -24,20 +24,7 @@
  * it.
  */
 
-/** One ingredient line: the canonical name plus any alternative spellings. */
-export interface AisleEntry {
-	/**
-	 * The name the CLI prints on the shopping list. Always the first field on
-	 * the line -- cooklang-rs calls it the common name used in lists.
-	 */
-	name: string;
-	/** Alternative spellings that resolve to `name`. */
-	aliases: string[];
-	/** Owning category. Maintained by reindex, never set by callers. */
-	category: string;
-	/** Trailing `// ...` text, without the slashes. Null when there is none. */
-	comment: string | null;
-}
+import type { AisleDuplicate, AisleEntry } from '$lib/types/aisle.js';
 
 /**
  * A parsed line. `raw` holds the bytes it was read from; null means it was
@@ -65,13 +52,6 @@ export interface AisleDoc {
 	 * the file the first time anything was saved.
 	 */
 	eol: '\n' | '\r\n';
-}
-
-/** A name or alias claimed by more than one entry. */
-export interface AisleDuplicate {
-	term: string;
-	/** Every entry claiming it, in file order. */
-	entries: AisleEntry[];
 }
 
 const CATEGORY_RE = /^\[([^\]]+)\]$/;

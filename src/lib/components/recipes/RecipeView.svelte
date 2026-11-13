@@ -13,6 +13,7 @@
 	import type { ImageRef, RecipeDisplay, StepDisplay, ActiveTimer } from '$lib/types/recipe';
 	import { parseTimerQuantity } from '$lib/utils/timer';
 	import { formatScale } from '$lib/utils/scale';
+	import { countLabel, pluralize } from '$lib/utils/pluralize';
 	import { playAlertSound } from '$lib/utils/audio';
 	import Page from '$lib/components/ui/Page.svelte';
 	import RecipeHeader from './RecipeHeader.svelte';
@@ -124,7 +125,7 @@
 	const servingsSummary = $derived.by(() => {
 		const servings = recipe.servings;
 		if (servings === undefined || servings === null || servings === '') return null;
-		return `${servings} ${servings === 1 || servings === '1' ? 'serving' : 'servings'}`;
+		return `${servings} ${pluralize(Number(servings), 'serving')}`;
 	});
 
 	function minutes(value: number): string {
@@ -164,9 +165,16 @@
 	let audioEnabled = $state(true);
 	let showTimersPanel = $state(false);
 
-	// Timer tick effect
+	// A single interval for as long as anything is actually counting down. The
+	// effect depends on that boolean rather than on `activeTimers` itself:
+	// replacing the array every tick would otherwise tear the interval down and
+	// rebuild it once a second.
+	const anyTimerRunning = $derived(
+		activeTimers.some((timer) => timer.status === 'running' && timer.remainingSeconds > 0)
+	);
+
 	$effect(() => {
-		if (activeTimers.length === 0) return;
+		if (!anyTimerRunning) return;
 
 		const interval = setInterval(() => {
 			let shouldAlert = false;
@@ -606,8 +614,7 @@
 								<ListOrderedIcon class="text-fg-subtle size-4 self-center" />
 								Instructions
 								<span class="text-fg-subtle text-xs font-normal tabular-nums">
-									{totalSteps}
-									{totalSteps === 1 ? 'step' : 'steps'}
+									{countLabel(totalSteps, 'step')}
 								</span>
 							</h2>
 
@@ -634,20 +641,14 @@
 					<span class="tabular-nums">{timeSummary}</span>
 					<span class="text-border" aria-hidden="true">·</span>
 				{/if}
-				<span class="tabular-nums">
-					{recipe.ingredients.length}
-					{recipe.ingredients.length === 1 ? 'ingredient' : 'ingredients'}
-				</span>
+				<span class="tabular-nums">{countLabel(recipe.ingredients.length, 'ingredient')}</span>
 				<span class="text-border" aria-hidden="true">·</span>
 				<span class="tabular-nums">
 					{recipe.cookware.length}
 					cookware
 				</span>
 				<span class="text-border" aria-hidden="true">·</span>
-				<span class="tabular-nums">
-					{totalSteps}
-					{totalSteps === 1 ? 'step' : 'steps'}
-				</span>
+				<span class="tabular-nums">{countLabel(totalSteps, 'step')}</span>
 
 				{#if scale !== 1}
 					<span class="ml-auto tabular-nums">{formatScale(scale)}× scale</span>

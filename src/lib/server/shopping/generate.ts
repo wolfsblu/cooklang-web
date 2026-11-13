@@ -11,12 +11,11 @@
 import { createHash } from 'node:crypto';
 import { CookCLIError, generateShoppingList } from '$lib/cooklang/cli.js';
 import { transformShoppingList } from '$lib/cooklang/transform.js';
-import type { ShoppingListDisplay } from '$lib/types/shopping-list.js';
+import type { RecipeSelection, ShoppingListDisplay } from '$lib/types/shopping-list.js';
 import { getIndex } from '../recipes/index.js';
 import { getAisleOrder, sortByAisle } from './aisle.js';
 import { aisleStamp } from '../aisle/store.js';
 import { pantryMtimeMs } from '../pantry/store.js';
-import type { ResolvedSelection } from './store.js';
 
 export interface GenerateResult {
 	list: ShoppingListDisplay | null;
@@ -54,7 +53,7 @@ let inflight: { key: string; promise: Promise<GenerateResult> } | null = null;
  * can be invisible, and the page would re-render the list it was meant to
  * regroup.
  */
-async function cacheKey(selections: readonly ResolvedSelection[]): Promise<string> {
+async function cacheKey(selections: readonly RecipeSelection[]): Promise<string> {
 	const [index, aisle, pantryMtime] = await Promise.all([
 		getIndex(),
 		aisleStamp(),
@@ -69,7 +68,7 @@ async function cacheKey(selections: readonly ResolvedSelection[]): Promise<strin
 		.digest('hex');
 }
 
-async function run(selections: readonly ResolvedSelection[]): Promise<GenerateResult> {
+async function run(selections: readonly RecipeSelection[]): Promise<GenerateResult> {
 	if (selections.length === 0) {
 		return { list: null, error: null, cliMissing: false, warnings: [] };
 	}
@@ -122,7 +121,7 @@ async function run(selections: readonly ResolvedSelection[]): Promise<GenerateRe
  * re-ran it after every add, remove and scale change.
  */
 export async function getShoppingList(
-	selections: readonly ResolvedSelection[]
+	selections: readonly RecipeSelection[]
 ): Promise<GenerateResult> {
 	const key = await cacheKey(selections);
 

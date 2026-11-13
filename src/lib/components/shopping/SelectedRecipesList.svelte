@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { ChevronDownIcon, ChevronUpIcon, MinusIcon, PlusIcon, Trash2Icon } from '@lucide/svelte';
-	import type { ResolvedSelection } from '$lib/server/shopping/store';
+	import type { RecipeSelection } from '$lib/types/shopping-list';
 	import { formatScale, stepScaleDown, stepScaleUp } from '$lib/utils/scale';
+	import { countLabel } from '$lib/utils/pluralize';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 
 	interface Props {
-		selections: ResolvedSelection[];
+		selections: RecipeSelection[];
 		/** Mobile only: whether the bottom sheet is expanded. */
 		open?: boolean;
 		ontoggle?: () => void;
@@ -95,7 +96,7 @@
 				<div class="flex items-center gap-2">
 					{#if selection.servings}
 						<span class="text-fg-muted text-xs">
-							{Math.round(selection.servings * selection.scale)} servings
+							{countLabel(Math.round(selection.servings * selection.scale), 'serving')}
 						</span>
 					{/if}
 

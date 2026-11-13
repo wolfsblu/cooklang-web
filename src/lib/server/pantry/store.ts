@@ -11,6 +11,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { config } from '../config.js';
+import { createLock, writeFileAtomic } from '../storage.js';
 import { parsePantry, serializePantry, type PantryDoc } from './format.js';
 
 const DEFAULT_SECTIONS = ['fridge', 'pantry', 'spices'];
@@ -31,17 +32,8 @@ export async function pantryMtimeMs(): Promise<number> {
 	}
 }
 
-/** Serializes read-modify-write cycles, as the shopping list store does. */
-let queue: Promise<unknown> = Promise.resolve();
-
-function withLock<T>(fn: () => Promise<T>): Promise<T> {
-	const run = queue.then(fn, fn);
-	queue = run.then(
-		() => undefined,
-		() => undefined
-	);
-	return run;
-}
+/** Serializes read-modify-write cycles for this file. */
+const withLock = createLock();
 
 /** Read and parse the pantry. Returns an empty document when the file is absent. */
 export async function readPantry(): Promise<PantryDoc> {
@@ -57,18 +49,7 @@ export async function readPantry(): Promise<PantryDoc> {
 
 /** Write the pantry atomically, creating config/ if it does not exist. */
 export async function writePantry(doc: PantryDoc): Promise<void> {
-	const target = pantryPath();
-	const temp = `${target}.${process.pid}.tmp`;
-
-	await fs.mkdir(path.dirname(target), { recursive: true });
-
-	try {
-		await fs.writeFile(temp, serializePantry(doc), 'utf8');
-		await fs.rename(temp, target);
-	} catch (error) {
-		await fs.unlink(temp).catch(() => {});
-		throw error;
-	}
+	await writeFileAtomic(pantryPath(), serializePantry(doc));
 }
 
 /**

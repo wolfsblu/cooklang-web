@@ -12,9 +12,13 @@
 	} from '@lucide/svelte';
 	import { onDestroy } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import type { AisleCoverageItem } from '$lib/server/aisle/coverage';
+	import type { AisleCoverageItem } from '$lib/types/aisle';
+	import { CELEBRATION_CONFETTI, COMPACT_CONFETTI } from '$lib/components/ui/confetti';
 	import Button from '$lib/components/ui/Button.svelte';
+	import ConfettiBurst from '$lib/components/ui/ConfettiBurst.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import ProgressRing from '$lib/components/ui/ProgressRing.svelte';
+	import { countLabel } from '$lib/utils/pluralize';
 	import AisleBulkBar from './AisleBulkBar.svelte';
 	import AisleCategoryField from './AisleCategoryField.svelte';
 
@@ -57,44 +61,6 @@
 		if (progress >= 0.5) return `Over halfway — ${remaining} to go.`;
 		return `Nice — ${sorted} sorted. ${remaining} to go.`;
 	});
-
-	const RING_RADIUS = 17;
-	const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
-
-	/** A small, fixed burst so the finish looks the same on every render. */
-	const CONFETTI = [
-		{ dx: -52, dy: -34, rot: -170, delay: 0, color: 'var(--color-brand-500)' },
-		{ dx: 44, dy: -40, rot: 150, delay: 20, color: 'var(--color-herb-500)' },
-		{ dx: -28, dy: -54, rot: -110, delay: 10, color: 'var(--color-warn-500)' },
-		{ dx: 30, dy: -56, rot: 200, delay: 60, color: 'var(--color-brand-400)' },
-		{ dx: -64, dy: 2, rot: -90, delay: 40, color: 'var(--color-herb-500)' },
-		{ dx: 62, dy: 6, rot: 120, delay: 10, color: 'var(--color-warn-500)' },
-		{ dx: -44, dy: 34, rot: 170, delay: 70, color: 'var(--color-brand-500)' },
-		{ dx: 42, dy: 32, rot: -150, delay: 30, color: 'var(--color-herb-500)' },
-		{ dx: 2, dy: -64, rot: 40, delay: 50, color: 'var(--color-brand-400)' },
-		{ dx: 18, dy: -48, rot: 230, delay: 80, color: 'var(--color-warn-500)' },
-		{ dx: -14, dy: -46, rot: -210, delay: 20, color: 'var(--color-herb-500)' },
-		{ dx: 56, dy: -18, rot: 100, delay: 90, color: 'var(--color-brand-500)' },
-		{ dx: -56, dy: -16, rot: -140, delay: 60, color: 'var(--color-warn-500)' },
-		{ dx: 8, dy: 44, rot: 190, delay: 40, color: 'var(--color-brand-400)' }
-	];
-
-	// A shorter burst for the toast, so a single assignment still feels like a
-	// win without drowning out the message.
-	const TOAST_CONFETTI = [
-		{ dx: -38, dy: -28, rot: -120, delay: 0, color: 'var(--color-brand-400)' },
-		{ dx: 36, dy: -30, rot: 100, delay: 20, color: 'var(--color-herb-400)' },
-		{ dx: -46, dy: 2, rot: -80, delay: 10, color: 'var(--color-warn-500)' },
-		{ dx: 46, dy: 6, rot: 90, delay: 30, color: 'var(--color-brand-500)' },
-		{ dx: -24, dy: 34, rot: 120, delay: 40, color: 'var(--color-herb-400)' },
-		{ dx: 24, dy: 32, rot: -140, delay: 10, color: 'var(--color-warn-500)' },
-		{ dx: 2, dy: -42, rot: 30, delay: 50, color: 'var(--color-brand-400)' },
-		{ dx: 8, dy: 38, rot: 160, delay: 20, color: 'var(--color-herb-400)' },
-		{ dx: -52, dy: -14, rot: -170, delay: 35, color: 'var(--color-brand-500)' },
-		{ dx: 52, dy: -18, rot: 150, delay: 45, color: 'var(--color-warn-500)' },
-		{ dx: -12, dy: -50, rot: -40, delay: 25, color: 'var(--color-herb-400)' },
-		{ dx: 18, dy: 46, rot: 200, delay: 55, color: 'var(--color-brand-400)' }
-	];
 
 	type Notice = { tone: 'ok' | 'danger'; message: string; celebrate?: boolean; id: number };
 
@@ -171,7 +137,7 @@
 		navigator.vibrate?.(12);
 		showNotice({
 			tone: 'ok',
-			message: count === 1 ? '1 ingredient sorted.' : `${count} ingredients sorted.`
+			message: `${countLabel(count, 'ingredient')} sorted.`
 		});
 	}
 </script>
@@ -182,8 +148,10 @@
 			<EmptyState
 				icon={SignpostIcon}
 				title="Create an aisle first"
-				description="Unassigned ingredients need somewhere to go. Add an aisle, then come back and sort {items.length}
-				{items.length === 1 ? 'ingredient' : 'ingredients'} in one pass."
+				description="Unassigned ingredients need somewhere to go. Add an aisle, then come back and sort {countLabel(
+					items.length,
+					'ingredient'
+				)} in one pass."
 			>
 				{#snippet actions()}
 					<Button href="/aisles">Manage aisles</Button>
@@ -201,14 +169,7 @@
 					<CircleCheckIcon class="text-ok size-10" strokeWidth={2} />
 				</span>
 				{#if sorted > 0}
-					<div class="pointer-events-none absolute inset-0" aria-hidden="true">
-						{#each CONFETTI as piece, index (index)}
-							<span
-								class="confetti-piece"
-								style="--dx: {piece.dx}px; --dy: {piece.dy}px; --rot: {piece.rot}deg; --delay: {piece.delay}ms; background-color: {piece.color}"
-							></span>
-						{/each}
-					</div>
+					<ConfettiBurst pieces={CELEBRATION_CONFETTI} />
 				{/if}
 			</div>
 
@@ -217,8 +178,7 @@
 			</p>
 			<p class="text-fg-muted mt-1 max-w-prose text-sm">
 				{#if sorted > 0}
-					You placed {sorted}
-					{sorted === 1 ? 'ingredient' : 'ingredients'}. Shopping lists can now group everything by
+					You placed {countLabel(sorted, 'ingredient')}. Shopping lists can now group everything by
 					aisle.
 				{:else}
 					Nothing in your recipes falls through to “Other”.
@@ -234,40 +194,13 @@
 		     keep sorting is visible at a glance, wherever you are in the list. -->
 		<section class="bg-surface shrink-0 px-4 py-3 sm:px-5 sm:py-4" aria-label="Assignment progress">
 			<div class="flex items-center gap-3 sm:gap-4">
-				<div class="relative flex size-14 shrink-0 items-center justify-center sm:size-16">
-					<svg viewBox="0 0 40 40" class="size-14 -rotate-90 sm:size-16" aria-hidden="true">
-						<circle
-							cx="20"
-							cy="20"
-							r={RING_RADIUS}
-							fill="none"
-							stroke="currentColor"
-							stroke-width="3.5"
-							class="text-surface-muted"
-						/>
-						<circle
-							cx="20"
-							cy="20"
-							r={RING_RADIUS}
-							fill="none"
-							stroke="currentColor"
-							stroke-width="3.5"
-							stroke-linecap="round"
-							stroke-dasharray={RING_LENGTH}
-							stroke-dashoffset={RING_LENGTH * (1 - progress)}
-							class="text-accent transition-all duration-500 ease-out"
-						/>
-					</svg>
-
-					<span class="absolute inset-0 flex items-center justify-center">
-						<span class="text-sm font-semibold tabular-nums">{percent}%</span>
-					</span>
-				</div>
+				<ProgressRing {progress} sizeClass="size-14 sm:size-16">
+					<span class="text-sm font-semibold tabular-nums">{percent}%</span>
+				</ProgressRing>
 
 				<div class="min-w-0 flex-1">
 					<p class="text-fg text-lg font-semibold sm:text-xl">
-						{remaining}
-						{remaining === 1 ? 'ingredient' : 'ingredients'} left to sort
+						{countLabel(remaining, 'ingredient')} left to sort
 					</p>
 					<p class="text-fg-muted text-sm" aria-live="polite">{message}</p>
 				</div>
@@ -352,14 +285,7 @@
 							data-testid="unassigned-item"
 						>
 							{#if isCelebrating}
-								<span class="pointer-events-none absolute inset-0 z-10" aria-hidden="true">
-									{#each CONFETTI as piece, index (index)}
-										<span
-											class="confetti-piece"
-											style="--dx: {piece.dx}px; --dy: {piece.dy}px; --rot: {piece.rot}deg; --delay: {piece.delay}ms; background-color: {piece.color}"
-										></span>
-									{/each}
-								</span>
+								<ConfettiBurst pieces={CELEBRATION_CONFETTI} class="z-10" />
 							{/if}
 							<label class="group -m-1 flex cursor-pointer items-start gap-3 rounded-md p-1">
 								<!-- The real bulk-form input, associated with the sticky bar's
@@ -400,8 +326,7 @@
 										<span
 											class="text-fg-subtle mt-0.5 shrink-0 text-xs whitespace-nowrap tabular-nums"
 										>
-											{item.recipeCount}
-											{item.recipeCount === 1 ? 'recipe' : 'recipes'}
+											{countLabel(item.recipeCount, 'recipe')}
 										</span>
 									</span>
 
@@ -515,14 +440,7 @@
 							<CheckIcon class="size-4" strokeWidth={3} />
 						</span>
 						{#if notice.celebrate}
-							<span class="pointer-events-none absolute inset-0" aria-hidden="true">
-								{#each TOAST_CONFETTI as piece, index (index)}
-									<span
-										class="confetti-piece"
-										style="--dx: {piece.dx}px; --dy: {piece.dy}px; --rot: {piece.rot}deg; --delay: {piece.delay}ms; background-color: {piece.color}"
-									></span>
-								{/each}
-							</span>
+							<ConfettiBurst pieces={COMPACT_CONFETTI} />
 						{/if}
 					</span>
 				{/key}
@@ -535,17 +453,6 @@
 {/if}
 
 <style>
-	.confetti-piece {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		width: 6px;
-		height: 10px;
-		border-radius: 2px;
-		animation: confetti-burst 900ms cubic-bezier(0.2, 0.6, 0.3, 1) forwards;
-		animation-delay: var(--delay);
-	}
-
 	.card-celebrate {
 		animation: card-flash 500ms ease-out;
 	}
@@ -559,21 +466,6 @@
 		}
 		100% {
 			box-shadow: inset 0 0 0 0 transparent;
-		}
-	}
-
-	@keyframes confetti-burst {
-		0% {
-			opacity: 0;
-			transform: translate(-50%, -50%) rotate(0deg) scale(0.6);
-		}
-		15% {
-			opacity: 1;
-		}
-		100% {
-			opacity: 0;
-			transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot))
-				scale(1);
 		}
 	}
 

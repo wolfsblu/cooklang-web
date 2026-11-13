@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { SvelteSet } from 'svelte/reactivity';
-	import type { AisleEntryView } from '../../../routes/aisles/ingredients/+page.server';
+	import type { AisleEntryView } from '$lib/types/aisle';
 	import AisleEntryRow from './AisleEntryRow.svelte';
 
 	interface Props {

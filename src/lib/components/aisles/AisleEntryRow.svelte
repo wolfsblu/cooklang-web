@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { PencilIcon, Trash2Icon } from '@lucide/svelte';
 	import type { SvelteSet } from 'svelte/reactivity';
-	import type { AisleEntryView } from '../../../routes/aisles/ingredients/+page.server';
+	import type { AisleEntryView } from '$lib/types/aisle';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import ButtonGroup from '$lib/components/ui/ButtonGroup.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';

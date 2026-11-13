@@ -5,6 +5,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import ButtonGroup from '$lib/components/ui/ButtonGroup.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { countLabel } from '$lib/utils/pluralize';
 
 	interface Props {
 		categories: string[];
@@ -120,8 +121,7 @@
 
 	/** Spelled out: a bare number here read as an unexplained code. */
 	function ingredients(name: string): string {
-		const count = counts[name] ?? 0;
-		return `${count} ${count === 1 ? 'ingredient' : 'ingredients'}`;
+		return countLabel(counts[name] ?? 0, 'ingredient');
 	}
 </script>
 

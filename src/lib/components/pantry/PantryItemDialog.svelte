@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Dialog } from 'bits-ui';
 	import { XIcon } from '@lucide/svelte';
-	import type { PantryItem } from '$lib/server/pantry/format';
+	import type { PantryItem } from '$lib/types/pantry';
 	import Button from '$lib/components/ui/Button.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 

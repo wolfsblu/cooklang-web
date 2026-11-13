@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { buildFilterUrl, parseFilterParams } from './url-params';
+import {
+	buildFilterUrl,
+	buildSortUrl,
+	EMPTY_FILTER_STATE,
+	filterStateFromDraft,
+	MAX_FILTER_SERVINGS,
+	MAX_FILTER_TIME,
+	parseFilterDraft,
+	parseFilterParams
+} from './url-params';
 import type { FilterState } from './recipe-filters';
 
 const EMPTY: FilterState = {
@@ -65,3 +74,60 @@ describe('buildFilterUrl', () => {
 		expect(parsed).toEqual(filters);
 	});
 });
+
+describe('filter drafts', () => {
+	it('turns an unbounded maximum into the slider ceiling', () => {
+		const draft = parseFilterDraft(new URLSearchParams(''));
+
+		expect(draft.timeRange).toEqual([0, MAX_FILTER_TIME]);
+		expect(draft.servingsRange).toEqual([0, MAX_FILTER_SERVINGS]);
+		expect(draft.course).toBe('');
+	});
+
+	it('round-trips through filterStateFromDraft', () => {
+		const filters: FilterState = {
+			tags: ['quick'],
+			ingredients: ['garlic'],
+			course: 'dinner',
+			timeRange: { min: 10, max: Infinity },
+			servingsRange: { min: 2, max: 6 }
+		};
+
+		expect(filterStateFromDraft(parseFilterDraft(buildQuery(filters)))).toEqual(filters);
+	});
+
+	it('treats the ceiling as unbounded again', () => {
+		const filters = filterStateFromDraft({
+			tags: [],
+			ingredients: [],
+			course: '',
+			timeRange: [0, MAX_FILTER_TIME],
+			servingsRange: [0, MAX_FILTER_SERVINGS]
+		});
+
+		expect(filters).toEqual(EMPTY_FILTER_STATE);
+	});
+});
+
+describe('buildSortUrl', () => {
+	it('keeps search and filters while changing the sort', () => {
+		const url = buildSortUrl(new URLSearchParams('q=soup&tags=quick&page=3'), 'time', 'desc');
+
+		expect(url).toBe('?q=soup&tags=quick&sort=time&order=desc');
+	});
+
+	it('drops defaults and the page when sorting by name ascending', () => {
+		const url = buildSortUrl(
+			new URLSearchParams('q=soup&sort=time&order=desc&page=2'),
+			'name',
+			'asc'
+		);
+
+		expect(url).toBe('?q=soup');
+	});
+});
+
+/** A query string carrying the filters, without the path. */
+function buildQuery(filters: FilterState): URLSearchParams {
+	return new URLSearchParams(buildFilterUrl('', filters, 'name', 'asc').slice(1));
+}

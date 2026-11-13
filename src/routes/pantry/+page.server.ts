@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { findItem, removeItem, upsertItem, type PantryItem } from '$lib/server/pantry/format.js';
+import type { PantryItemView } from '$lib/types/pantry.js';
+import { findItem, removeItem, upsertItem } from '$lib/server/pantry/format.js';
 import {
 	daysUntilExpiry,
 	formatQuantity,
@@ -9,20 +10,6 @@ import {
 	parseQuantity
 } from '$lib/server/pantry/quantity.js';
 import { readPantry, updatePantry } from '$lib/server/pantry/store.js';
-
-export interface PantryItemView extends PantryItem {
-	displayQuantity: string | null;
-	runningLow: boolean;
-	expiringSoon: boolean;
-	daysLeft: number | null;
-	/**
-	 * Numeric amount for sorting the quantity column. Computed here because
-	 * the parser lives under $lib/server and cannot be imported by a component.
-	 * Units are deliberately ignored: sorting is a within-column convenience,
-	 * not the meaningful comparison that compareQuantities refuses to fake.
-	 */
-	sortAmount: number | null;
-}
 
 export const load: PageServerLoad = async () => {
 	const doc = await readPantry();

@@ -15,6 +15,7 @@
  */
 
 import { lookupEntry, type AisleDoc } from './format.js';
+import type { AisleCoverageItem } from '$lib/types/aisle.js';
 import type { RecipeEntry } from '../recipes/index.js';
 
 /** How many using recipes to name per unassigned ingredient. */
@@ -25,19 +26,6 @@ const SAMPLE_LIMIT = 3;
  * plain object literals instead of building a whole index.
  */
 export type CoverageRecipe = Pick<RecipeEntry, 'slug' | 'title' | 'ingredientNames'>;
-
-export interface AisleCoverageItem {
-	/** The ingredient name as the recipes write it. */
-	name: string;
-	recipeCount: number;
-	/** A few of the recipes using it, for context. */
-	recipes: { slug: string; title: string }[];
-	/**
-	 * An existing canonical name this looks like a variant of, or null. Drives
-	 * an "add as an alias of X" action rather than a new entry.
-	 */
-	suggestedAliasOf: string | null;
-}
 
 export interface AisleCoverage {
 	unassigned: AisleCoverageItem[];

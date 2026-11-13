@@ -2,6 +2,7 @@
 	import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, TimerIcon, XIcon } from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { countLabel } from '$lib/utils/pluralize';
 
 	interface Props {
 		currentStep: number;
@@ -64,7 +65,7 @@
 			<span class="relative">
 				<IconButton
 					label={activeTimerCount > 0
-						? `Show ${activeTimerCount} active timer${activeTimerCount === 1 ? '' : 's'}`
+						? `Show ${countLabel(activeTimerCount, 'active timer')}`
 						: 'Show timers'}
 					variant={activeTimerCount > 0 ? 'primary' : 'ghost'}
 					onclick={ontoggletimers}

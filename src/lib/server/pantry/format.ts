@@ -15,19 +15,7 @@
  * library to preserve everything.
  */
 
-/** A single stocked (or template) item. */
-export interface PantryItem {
-	name: string;
-	section: string;
-	/** Raw cooklang quantity, e.g. "500%g" or "6". Null when only presence matters. */
-	quantity: string | null;
-	/** Threshold below which the item counts as running low. */
-	low: string | null;
-	bought: string | null;
-	expire: string | null;
-	/** True for `# name = "..."` entries: remembered, but not in stock. */
-	disabled: boolean;
-}
+import type { PantryItem } from '$lib/types/pantry.js';
 
 type Line =
 	| { kind: 'section'; name: string; raw: string }

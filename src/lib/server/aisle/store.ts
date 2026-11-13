@@ -16,6 +16,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { config } from '../config.js';
+import { createLock, writeFileAtomic } from '../storage.js';
 import { parseAisle, serializeAisle, type AisleDoc } from './format.js';
 
 interface TextCache {
@@ -93,40 +94,24 @@ export async function readAisle(): Promise<AisleDoc> {
 		const text = await fs.readFile(aislePath(), 'utf8');
 		cache = { mtimeMs, size: stat.size, text };
 		return parseAisle(text);
-	} catch {
-		return parseAisle('');
+	} catch (error) {
+		// An absent file is an empty configuration, but a permission, I/O or
+		// mount failure is not: reporting it as "no aisles" would hide a broken
+		// NAS mount behind an empty-looking page.
+		if ((error as NodeJS.ErrnoException).code === 'ENOENT') return parseAisle('');
+		throw error;
 	}
 }
 
 /** Write the aisle config atomically, creating config/ if it does not exist. */
 export async function writeAisle(doc: AisleDoc): Promise<void> {
-	const target = aislePath();
-	const temp = `${target}.${process.pid}.tmp`;
-
-	await fs.mkdir(path.dirname(target), { recursive: true });
-
-	try {
-		await fs.writeFile(temp, serializeAisle(doc), 'utf8');
-		await fs.rename(temp, target);
-		cache = null;
-		revision++;
-	} catch (error) {
-		await fs.unlink(temp).catch(() => {});
-		throw error;
-	}
+	await writeFileAtomic(aislePath(), serializeAisle(doc));
+	cache = null;
+	revision++;
 }
 
-/** Serializes read-modify-write cycles, as the pantry and shopping list stores do. */
-let queue: Promise<unknown> = Promise.resolve();
-
-function withLock<T>(fn: () => Promise<T>): Promise<T> {
-	const run = queue.then(fn, fn);
-	queue = run.then(
-		() => undefined,
-		() => undefined
-	);
-	return run;
-}
+/** Serializes read-modify-write cycles for this file. */
+const withLock = createLock();
 
 /**
  * Read, modify and write under the lock.

@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { PlusIcon, RefrigeratorIcon } from '@lucide/svelte';
 	import type { PageProps } from './$types';
-	import type { PantryItemView } from './+page.server';
+	import type { PantryItemView } from '$lib/types/pantry';
 	import PantryFolderList from '$lib/components/pantry/PantryFolderList.svelte';
 	import PantryItemDialog from '$lib/components/pantry/PantryItemDialog.svelte';
 	import PantryItemTable, {
@@ -13,6 +13,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
+	import { countLabel } from '$lib/utils/pluralize';
 
 	const { data }: PageProps = $props();
 
@@ -152,8 +153,7 @@
 								{folder ?? 'All items'}
 							</span>
 							<span class="text-fg-subtle shrink-0 text-xs font-normal tabular-nums">
-								{visibleItems.length}
-								{visibleItems.length === 1 ? 'item' : 'items'}
+								{countLabel(visibleItems.length, 'item')}
 							</span>
 						</h2>
 
@@ -234,15 +234,9 @@
 		<footer
 			class="border-border text-fg-subtle flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-t px-4 py-1.5 text-xs"
 		>
-			<span class="tabular-nums">
-				{data.sections.length}
-				{data.sections.length === 1 ? 'folder' : 'folders'}
-			</span>
+			<span class="tabular-nums">{countLabel(data.sections.length, 'folder')}</span>
 			<span class="text-border" aria-hidden="true">·</span>
-			<span class="tabular-nums">
-				{data.items.length}
-				{data.items.length === 1 ? 'item' : 'items'}
-			</span>
+			<span class="tabular-nums">{countLabel(data.items.length, 'item')}</span>
 			<span class="text-border" aria-hidden="true">·</span>
 			<span class="tabular-nums">{data.lowCount} low</span>
 			<span class="text-border" aria-hidden="true">·</span>

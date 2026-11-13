@@ -36,7 +36,6 @@
 	import { LoaderCircleIcon } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
-
 	type Props = {
 		variant?: ButtonVariant;
 		size?: ButtonSize;
@@ -53,23 +52,39 @@
 		size = 'md',
 		block = false,
 		loading = false,
+		disabled = false,
 		href,
 		class: className,
 		children,
 		...rest
 	}: Props = $props();
 
-	const classes = $derived(button({ variant, size, block, class: className }));
+	const classes = $derived(
+		button({
+			variant,
+			size,
+			block,
+			class: [className, disabled ? 'pointer-events-none opacity-50' : ''].filter(Boolean).join(' ')
+		})
+	);
 </script>
 
 {#if href}
-	<a {href} class={classes} {...rest}>
+	<!-- `disabled` is not valid on an anchor, so mirror the button state with
+	     aria-disabled, a skipped tab stop and the same visual treatment. -->
+	<a
+		{...rest}
+		{href}
+		class={classes}
+		aria-disabled={disabled || undefined}
+		tabindex={disabled ? -1 : undefined}
+	>
 		{@render children()}
 	</a>
 {:else}
 	<!-- disabled comes after the spread: otherwise a `disabled` in rest would
 	     overwrite it and a loading button would stay clickable. -->
-	<button class={classes} {...rest} disabled={loading || (rest as HTMLButtonAttributes).disabled}>
+	<button class={classes} {...rest} disabled={loading || disabled}>
 		{#if loading}
 			<LoaderCircleIcon class="size-4 animate-spin" aria-hidden="true" />
 		{/if}

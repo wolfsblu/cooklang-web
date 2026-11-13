@@ -12,9 +12,13 @@
 		type ShoppingListCategory,
 		type ShoppingListDisplay
 	} from '$lib/types/shopping-list';
+	import { CELEBRATION_CONFETTI, COMPACT_CONFETTI } from '$lib/components/ui/confetti';
+	import ConfettiBurst from '$lib/components/ui/ConfettiBurst.svelte';
+	import ProgressRing from '$lib/components/ui/ProgressRing.svelte';
 	import ShoppingAislePicker from './ShoppingAislePicker.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import { countLabel } from '$lib/utils/pluralize';
 
 	interface Props {
 		shoppingList: ShoppingListDisplay | null;
@@ -106,41 +110,6 @@
 		if (progress >= 0.5) return `Over halfway — ${remaining} to go.`;
 		return `Nice start — ${remaining} to go.`;
 	});
-
-	const RING_RADIUS = 17;
-	const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
-
-	// Fixed rather than random so the burst is identical on every run (and does
-	// not differ between the server render and hydration).
-	const CONFETTI = [
-		{ dx: -52, dy: -34, rot: -170, delay: 0, color: 'var(--color-brand-500)' },
-		{ dx: 44, dy: -40, rot: 150, delay: 20, color: 'var(--color-herb-500)' },
-		{ dx: -28, dy: -54, rot: -110, delay: 10, color: 'var(--color-warn-500)' },
-		{ dx: 30, dy: -56, rot: 200, delay: 60, color: 'var(--color-brand-400)' },
-		{ dx: -64, dy: 2, rot: -90, delay: 40, color: 'var(--color-herb-500)' },
-		{ dx: 62, dy: 6, rot: 120, delay: 10, color: 'var(--color-warn-500)' },
-		{ dx: -44, dy: 34, rot: 170, delay: 70, color: 'var(--color-brand-500)' },
-		{ dx: 42, dy: 32, rot: -150, delay: 30, color: 'var(--color-herb-500)' },
-		{ dx: 2, dy: -64, rot: 40, delay: 50, color: 'var(--color-brand-400)' },
-		{ dx: 18, dy: -48, rot: 230, delay: 80, color: 'var(--color-warn-500)' },
-		{ dx: -14, dy: -46, rot: -210, delay: 20, color: 'var(--color-herb-500)' },
-		{ dx: 56, dy: -18, rot: 100, delay: 90, color: 'var(--color-brand-500)' },
-		{ dx: -56, dy: -16, rot: -140, delay: 60, color: 'var(--color-warn-500)' },
-		{ dx: 8, dy: 44, rot: 190, delay: 40, color: 'var(--color-brand-400)' }
-	];
-
-	// A shorter burst for an aisle's header check, so the whole-list finish
-	// stays the bigger moment.
-	const AISLE_CONFETTI = [
-		{ dx: -18, dy: -16, rot: -120, delay: 0, color: 'var(--color-brand-500)' },
-		{ dx: 16, dy: -20, rot: 100, delay: 20, color: 'var(--color-herb-500)' },
-		{ dx: -22, dy: 2, rot: -80, delay: 10, color: 'var(--color-warn-500)' },
-		{ dx: 22, dy: 4, rot: 90, delay: 30, color: 'var(--color-brand-400)' },
-		{ dx: -12, dy: 18, rot: 120, delay: 40, color: 'var(--color-herb-500)' },
-		{ dx: 12, dy: 16, rot: -140, delay: 10, color: 'var(--color-warn-500)' },
-		{ dx: 0, dy: -24, rot: 30, delay: 50, color: 'var(--color-brand-500)' },
-		{ dx: 4, dy: 22, rot: 160, delay: 20, color: 'var(--color-herb-500)' }
-	];
 
 	function readSaved(signature: string): string[] {
 		try {
@@ -263,48 +232,17 @@
 			aria-label="Shopping progress"
 		>
 			<div class="flex flex-wrap items-center gap-4">
-				<div class="relative flex size-16 shrink-0 items-center justify-center">
-					<svg viewBox="0 0 40 40" class="size-16 -rotate-90" aria-hidden="true">
-						<circle
-							cx="20"
-							cy="20"
-							r={RING_RADIUS}
-							fill="none"
-							stroke="currentColor"
-							stroke-width="3.5"
-							class="text-surface-muted"
-						/>
-						<circle
-							cx="20"
-							cy="20"
-							r={RING_RADIUS}
-							fill="none"
-							stroke="currentColor"
-							stroke-width="3.5"
-							stroke-linecap="round"
-							stroke-dasharray={RING_LENGTH}
-							stroke-dashoffset={RING_LENGTH * (1 - progress)}
-							class="transition-all duration-500 ease-out {allDone ? 'text-ok' : 'text-accent'}"
-						/>
-					</svg>
-
-					<span class="absolute inset-0 flex items-center justify-center">
+				<div class="relative shrink-0">
+					<ProgressRing {progress} tone={allDone ? 'ok' : 'accent'}>
 						{#if allDone}
 							<CheckIcon class="text-ok size-7" strokeWidth={2.5} />
 						{:else}
 							<span class="text-sm font-semibold tabular-nums">{percent}%</span>
 						{/if}
-					</span>
+					</ProgressRing>
 
 					{#if allDone}
-						<div class="pointer-events-none absolute inset-0" aria-hidden="true">
-							{#each CONFETTI as piece, index (index)}
-								<span
-									class="confetti-piece"
-									style="--dx: {piece.dx}px; --dy: {piece.dy}px; --rot: {piece.rot}deg; --delay: {piece.delay}ms; background-color: {piece.color}"
-								></span>
-							{/each}
-						</div>
+						<ConfettiBurst pieces={CELEBRATION_CONFETTI} />
 					{/if}
 				</div>
 
@@ -414,14 +352,7 @@
 											</span>
 
 											{#if celebrating === category.name}
-												<span class="pointer-events-none absolute inset-0" aria-hidden="true">
-													{#each AISLE_CONFETTI as piece, index (index)}
-														<span
-															class="confetti-piece"
-															style="--dx: {piece.dx}px; --dy: {piece.dy}px; --rot: {piece.rot}deg; --delay: {piece.delay}ms; background-color: {piece.color}"
-														></span>
-													{/each}
-												</span>
+												<ConfettiBurst pieces={COMPACT_CONFETTI} />
 											{/if}
 										</span>
 										<span class="min-w-0">{category.displayName}</span>
@@ -534,11 +465,8 @@
 				{/if}
 				{checkedCount}/{total} picked up
 			</span>
-			<span class="tabular-nums">{shoppingList.categories.length} aisles</span>
-			<span class="tabular-nums">
-				{shoppingList.recipeCount}
-				{shoppingList.recipeCount === 1 ? 'recipe' : 'recipes'}
-			</span>
+			<span class="tabular-nums">{countLabel(shoppingList.categories.length, 'aisle')}</span>
+			<span class="tabular-nums">{countLabel(shoppingList.recipeCount, 'recipe')}</span>
 			<span class="ml-auto tabular-nums">{allDone ? 'All done' : `${remaining} to go`}</span>
 		</footer>
 	</div>
@@ -610,32 +538,6 @@
 		100% {
 			transform: scale(1) rotate(0deg);
 			opacity: 1;
-		}
-	}
-
-	.confetti-piece {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		width: 6px;
-		height: 10px;
-		border-radius: 2px;
-		animation: confetti-burst 900ms cubic-bezier(0.2, 0.6, 0.3, 1) forwards;
-		animation-delay: var(--delay);
-	}
-
-	@keyframes confetti-burst {
-		0% {
-			opacity: 0;
-			transform: translate(-50%, -50%) rotate(0deg) scale(0.6);
-		}
-		15% {
-			opacity: 1;
-		}
-		100% {
-			opacity: 0;
-			transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot))
-				scale(1);
 		}
 	}
 

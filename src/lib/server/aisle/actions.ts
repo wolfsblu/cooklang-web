@@ -9,6 +9,7 @@
  */
 
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
+import { countLabel } from '$lib/utils/pluralize.js';
 import {
 	addAlias,
 	addCategory as addCategoryLine,
@@ -274,12 +275,18 @@ export const bulkMove = async ({ request }: RequestEvent) => {
 	return { success: true };
 };
 
-/** Remove many entries from one aisle in a single write. */
+/**
+ * Remove many entries from one aisle in a single write.
+ *
+ * Reads `from`, not `category`: the bulk bar reuses one form for moving and
+ * removing, and its `category` field is the *destination* picked in the move
+ * select. Reading it here made Remove a silent no-op against the wrong aisle.
+ */
 export const bulkRemove = async ({ request }: RequestEvent) => {
 	const data = await request.formData();
 
 	const selected = names(data);
-	const category = str(data, 'category');
+	const category = str(data, 'from');
 	if (!category || selected.length === 0) {
 		return fail(400, { message: 'Pick ingredients to remove' });
 	}
@@ -336,7 +343,7 @@ export const removeCategory = async ({ request }: RequestEvent) => {
 	// the only record of where they belonged is the file being edited.
 	if (populated.length > 0) {
 		return fail(400, {
-			message: `${name} still has ${populated.length} ingredient${populated.length === 1 ? '' : 's'}. Move or remove them first.`
+			message: `${name} still has ${countLabel(populated.length, 'ingredient')}. Move or remove them first.`
 		});
 	}
 

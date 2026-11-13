@@ -40,6 +40,7 @@
 		type CompletionContext
 	} from '$lib/utils/cooklang-completion';
 	import { highlightCooklang, type CooklangTokenKind } from '$lib/utils/cooklang-highlight';
+	import { countLabel } from '$lib/utils/pluralize';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
@@ -1104,8 +1105,7 @@
 				{#if problemCount > 0}
 					<TriangleAlertIcon class="text-warn-soft-fg size-3.5 shrink-0" />
 					<span class="text-fg text-xs font-medium">
-						{problemCount}
-						{problemCount === 1 ? 'problem' : 'problems'}
+						{countLabel(problemCount, 'problem')}
 					</span>
 				{:else}
 					<CircleCheckIcon class="text-ok size-3.5 shrink-0" />
@@ -1159,8 +1159,8 @@
 			class="border-border text-fg-subtle flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t px-3 py-1.5 text-xs"
 		>
 			<span>Ln {caretLine}, Col {caretColumn}</span>
-			<span>{wordCount} words</span>
-			<span>{stepCount} steps</span>
+			<span>{countLabel(wordCount, 'word')}</span>
+			<span>{countLabel(stepCount, 'step')}</span>
 			<span class="ml-auto hidden sm:inline">
 				{#if dirty}
 					Ctrl+S to save · Ctrl+Space for suggestions

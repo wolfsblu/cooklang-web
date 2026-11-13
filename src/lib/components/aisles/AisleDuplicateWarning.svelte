@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { TriangleAlertIcon } from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { countLabel } from '$lib/utils/pluralize';
 
 	interface Props {
 		duplicates: { term: string; categories: string[] }[];
@@ -23,8 +24,9 @@
 
 	<div class="max-w-4xl min-w-0 flex-1">
 		<p class="font-semibold">
-			{duplicates.length === 1 ? 'An ingredient is' : `${duplicates.length} ingredients are`} in more
-			than one aisle
+			{duplicates.length === 1
+				? 'An ingredient is'
+				: `${countLabel(duplicates.length, 'ingredient')} are`} in more than one aisle
 		</p>
 		<p class="mt-1 text-sm">
 			Only the first aisle listed in the file is used. Pick the one to keep and the others are

@@ -72,16 +72,33 @@ describe('bulkRemove', () => {
 		doc = parseAisle('[dairy]\nbutter\nmilk\ncheese\n');
 	});
 
-	it('removes only the named entries', async () => {
+	it('removes only the named entries from the aisle being viewed', async () => {
 		await bulkRemove(
 			event([
-				['category', 'dairy'],
+				['from', 'dairy'],
 				['name', 'butter'],
 				['name', 'cheese']
 			])
 		);
 
 		expect(doc.entries.map((e) => e.name)).toEqual(['milk']);
+	});
+
+	it('ignores a move destination that shares the form', async () => {
+		doc = parseAisle('[dairy]\nbutter\nmilk\n\n[bakery]\nbread\n');
+
+		// The bulk bar posts the move select as `category` alongside `from`;
+		// Remove must act on `from` rather than that destination.
+		await bulkRemove(
+			event([
+				['from', 'dairy'],
+				['category', 'bakery'],
+				['name', 'butter']
+			])
+		);
+
+		expect(entry('butter')).toBeUndefined();
+		expect(entry('bread')?.category).toBe('bakery');
 	});
 });
 

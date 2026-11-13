@@ -36,3 +36,18 @@ export interface ShoppingListDisplay {
 	recipeCount: number;
 	totalItems: number;
 }
+
+/**
+ * A recipe in the shopping list after its stored slug has been joined against
+ * the recipe index.
+ *
+ * The title and servings are deliberately not stored in the shopping-list
+ * file: they would go stale as soon as a recipe was edited or renamed.
+ */
+export interface RecipeSelection {
+	slug: string;
+	scale: number;
+	title: string;
+	relPath: string;
+	servings: number | null;
+}

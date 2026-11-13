@@ -25,27 +25,13 @@ const MIME_TYPES: Record<string, string> = {
 	'.webp': 'image/webp'
 };
 
-/** Every image key the index knows about, with its mtime and size. */
-async function findImage(key: string) {
-	const index = await getIndex();
-
-	for (const entry of index.entries) {
-		if (entry.image?.key === key) return entry.image;
-
-		for (const stepImage of Object.values(entry.stepImages)) {
-			if (stepImage.key === key) return stepImage;
-		}
-	}
-
-	return null;
-}
-
 export const GET: RequestHandler = async ({ params, request, setHeaders }) => {
 	const key = params.key;
 
 	// Membership in the index is the whole authorization check: an arbitrary
 	// path cannot be requested because it was never indexed.
-	const image = await findImage(key);
+	const index = await getIndex();
+	const image = index.imageByKey.get(key);
 	if (!image) {
 		throw error(404, 'Recipe image not found');
 	}

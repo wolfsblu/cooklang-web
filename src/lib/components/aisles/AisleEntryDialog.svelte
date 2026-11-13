@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Dialog } from 'bits-ui';
 	import { XIcon } from '@lucide/svelte';
-	import type { AisleEntry } from '$lib/server/aisle/format';
+	import type { AisleEntry } from '$lib/types/aisle';
 	import Button from '$lib/components/ui/Button.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 

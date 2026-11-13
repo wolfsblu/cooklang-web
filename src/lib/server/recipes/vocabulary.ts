@@ -20,7 +20,7 @@ function addNames(map: Map<string, CompletionTerm>, names: readonly string[]): v
 		const name = rawName.trim();
 		if (!name) continue;
 
-		const key = name.toLocaleLowerCase();
+		const key = name.toLowerCase();
 		const existing = map.get(key);
 
 		if (existing) {

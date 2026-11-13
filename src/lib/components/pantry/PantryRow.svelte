@@ -8,7 +8,7 @@
 		PencilIcon,
 		Trash2Icon
 	} from '@lucide/svelte';
-	import type { PantryItemView } from '../../../routes/pantry/+page.server';
+	import type { PantryItemView } from '$lib/types/pantry';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import ButtonGroup from '$lib/components/ui/ButtonGroup.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';

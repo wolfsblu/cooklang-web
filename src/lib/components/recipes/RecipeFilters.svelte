@@ -10,7 +10,7 @@
 	} from '@lucide/svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import { buildFilterUrl } from '$lib/utils/url-params';
+	import { buildFilterUrl, buildSortUrl, EMPTY_FILTER_STATE } from '$lib/utils/url-params';
 
 	/**
 	 * The flat toolbar in the recipe list's title bar: filter toggles, sort
@@ -56,20 +56,10 @@
 	});
 
 	function updateUrl() {
-		const params = new URLSearchParams(page.url.searchParams);
-
-		// Re-sorting reshuffles the whole list, so page 3 of the old order means
-		// nothing in the new one.
-		params.delete('page');
-
-		if (sortField !== 'name') params.set('sort', sortField);
-		else params.delete('sort');
-
-		if (sortOrder !== 'asc') params.set('order', sortOrder);
-		else params.delete('order');
-
-		const query = params.toString();
-		goto(query ? `?${query}` : '/', { keepFocus: true, noScroll: true });
+		goto(buildSortUrl(page.url.searchParams, sortField, sortOrder), {
+			keepFocus: true,
+			noScroll: true
+		});
 	}
 
 	function toggleSortOrder() {
@@ -80,13 +70,7 @@
 	function clearFilters() {
 		const url = buildFilterUrl(
 			page.url.searchParams.get('q') || '',
-			{
-				tags: [],
-				ingredients: [],
-				course: null,
-				timeRange: { min: 0, max: Infinity },
-				servingsRange: { min: 0, max: Infinity }
-			},
+			EMPTY_FILTER_STATE,
 			sortField,
 			sortOrder
 		);

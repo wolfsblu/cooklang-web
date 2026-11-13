@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
 	import { CheckIcon, ShoppingCartIcon, XIcon } from '@lucide/svelte';
 	import { formatScale } from '$lib/utils/scale';
 	import Button, { type ButtonVariant } from '$lib/components/ui/Button.svelte';
@@ -81,9 +80,10 @@
 	const submit =
 		() =>
 		async ({ update }: { update: () => Promise<void> }) => {
+			// update() re-runs every load function, including the root layout's
+			// shopping-count badge. Calling invalidateAll() on top of it would
+			// just fetch the same data twice.
 			await update();
-			// The shopping count in the nav lives in the root layout.
-			await invalidateAll();
 		};
 </script>
 

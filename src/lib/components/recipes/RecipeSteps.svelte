@@ -77,21 +77,25 @@
 		};
 	}
 
-	// Scroll current step into view when it changes
+	// Scroll current step into view when it changes. The container is bound
+	// rather than using `document.querySelector`, so a second recipe rendered
+	// on the same page cannot capture the scroll.
+	let container = $state<HTMLDivElement | null>(null);
+
 	$effect(() => {
-		if (cookMode && currentStep) {
-			// Use requestAnimationFrame to ensure DOM is updated
-			requestAnimationFrame(() => {
-				const stepElement = document.querySelector(`[data-step="${currentStep}"]`);
-				if (stepElement) {
-					stepElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-				}
-			});
-		}
+		if (!cookMode || !currentStep) return;
+
+		const frame = requestAnimationFrame(() => {
+			container
+				?.querySelector(`[data-step="${currentStep}"]`)
+				?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		});
+
+		return () => cancelAnimationFrame(frame);
 	});
 </script>
 
-<div class="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6">
+<div bind:this={container} class="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6">
 	{#each sections as section, sectionIndex (sectionIndex)}
 		{#if section.name}
 			<h3 class="text-fg mt-6 mb-3 text-base font-semibold">{section.name}</h3>

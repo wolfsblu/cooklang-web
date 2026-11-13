@@ -10,8 +10,8 @@
  */
 
 import fs from 'node:fs/promises';
-import path from 'node:path';
 import type { RecipeEntry } from './index.js';
+import { createLock, writeFileAtomic } from '../storage.js';
 
 /** Raised when the file changed after the editor loaded it. */
 export class RecipeConflictError extends Error {
@@ -22,16 +22,7 @@ export class RecipeConflictError extends Error {
 }
 
 /** One save at a time. Saves are rare and serialising them avoids temp races. */
-let queue: Promise<unknown> = Promise.resolve();
-
-function withLock<T>(fn: () => Promise<T>): Promise<T> {
-	const run = queue.then(fn, fn);
-	queue = run.then(
-		() => undefined,
-		() => undefined
-	);
-	return run;
-}
+const withLock = createLock();
 
 function roundedMtime(stat: { mtimeMs: number }): number {
 	return Math.round(stat.mtimeMs);
@@ -68,23 +59,11 @@ export async function saveRecipeSource(
 			throw new RecipeConflictError();
 		}
 
-		const temporary = path.join(
-			path.dirname(target),
-			`.${path.basename(target)}.${process.pid}.${Date.now()}.tmp`
-		);
-
-		try {
-			await fs.writeFile(temporary, source, {
-				encoding: 'utf8',
-				// Keep the original permissions; a default-mode temp file renamed
-				// into place would quietly change who can edit the library.
-				mode: current.mode & 0o777
-			});
-			await fs.rename(temporary, target);
-		} catch (error) {
-			await fs.unlink(temporary).catch(() => {});
-			throw error;
-		}
+		await writeFileAtomic(target, source, {
+			// Keep the original permissions; a default-mode temp file renamed
+			// into place would quietly change who can edit the library.
+			mode: current.mode & 0o777
+		});
 
 		return roundedMtime(await fs.stat(target));
 	});

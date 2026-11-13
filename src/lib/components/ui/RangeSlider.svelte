@@ -14,10 +14,12 @@
 		max: number;
 		step?: number;
 		label: string;
+		/** Fires on every value change, e.g. to keep a label in step while dragging. */
+		onchange?: (value: number[]) => void;
 		oncommit?: (value: number[]) => void;
 	};
 
-	let { value = $bindable(), min, max, step = 1, label, oncommit }: Props = $props();
+	let { value = $bindable(), min, max, step = 1, label, onchange, oncommit }: Props = $props();
 </script>
 
 <Slider.Root
@@ -26,6 +28,7 @@
 	{min}
 	{max}
 	{step}
+	onValueChange={onchange}
 	onValueCommit={oncommit}
 	aria-label={label}
 	class="relative flex w-full touch-none items-center py-2 select-none"

@@ -85,6 +85,14 @@ export interface RecipeEntry {
 export interface RecipeIndex {
 	entries: RecipeEntry[];
 	bySlug: ReadonlyMap<string, RecipeEntry>;
+	/**
+	 * Every indexed image (main and step) by its path key.
+	 *
+	 * The fallback image route serves only keys found here, which is both the
+	 * authorization check and, with a map, an O(1) lookup instead of walking
+	 * every recipe on every image request.
+	 */
+	imageByKey: ReadonlyMap<string, RecipeImage>;
 	allTags: string[];
 	allCourses: string[];
 	/** Distinct listed ingredient names across the library, for the filter facet. */
@@ -124,16 +132,6 @@ const fileCache = new Map<string, CachedFile>();
 
 let cachedIndex: RecipeIndex | null = null;
 let inflight: Promise<RecipeIndex> | null = null;
-
-/**
- * Drop the cached index so the next read re-scans.
- *
- * Called by write paths (pantry edits, shopping list changes) so a user's own
- * change is visible immediately rather than after the TTL.
- */
-export function invalidateIndex(): void {
-	cachedIndex = null;
-}
 
 /**
  * Drop one file from the parse cache and the aggregate index.
@@ -358,6 +356,7 @@ async function buildIndex(): Promise<RecipeIndex> {
 		const empty: RecipeIndex = {
 			entries: [],
 			bySlug: new Map(),
+			imageByKey: new Map(),
 			allTags: [],
 			allCourses: [],
 			allIngredients: [],
@@ -445,6 +444,12 @@ async function buildIndex(): Promise<RecipeIndex> {
 	const index: RecipeIndex = {
 		entries: live,
 		bySlug: new Map(live.map((entry) => [entry.slug, entry])),
+		imageByKey: new Map(
+			live.flatMap((entry) => [
+				...(entry.image ? [[entry.image.key, entry.image] as const] : []),
+				...Object.values(entry.stepImages).map((image) => [image.key, image] as const)
+			])
+		),
 		allTags: [...new Set(live.flatMap((entry) => entry.tags))].sort((a, b) => a.localeCompare(b)),
 		allCourses: [...new Set(live.map((entry) => entry.course).filter((c) => c !== null))].sort(
 			(a, b) => a.localeCompare(b)
