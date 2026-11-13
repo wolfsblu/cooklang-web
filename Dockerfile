@@ -54,6 +54,9 @@ RUN set -eux; \
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV RECIPE_PATH=/app/recipes
+# Recipe cover images can be up to 20 MB; adapter-node otherwise rejects any
+# request body larger than 512 KB before the action sees it.
+ENV BODY_SIZE_LIMIT=25M
 
 RUN addgroup -S app && adduser -S app -G app
 USER app

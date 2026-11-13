@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ImageRef } from '$lib/types/recipe';
+	import RecipeCoverImage from './RecipeCoverImage.svelte';
 
 	/**
 	 * The recipe's hero images, as a full-width strip at the top on mobile.
@@ -7,39 +8,39 @@
 	 * The image used to open the ingredients panel, which made the panel tall
 	 * before its useful content began. Above the title bar it reads as the
 	 * recipe's cover; when there is more than one, they scroll sideways one
-	 * screen at a time instead of stacking down the page.
+	 * screen at a time instead of stacking down the page. When the recipe has
+	 * no image, the strip becomes the "add cover image" affordance, so the
+	 * control is in the same place whether or not a photo exists.
 	 */
 	interface Props {
 		images: ImageRef[];
 		title?: string;
+		/** Whether clicking an image (or the empty slot) opens the image editor. */
+		editable?: boolean;
+		onedit?: () => void;
 	}
 
-	const { images, title = 'Recipe' }: Props = $props();
-
-	// Track failures by URL so one broken image does not hide the rest, and a
-	// failing image disappearing does not leave an empty gap.
-	let failed = $state<Record<string, boolean>>({});
-	const visible = $derived(images.filter((image) => !failed[image.src]));
+	const { images, title = 'Recipe', editable = false, onedit = () => {} }: Props = $props();
 </script>
 
-{#if visible.length > 0}
+{#if images.length > 0 || editable}
 	<div
 		class="border-border bg-surface-muted/30 no-scrollbar flex shrink-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain border-b lg:hidden"
 		role="group"
 		aria-label="Recipe images"
 	>
-		{#each visible as image, index (image.src)}
-			<img
-				src={image.src}
-				srcset={image.srcset}
-				width={image.width}
-				height={image.height}
-				alt={visible.length > 1 ? `${title} image ${index + 1}` : title}
-				onerror={() => (failed[image.src] = true)}
-				fetchpriority={index === 0 ? 'high' : 'auto'}
-				decoding="async"
-				class="h-auto w-full shrink-0 snap-start object-cover"
-			/>
-		{/each}
+		{#if images.length > 0}
+			{#each images as image (image.src)}
+				<RecipeCoverImage
+					{image}
+					{title}
+					{onedit}
+					class="w-full shrink-0 snap-start"
+					imageClass="h-auto w-full object-cover"
+				/>
+			{/each}
+		{:else}
+			<RecipeCoverImage image={null} {title} {onedit} class="w-full" />
+		{/if}
 	</div>
 {/if}

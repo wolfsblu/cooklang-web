@@ -22,6 +22,8 @@
 	import RecipeCookware from './RecipeCookware.svelte';
 	import RecipeSteps from './RecipeSteps.svelte';
 	import RecipeImageStrip from './RecipeImageStrip.svelte';
+	import RecipeImageDialog from './RecipeImageDialog.svelte';
+	import RecipeCoverImage from './RecipeCoverImage.svelte';
 	import RecipeActionBar from './RecipeActionBar.svelte';
 	import CookControlBar from './cook/CookControlBar.svelte';
 	import ActiveTimersPanel from './cook/ActiveTimersPanel.svelte';
@@ -59,8 +61,7 @@
 	// panel, so the instructions keep the viewport rather than following a long
 	// ingredient list.
 	let detailsOpen = $state(false);
-	let imgError = $state(false);
-	const showImage = $derived(image !== null && !imgError);
+	let imageDialogOpen = $state(false);
 
 	type PanelTab = 'details' | 'ingredients' | 'cookware';
 	let panelTab = $state<PanelTab>('details');
@@ -427,7 +428,12 @@
 					phones and tablets. Above the title bar it reads as the recipe's
 					cover; more than one scrolls sideways, never down the page.
 				-->
-				<RecipeImageStrip images={image ? [image] : []} title={recipe.title ?? 'Recipe'} />
+				<RecipeImageStrip
+					images={image ? [image] : []}
+					title={recipe.title ?? 'Recipe'}
+					editable
+					onedit={() => (imageDialogOpen = true)}
+				/>
 
 				<header
 					class="border-border bg-surface sticky top-0 z-20 flex shrink-0 flex-wrap items-center border-b md:gap-x-3 md:px-4 md:py-2 lg:static"
@@ -581,19 +587,13 @@
 
 							<!-- Desktop keeps all three panes stacked, as before. -->
 							<div class="hidden min-h-0 flex-1 overflow-y-auto lg:block">
-								{#if showImage && image}
-									<img
-										src={image.src}
-										srcset={image.srcset}
-										width={image.width}
-										height={image.height}
-										onerror={() => (imgError = true)}
-										fetchpriority="high"
-										decoding="async"
-										alt={recipe.title ?? 'Recipe'}
-										class="border-border block aspect-[16/9] w-full border-b object-cover"
-									/>
-								{/if}
+								<RecipeCoverImage
+									{image}
+									title={recipe.title ?? 'Recipe'}
+									onedit={() => (imageDialogOpen = true)}
+									class="border-border w-full border-b"
+									imageClass="block aspect-[16/9] w-full object-cover"
+								/>
 
 								{#if recipe.description}
 									<div class="border-border border-b px-4 py-3">
@@ -681,3 +681,5 @@
 		oncancel={cancelTimer}
 	/>
 {/if}
+
+<RecipeImageDialog bind:open={imageDialogOpen} {image} title={recipe.title ?? 'Recipe'} />

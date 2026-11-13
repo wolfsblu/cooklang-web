@@ -1,8 +1,15 @@
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
-import { getEntry } from '$lib/server/recipes/index.js';
+import { error, fail } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import { getEntry, invalidateRecipe } from '$lib/server/recipes/index.js';
 import { clampScale, getRecipeDisplay } from '$lib/server/recipes/parse.js';
 import { imageRef } from '$lib/server/images.js';
+import {
+	detectImageType,
+	isHeif,
+	MAX_IMAGE_BYTES,
+	removeRecipeImage,
+	writeRecipeImage
+} from '$lib/server/recipes/image.js';
 import { readSelections } from '$lib/server/shopping/store.js';
 
 export const load: PageServerLoad = async ({ params, url }) => {
@@ -41,4 +48,87 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		slug: entry.slug,
 		relPath: entry.relPath
 	};
+};
+
+/** A filesystem failure the whole library volume would share, phrased for the UI. */
+function imageWriteFailure(err: unknown) {
+	const code = (err as NodeJS.ErrnoException).code ?? '';
+
+	if (['EACCES', 'EPERM', 'EROFS'].includes(code)) {
+		return fail(500, {
+			message: 'The recipe directory is not writable. Check the mount and container permissions.'
+		});
+	}
+
+	if (code === 'ENOSPC') {
+		return fail(500, { message: 'The recipe volume is full, so the image could not be saved.' });
+	}
+
+	console.error('Failed to update a recipe image:', err);
+	return fail(500, { message: 'The image could not be saved. Please try again.' });
+}
+
+export const actions: Actions = {
+	/** Replace or add the cover image beside the recipe file. */
+	updateImage: async ({ request, params }) => {
+		const entry = await getEntry(params.slug);
+		if (!entry) return fail(404, { message: 'Recipe not found' });
+
+		const data = await request.formData();
+		const upload = data.get('image');
+		if (!(upload instanceof File)) {
+			return fail(400, { message: 'Choose an image to upload' });
+		}
+
+		if (upload.size === 0) {
+			return fail(400, { message: 'That image is empty' });
+		}
+
+		if (upload.size > MAX_IMAGE_BYTES) {
+			return fail(413, { message: 'Images must be 20 MB or smaller' });
+		}
+
+		let bytes: Uint8Array;
+		try {
+			bytes = new Uint8Array(await upload.arrayBuffer());
+		} catch {
+			return fail(400, { message: 'The image could not be read. Please choose it again.' });
+		}
+
+		// Sniff the bytes rather than trusting the filename or the browser's
+		// content type, both of which the client controls.
+		const detected = detectImageType(bytes);
+		if (!detected) {
+			return fail(415, {
+				message: isHeif(bytes)
+					? 'HEIC and HEIF photos cannot be stored directly. Export the photo as a JPEG and upload that.'
+					: 'Choose a JPEG, PNG or WebP image'
+			});
+		}
+
+		try {
+			await writeRecipeImage(entry, bytes, detected.extension);
+
+			// The index caches image mtimes. Drop the entry so the page reload
+			// that follows the action picks up the new file and cache-busts it.
+			invalidateRecipe(entry.relPath);
+			return { success: true };
+		} catch (err) {
+			return imageWriteFailure(err);
+		}
+	},
+
+	/** Delete the cover image. Step photos are left alone. */
+	removeImage: async ({ params }) => {
+		const entry = await getEntry(params.slug);
+		if (!entry) return fail(404, { message: 'Recipe not found' });
+
+		try {
+			await removeRecipeImage(entry);
+			invalidateRecipe(entry.relPath);
+			return { success: true };
+		} catch (err) {
+			return imageWriteFailure(err);
+		}
+	}
 };
