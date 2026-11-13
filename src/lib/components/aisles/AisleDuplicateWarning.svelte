@@ -34,7 +34,7 @@
 		<ul class="mt-3 space-y-2">
 			{#each duplicates as duplicate (duplicate.term)}
 				<li class="flex flex-wrap items-center gap-2">
-					<span class="font-medium capitalize">{duplicate.term}</span>
+					<span class="font-medium">{duplicate.term}</span>
 					{#each duplicate.categories as category (category)}
 						<form method="POST" action="?/resolveDuplicate" use:enhance>
 							<input type="hidden" name="term" value={duplicate.term} />

@@ -394,7 +394,7 @@
 
 								<span class="min-w-0 flex-1">
 									<span class="flex items-start justify-between gap-2">
-										<span class="text-fg min-w-0 font-medium break-words capitalize">
+										<span class="text-fg min-w-0 font-medium break-words">
 											{item.name}
 										</span>
 										<span
@@ -439,7 +439,7 @@
 												<SparklesIcon class="size-3.5 shrink-0" />
 											{/if}
 											<span class="min-w-0">
-												Same as <span class="capitalize">{item.suggestedAliasOf}</span>
+												Same as <span>{item.suggestedAliasOf}</span>
 											</span>
 										</Button>
 									</form>

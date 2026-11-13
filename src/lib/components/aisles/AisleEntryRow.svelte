@@ -48,9 +48,10 @@
 	<td class="py-2 pr-2">
 		<div class="min-w-0">
 			<div class="flex flex-wrap items-center gap-2">
-				<!-- Capitalized for display only. The file keeps the name as written,
-				     because the CLI matches it against ingredient names verbatim. -->
-				<span class="truncate font-medium capitalize">{entry.name}</span>
+				<!-- Shown exactly as written in the file. The CLI matches this name
+				     against recipe ingredients verbatim, and it is what the shopping
+				     list prints, so changing its case here would misrepresent it. -->
+				<span class="truncate font-medium">{entry.name}</span>
 
 				{#if entry.duplicate}
 					<Badge tone="danger">Duplicate</Badge>
