@@ -333,17 +333,17 @@
 			</span>
 		</div>
 
-		<!-- Cards in columns rather than full-width rows: on a wide workbench the
-		     old list left most of every row empty, and a tile per ingredient
-		     gives each assignment a visible finish line. -->
+		<!-- Cards in a grid rather than columns: rows share a height, so the
+		     controls in neighbouring cards line up instead of drifting with
+		     each card's content. -->
 		<div class="min-h-0 flex-1 overflow-y-auto">
 			<div class="bg-surface-muted/20 @container min-h-full p-3 sm:p-4">
-				<div class="columns-1 gap-3 @3xl:columns-2 @5xl:columns-3">
+				<div class="grid grid-cols-1 gap-3 @3xl:grid-cols-2 @5xl:grid-cols-3">
 					{#each items as item (item.name)}
 						{@const isSelected = selected.has(item.name)}
 						{@const isCelebrating = celebrating === item.name}
 						<article
-							class="border-border bg-surface relative mb-3 break-inside-avoid rounded-lg border p-3 transition-colors duration-150 sm:p-4 {isCelebrating
+							class="border-border bg-surface relative flex h-full flex-col rounded-lg border p-3 transition-colors duration-150 sm:p-4 {isCelebrating
 								? 'border-ok bg-ok-soft/40'
 								: isSelected
 									? 'border-accent'
@@ -393,11 +393,13 @@
 								</span>
 
 								<span class="min-w-0 flex-1">
-									<span class="flex items-baseline justify-between gap-2">
+									<span class="flex items-start justify-between gap-2">
 										<span class="text-fg min-w-0 font-medium break-words capitalize">
 											{item.name}
 										</span>
-										<span class="text-fg-subtle shrink-0 text-xs whitespace-nowrap tabular-nums">
+										<span
+											class="text-fg-subtle mt-0.5 shrink-0 text-xs whitespace-nowrap tabular-nums"
+										>
 											{item.recipeCount}
 											{item.recipeCount === 1 ? 'recipe' : 'recipes'}
 										</span>
@@ -415,69 +417,71 @@
 								</span>
 							</label>
 
-							{#if item.suggestedAliasOf}
-								<!-- The far better fix for a plural. Adding "onions" as its own
-								     entry works, but the file then grows a second line for every
-								     spelling of everything. -->
-								<form method="POST" action="?/assign" use:enhance={submit} class="mt-3">
-									<input type="hidden" name="name" value={item.name} />
-									<input type="hidden" name="aliasOf" value={item.suggestedAliasOf} />
-									<input type="hidden" name="category" value={categories[0] ?? ''} />
-									<input type="hidden" name="returnTo" value={returnTo} />
-									<Button
-										type="submit"
-										size="sm"
-										variant="soft"
-										class="h-auto w-full justify-start py-1.5 text-left whitespace-normal"
-										loading={pending?.name === item.name && pending.alias}
-										disabled={pending?.name === item.name}
-									>
-										{#if !(pending?.name === item.name && pending.alias)}
-											<SparklesIcon class="size-3.5 shrink-0" />
-										{/if}
-										<span class="min-w-0">
-											Same as <span class="capitalize">{item.suggestedAliasOf}</span>
-										</span>
-									</Button>
-								</form>
-							{/if}
+							<div class="mt-auto flex flex-col gap-2 pt-3">
+								{#if item.suggestedAliasOf}
+									<!-- The far better fix for a plural. Adding "onions" as its own
+									     entry works, but the file then grows a second line for every
+									     spelling of everything. -->
+									<form method="POST" action="?/assign" use:enhance={submit}>
+										<input type="hidden" name="name" value={item.name} />
+										<input type="hidden" name="aliasOf" value={item.suggestedAliasOf} />
+										<input type="hidden" name="category" value={categories[0] ?? ''} />
+										<input type="hidden" name="returnTo" value={returnTo} />
+										<Button
+											type="submit"
+											size="sm"
+											variant="soft"
+											class="h-auto w-full justify-start py-1.5 text-left whitespace-normal"
+											loading={pending?.name === item.name && pending.alias}
+											disabled={pending?.name === item.name}
+										>
+											{#if !(pending?.name === item.name && pending.alias)}
+												<SparklesIcon class="size-3.5 shrink-0" />
+											{/if}
+											<span class="min-w-0">
+												Same as <span class="capitalize">{item.suggestedAliasOf}</span>
+											</span>
+										</Button>
+									</form>
+								{/if}
 
-							<form method="POST" action="?/assign" use:enhance={submit} class="mt-2">
-								<input type="hidden" name="name" value={item.name} />
-								<input type="hidden" name="returnTo" value={returnTo} />
-								<!-- A native select: this is a real POST form and the Bits UI
-								     select does not contribute a form value. The action sits
-								     inside the field's trailing edge, matching the pantry's
-								     New folder control. -->
-								<div class="relative">
-									<select
-										name="category"
-										class="field h-11 w-full appearance-none py-0 pr-30 text-sm capitalize"
-										aria-label="Aisle for {item.name}"
-									>
-										{#each categories as category (category)}
-											<option value={category}>{category}</option>
-										{/each}
-									</select>
-									<ChevronDownIcon
-										class="text-fg-subtle pointer-events-none absolute top-1/2 right-[6.5rem] size-4 -translate-y-1/2"
-										aria-hidden="true"
-									/>
-									<Button
-										type="submit"
-										size="sm"
-										variant="soft"
-										class="absolute top-1/2 right-1.5 -translate-y-1/2"
-										loading={pending?.name === item.name && !pending.alias}
-										disabled={pending?.name === item.name}
-									>
-										{#if !(pending?.name === item.name && !pending.alias)}
-											<ArrowRightIcon class="size-3.5" />
-										{/if}
-										Assign
-									</Button>
-								</div>
-							</form>
+								<form method="POST" action="?/assign" use:enhance={submit}>
+									<input type="hidden" name="name" value={item.name} />
+									<input type="hidden" name="returnTo" value={returnTo} />
+									<!-- A native select: this is a real POST form and the Bits UI
+									     select does not contribute a form value. The action sits
+									     inside the field's trailing edge, matching the pantry's
+									     New folder control. -->
+									<div class="relative">
+										<select
+											name="category"
+											class="field h-11 w-full appearance-none py-0 pr-30 text-sm capitalize"
+											aria-label="Aisle for {item.name}"
+										>
+											{#each categories as category (category)}
+												<option value={category}>{category}</option>
+											{/each}
+										</select>
+										<ChevronDownIcon
+											class="text-fg-subtle pointer-events-none absolute top-1/2 right-[6.5rem] size-4 -translate-y-1/2"
+											aria-hidden="true"
+										/>
+										<Button
+											type="submit"
+											size="sm"
+											variant="soft"
+											class="absolute top-1/2 right-1.5 -translate-y-1/2"
+											loading={pending?.name === item.name && !pending.alias}
+											disabled={pending?.name === item.name}
+										>
+											{#if !(pending?.name === item.name && !pending.alias)}
+												<ArrowRightIcon class="size-3.5" />
+											{/if}
+											Assign
+										</Button>
+									</div>
+								</form>
+							</div>
 						</article>
 					{/each}
 				</div>
