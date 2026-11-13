@@ -29,17 +29,20 @@
 	{#each categories as category (category)}
 		{@const group = byCategory[category] ?? []}
 		<section class="border-border border-t first:border-t-0">
-			<header class="flex items-baseline justify-between gap-3 px-4 py-2">
-				<h3 class="text-fg text-sm font-semibold">
-					<a href={href(category)} class="capitalize hover:underline">{category}</a>
-					<span class="text-fg-subtle ml-1 text-xs font-normal tabular-nums">{group.length}</span>
+			<header
+				class="border-border bg-surface-muted sticky top-0 z-10 flex items-center justify-between gap-3 border-b px-4 py-2.5"
+			>
+				<h3 class="text-fg flex min-w-0 items-center gap-2 text-sm font-semibold">
+					<span class="bg-accent h-4 w-1 shrink-0 rounded-full" aria-hidden="true"></span>
+					<a href={href(category)} class="min-w-0 truncate capitalize hover:underline">{category}</a
+					>
+					<span class="text-fg-muted shrink-0 text-xs font-normal tabular-nums">{group.length}</span
+					>
 				</h3>
 			</header>
 
 			{#if group.length > 0}
-				<div class="px-4">
-					<AisleEntryTable entries={group} showCategory={false} {onedit} />
-				</div>
+				<AisleEntryTable entries={group} showCategory={false} {onedit} />
 			{:else}
 				<p class="text-fg-subtle px-4 pb-3 text-sm">
 					Nothing here yet — assign ingredients from the

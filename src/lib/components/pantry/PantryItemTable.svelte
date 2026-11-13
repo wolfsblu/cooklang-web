@@ -49,7 +49,7 @@
 <table class="w-full text-left">
 	<thead>
 		<tr class="border-border text-fg-muted border-b text-xs">
-			<th scope="col" aria-sort={ariaSort('name')} class="font-medium">
+			<th scope="col" aria-sort={ariaSort('name')} class="pl-4 font-medium">
 				{@render header('name', 'Name')}
 			</th>
 			<th
@@ -71,7 +71,7 @@
 			<th scope="col" aria-sort={ariaSort('expires')} class="hidden w-28 font-medium sm:table-cell">
 				{@render header('expires', 'Expires')}
 			</th>
-			<th scope="col" class="w-px"><span class="sr-only">Actions</span></th>
+			<th scope="col" class="w-px pr-4"><span class="sr-only">Actions</span></th>
 		</tr>
 	</thead>
 

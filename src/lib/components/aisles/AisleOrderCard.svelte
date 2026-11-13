@@ -3,6 +3,7 @@
 	import { GripVerticalIcon, PencilIcon, PlusIcon, Trash2Icon } from '@lucide/svelte';
 	import { flip } from 'svelte/animate';
 	import Button from '$lib/components/ui/Button.svelte';
+	import ButtonGroup from '$lib/components/ui/ButtonGroup.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 
 	interface Props {
@@ -131,33 +132,27 @@
 	focused handle as an accessible, no-pointer fallback.
 -->
 <div class="flex h-full min-h-0 flex-col">
-	<div
-		class="border-border flex shrink-0 flex-wrap items-end justify-between gap-3 border-b px-4 py-3"
-	>
-		<div class="min-w-0">
-			<h2 class="text-fg text-sm font-semibold">Aisle order</h2>
-			<p class="text-fg-muted mt-0.5 text-xs">
-				Drag a handle, or use the arrow keys, to arrange them the way you walk the shop.
-			</p>
-		</div>
-
-		<form
-			method="POST"
-			action="?/addCategory"
-			use:enhance
-			class="flex w-full items-stretch gap-2 sm:w-auto"
-		>
-			<input
-				name="name"
-				class="field min-w-0 flex-1 sm:w-56 sm:flex-none"
-				placeholder="Add an aisle, e.g. frozen"
-				aria-label="New aisle name"
-				required
-			/>
-			<Button type="submit" variant="outline" class="h-auto shrink-0">
-				<PlusIcon class="size-4" />
-				Add
-			</Button>
+	<div class="border-border flex shrink-0 justify-end border-b px-4 py-3">
+		<form method="POST" action="?/addCategory" use:enhance class="w-full sm:w-72">
+			<!-- One integrated control, matching the pantry's New folder field. -->
+			<div class="relative">
+				<input
+					name="name"
+					class="field h-11 pr-20"
+					placeholder="Add an aisle, e.g. frozen"
+					aria-label="New aisle name"
+					required
+				/>
+				<Button
+					type="submit"
+					variant="soft"
+					size="sm"
+					class="absolute top-1/2 right-1.5 -translate-y-1/2"
+				>
+					<PlusIcon class="size-4" />
+					Add
+				</Button>
+			</div>
 		</form>
 	</div>
 
@@ -172,7 +167,7 @@
 			<li
 				data-name={name}
 				animate:flip={{ duration: 180 }}
-				class="hover:bg-surface-muted/50 flex items-center gap-1 px-4 py-2 transition-colors {drag?.name ===
+				class="hover:bg-surface-muted/50 flex items-start gap-2 px-4 py-2.5 transition-colors sm:items-center sm:gap-1 sm:py-2 {drag?.name ===
 				name
 					? 'opacity-0'
 					: ''}"
@@ -181,46 +176,56 @@
 					type="button"
 					onpointerdown={(event) => startDrag(event, name)}
 					onkeydown={(event) => onKey(event, name)}
-					class="text-fg-subtle hover:text-fg hover:bg-surface-muted focus-visible:ring-accent -ml-1 flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none active:cursor-grabbing"
+					class="text-fg-subtle hover:text-fg hover:bg-surface-muted focus-visible:ring-accent mt-0.5 -ml-1 flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none active:cursor-grabbing sm:mt-0"
 					aria-label="Reorder {name}. Drag, or use the arrow keys."
 				>
 					<GripVerticalIcon class="size-4" />
 				</button>
 
-				<a
-					href={href(name)}
-					class="text-fg ml-1 min-w-0 flex-1 truncate font-medium capitalize hover:underline"
-				>
-					{name}
-				</a>
-
-				<span class="text-fg-muted shrink-0 text-xs tabular-nums">{ingredients(name)}</span>
-
-				<IconButton size="sm" label="Rename {name}" onclick={() => onrename(name)}>
-					<PencilIcon class="size-4" />
-				</IconButton>
-
-				<!-- The reason Remove is disabled goes on the form: a disabled button
-				     never gets the hover that would show its own tooltip. -->
-				<form
-					method="POST"
-					action="?/removeCategory"
-					use:enhance
-					title={(counts[name] ?? 0) > 0
-						? 'Move or remove its ingredients before deleting this aisle'
-						: undefined}
-				>
-					<input type="hidden" name="name" value={name} />
-					<IconButton
-						type="submit"
-						size="sm"
-						variant="dangerSoft"
-						label="Remove {name}"
-						disabled={(counts[name] ?? 0) > 0}
+				<div class="min-w-0 flex-1">
+					<a
+						href={href(name)}
+						class="text-fg block font-medium break-words capitalize hover:underline sm:truncate"
 					>
-						<Trash2Icon class="size-4" />
+						{name}
+					</a>
+					<span class="text-fg-muted mt-0.5 block text-xs tabular-nums sm:hidden">
+						{ingredients(name)}
+					</span>
+				</div>
+
+				<span class="text-fg-muted hidden shrink-0 text-xs tabular-nums sm:inline">
+					{ingredients(name)}
+				</span>
+
+				<ButtonGroup class="mt-0.5 sm:mt-0">
+					<IconButton size="sm" label="Rename {name}" onclick={() => onrename(name)}>
+						<PencilIcon class="size-4" />
 					</IconButton>
-				</form>
+
+					<!-- The reason Remove is disabled goes on the form: a disabled button
+					     never gets the hover that would show its own tooltip. -->
+					<form
+						method="POST"
+						action="?/removeCategory"
+						use:enhance
+						class="flex"
+						title={(counts[name] ?? 0) > 0
+							? 'Move or remove its ingredients before deleting this aisle'
+							: undefined}
+					>
+						<input type="hidden" name="name" value={name} />
+						<IconButton
+							type="submit"
+							size="sm"
+							variant="dangerSoft"
+							label="Remove {name}"
+							disabled={(counts[name] ?? 0) > 0}
+						>
+							<Trash2Icon class="size-4" />
+						</IconButton>
+					</form>
+				</ButtonGroup>
 			</li>
 		{/each}
 	</ol>

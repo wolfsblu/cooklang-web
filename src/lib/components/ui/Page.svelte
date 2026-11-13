@@ -13,6 +13,8 @@
 		wide?: boolean;
 		/** Fill the content area, for pages whose layout is built to stretch. */
 		full?: boolean;
+		/** Drop the page gutters entirely, for full-bleed workbenches. */
+		flush?: boolean;
 		class?: string;
 		children: Snippet;
 	};
@@ -22,14 +24,16 @@
 		actions,
 		wide = false,
 		full = false,
+		flush = false,
 		class: className,
 		children
 	}: Props = $props();
 
 	const width = $derived(full ? 'max-w-none' : wide ? 'max-w-[110rem]' : 'max-w-6xl');
+	const padding = $derived(flush ? 'p-0' : 'px-4 py-6 sm:px-6');
 </script>
 
-<div class="mx-auto w-full px-4 py-6 sm:px-6 {width} {className ?? ''}">
+<div class="mx-auto w-full {padding} {width} {className ?? ''}">
 	{#if title || actions}
 		<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 			{#if title}

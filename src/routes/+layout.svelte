@@ -17,9 +17,15 @@
 	// height so the code area and its bottom panel never make the page scroll.
 	const isEditor = $derived(page.url.pathname.startsWith('/recipes/edit/'));
 
-	// Aisles use the same fixed-height workspace treatment: their panes scroll
-	// internally while the tabs and status bar stay in place.
-	const isWorkspace = $derived(isEditor || page.url.pathname.startsWith('/aisles'));
+	// Aisles, the pantry and the shopping list use the same fixed-height
+	// workspace treatment: their panes scroll internally while the tabs,
+	// toolbar strips and status bar stay in place.
+	const isWorkspace = $derived(
+		isEditor ||
+			page.url.pathname.startsWith('/aisles') ||
+			page.url.pathname.startsWith('/pantry') ||
+			page.url.pathname.startsWith('/shopping')
+	);
 </script>
 
 <svelte:head>

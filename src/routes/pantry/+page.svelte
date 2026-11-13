@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { InfoIcon, PlusIcon, RefrigeratorIcon } from '@lucide/svelte';
+	import { PlusIcon, RefrigeratorIcon } from '@lucide/svelte';
 	import type { PageProps } from './$types';
 	import type { PantryItemView } from './+page.server';
 	import PantryFolderList from '$lib/components/pantry/PantryFolderList.svelte';
@@ -11,7 +11,6 @@
 	} from '$lib/components/pantry/PantryItemTable.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
 
@@ -107,118 +106,148 @@
 	<title>Pantry</title>
 </svelte:head>
 
-<Page title="Pantry">
-	<Card variant="flat" class="mb-6 flex items-start gap-3 p-4">
-		<InfoIcon class="text-fg-subtle mt-0.5 size-5 shrink-0" />
-		<p class="text-fg-muted text-sm">
-			Anything stocked here is subtracted from your
-			<a href="/shopping" class="link">shopping list</a> automatically. Items you keep but have run out
-			of can be switched off rather than deleted, so they stay as a reminder.
-		</p>
-	</Card>
+<Page full flush class="flex h-full min-h-0 flex-col">
+	<h1 class="sr-only">Pantry</h1>
 
-	<div class="grid gap-6 lg:grid-cols-[15rem_1fr]">
-		<!-- min-w-0 so the folder strip can scroll sideways instead of widening
-		     the page: a grid item defaults to min-width:auto. -->
-		<aside class="min-w-0 lg:sticky lg:top-20 lg:self-start">
-			<PantryFolderList
-				sections={data.sections}
-				{counts}
-				total={data.items.length}
-				selected={folder}
-			/>
-		</aside>
+	<!--
+		One workbench rather than a stack of cards: the folder sidebar, toolbar
+		strips and status bar share a single frame with hairline dividers. The
+		frame fills the viewport; only the folder and item panes scroll.
+	-->
+	<div
+		class="border-border bg-surface flex min-h-0 flex-1 flex-col overflow-hidden border border-t-0 md:border-l-0"
+	>
+		<div class="grid min-h-0 flex-1 grid-rows-[auto_1fr] lg:grid-cols-[15rem_1fr] lg:grid-rows-1">
+			<!-- min-w-0 so the folder strip can scroll sideways instead of widening
+			     the page: a grid item defaults to min-width:auto. Each pane owns its
+			     own scroll, so the workbench itself never scrolls. -->
+			<aside
+				class="border-border bg-surface-muted/40 min-h-0 min-w-0 border-b lg:overflow-hidden lg:border-r lg:border-b-0"
+			>
+				<PantryFolderList
+					sections={data.sections}
+					{counts}
+					total={data.items.length}
+					selected={folder}
+				/>
+			</aside>
 
-		<div class="min-w-0">
-			{#if data.sections.length === 0}
-				<Card variant="outline" class="px-4">
-					<EmptyState
-						icon={RefrigeratorIcon}
-						title="Your pantry is empty"
-						description="Add a folder such as fridge, pantry or spices to start tracking what you have."
-					/>
-				</Card>
-			{:else}
-				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-					<h2 class="text-fg text-lg font-semibold">
-						<!-- capitalize is for folder names as written in the file; the
-						     literal label is already spelled the way it should read. -->
-						<span class={folder ? 'capitalize' : ''}>{folder ?? 'All items'}</span>
-						<span class="text-fg-subtle text-sm font-normal tabular-nums">
-							{visibleItems.length}
-							{visibleItems.length === 1 ? 'item' : 'items'}
-						</span>
-					</h2>
-
-					<Button size="sm" onclick={openAdd}>
-						<PlusIcon class="size-4" />
-						Add item
-					</Button>
-				</div>
-
-				<div class="mb-2 flex flex-wrap items-center gap-2">
-					<Button
-						variant={filter === 'all' ? 'primary' : 'ghost'}
-						size="sm"
-						onclick={() => (filter = 'all')}
-					>
-						All
-					</Button>
-					<Button
-						variant={filter === 'low' ? 'primary' : 'ghost'}
-						size="sm"
-						onclick={() => (filter = 'low')}
-					>
-						Low stock
-						{#if data.lowCount > 0}<Badge tone="warn">{data.lowCount}</Badge>{/if}
-					</Button>
-					<Button
-						variant={filter === 'expiring' ? 'primary' : 'ghost'}
-						size="sm"
-						onclick={() => (filter = 'expiring')}
-					>
-						Expiring soon
-						{#if data.expiringCount > 0}<Badge tone="warn">{data.expiringCount}</Badge>{/if}
-					</Button>
-				</div>
-
-				<Card variant="outline" class="px-4">
-					{#if visibleItems.length > 0}
-						<PantryItemTable
-							items={visibleItems}
-							showLocation={folder === null}
-							{sort}
-							{direction}
-							{onsort}
-							onedit={openEdit}
+			<div class="bg-surface flex min-h-0 min-w-0 flex-col">
+				{#if data.sections.length === 0}
+					<div class="min-h-0 flex-1 overflow-y-auto">
+						<EmptyState
+							icon={RefrigeratorIcon}
+							title="Your pantry is empty"
+							description="Add a folder such as fridge, pantry or spices to start tracking what you have."
 						/>
-					{:else if filter !== 'all'}
-						<EmptyState
-							icon={RefrigeratorIcon}
-							title={filter === 'low' ? 'Nothing is running low' : 'Nothing is expiring soon'}
-							description="Set a “low at” threshold or an expiry date on an item to track it here."
+					</div>
+				{:else}
+					<div
+						class="border-border flex shrink-0 flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5"
+					>
+						<h2 class="text-fg flex min-w-0 items-baseline gap-2 text-sm font-semibold">
+							<!-- capitalize is for folder names as written in the file; the
+							     literal label is already spelled the way it should read. -->
+							<span class="truncate" class:capitalize={folder}>
+								{folder ?? 'All items'}
+							</span>
+							<span class="text-fg-subtle shrink-0 text-xs font-normal tabular-nums">
+								{visibleItems.length}
+								{visibleItems.length === 1 ? 'item' : 'items'}
+							</span>
+						</h2>
+
+						<Button size="sm" onclick={openAdd}>
+							<PlusIcon class="size-4" />
+							Add item
+						</Button>
+					</div>
+
+					<div class="border-border flex shrink-0 flex-wrap items-center gap-2 border-b px-4 py-2">
+						<Button
+							variant={filter === 'all' ? 'primary' : 'ghost'}
+							size="sm"
+							onclick={() => (filter = 'all')}
 						>
-							{#snippet actions()}
-								<Button variant="outline" onclick={() => (filter = 'all')}>Show everything</Button>
-							{/snippet}
-						</EmptyState>
-					{:else}
-						<EmptyState
-							icon={RefrigeratorIcon}
-							title={folder ? `Nothing in ${folder} yet` : 'Nothing in your pantry yet'}
-							description="Add what you keep on hand and it will be deducted from your shopping list."
+							All
+						</Button>
+						<Button
+							variant={filter === 'low' ? 'primary' : 'ghost'}
+							size="sm"
+							onclick={() => (filter = 'low')}
 						>
-							{#snippet actions()}
-								<Button variant="outline" onclick={openAdd}>
-									<PlusIcon class="size-4" />
-									Add item
-								</Button>
-							{/snippet}
-						</EmptyState>
-					{/if}
-				</Card>
-			{/if}
+							Low stock
+							{#if data.lowCount > 0}<Badge tone="warn">{data.lowCount}</Badge>{/if}
+						</Button>
+						<Button
+							variant={filter === 'expiring' ? 'primary' : 'ghost'}
+							size="sm"
+							onclick={() => (filter = 'expiring')}
+						>
+							Expiring soon
+							{#if data.expiringCount > 0}<Badge tone="warn">{data.expiringCount}</Badge>{/if}
+						</Button>
+					</div>
+
+					<!-- The only scrolling region: the workbench chrome above and
+					     below stays put while the table moves. -->
+					<div class="min-h-0 flex-1 overflow-y-auto">
+						{#if visibleItems.length > 0}
+							<PantryItemTable
+								items={visibleItems}
+								showLocation={folder === null}
+								{sort}
+								{direction}
+								{onsort}
+								onedit={openEdit}
+							/>
+						{:else if filter !== 'all'}
+							<EmptyState
+								icon={RefrigeratorIcon}
+								title={filter === 'low' ? 'Nothing is running low' : 'Nothing is expiring soon'}
+								description="Set a “low at” threshold or an expiry date on an item to track it here."
+							>
+								{#snippet actions()}
+									<Button variant="outline" onclick={() => (filter = 'all')}>Show everything</Button
+									>
+								{/snippet}
+							</EmptyState>
+						{:else}
+							<EmptyState
+								icon={RefrigeratorIcon}
+								title={folder ? `Nothing in ${folder} yet` : 'Nothing in your pantry yet'}
+								description="Add what you keep on hand and it will be deducted from your shopping list."
+							>
+								{#snippet actions()}
+									<Button variant="outline" onclick={openAdd}>
+										<PlusIcon class="size-4" />
+										Add item
+									</Button>
+								{/snippet}
+							</EmptyState>
+						{/if}
+					</div>
+				{/if}
+			</div>
 		</div>
+
+		<footer
+			class="border-border text-fg-subtle flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-t px-4 py-1.5 text-xs"
+		>
+			<span class="tabular-nums">
+				{data.sections.length}
+				{data.sections.length === 1 ? 'folder' : 'folders'}
+			</span>
+			<span class="text-border" aria-hidden="true">·</span>
+			<span class="tabular-nums">
+				{data.items.length}
+				{data.items.length === 1 ? 'item' : 'items'}
+			</span>
+			<span class="text-border" aria-hidden="true">·</span>
+			<span class="tabular-nums">{data.lowCount} low</span>
+			<span class="text-border" aria-hidden="true">·</span>
+			<span class="tabular-nums">{data.expiringCount} expiring</span>
+		</footer>
 	</div>
 </Page>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { CircleHelpIcon, FolderIcon, InfoIcon, SlidersHorizontalIcon } from '@lucide/svelte';
+	import { CircleHelpIcon, FolderIcon, SlidersHorizontalIcon } from '@lucide/svelte';
 	import type { LayoutProps } from './$types';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
@@ -25,30 +25,18 @@
 	const idle = 'border-transparent text-fg-muted hover:text-fg hover:border-border';
 </script>
 
-<Page full class="flex h-full min-h-0 flex-col">
+<Page full flush class="flex h-full min-h-0 flex-col">
 	<h1 class="sr-only">Aisles</h1>
 
 	<!--
-		One workbench for the whole section: the explainer and tabs are strips
-		inside the same frame as the routed page, and the status bar closes the
-		bottom edge. Keeping the frame in the layout means it persists as you
-		move between the three tabs. The frame fills the viewport; only the
-		routed pane scrolls.
+		One workbench for the whole section: the tabs are a strip inside the same
+		frame as the routed page, and the status bar closes the bottom edge.
+		Keeping the frame in the layout means it persists as you move between the
+		three tabs. The frame fills the viewport; only the routed pane scrolls.
 	-->
 	<div
-		class="border-border bg-surface flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border"
+		class="border-border bg-surface flex min-h-0 flex-1 flex-col overflow-hidden border border-t-0 md:border-l-0"
 	>
-		<div
-			class="border-border bg-surface-muted/40 flex shrink-0 items-start gap-3 border-b px-4 py-3"
-		>
-			<InfoIcon class="text-fg-subtle mt-0.5 size-5 shrink-0" />
-			<p class="text-fg-muted min-w-0 flex-1 text-sm">
-				Your <a href="/shopping" class="link">shopping list</a> groups by these aisles, in this order.
-				Ingredients match by exact name, so list every spelling you use — “onions” only lands if written
-				here.
-			</p>
-		</div>
-
 		<nav
 			aria-label="Aisle tabs"
 			class="border-border no-scrollbar flex shrink-0 gap-1 overflow-x-auto border-b px-2"

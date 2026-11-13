@@ -239,23 +239,25 @@
 </script>
 
 {#if loading}
-	<div class="flex items-center justify-center gap-3 px-4 py-12">
+	<div class="flex h-full min-h-0 items-center justify-center gap-3 overflow-y-auto px-4 py-12">
 		<Spinner label="Generating shopping list" />
 		<span class="text-fg-muted">Generating shopping list…</span>
 	</div>
 {:else if !shoppingList || shoppingList.categories.length === 0}
-	<EmptyState
-		icon={ListChecksIcon}
-		title="Nothing to buy yet"
-		description="Add recipes to generate a shopping list."
-	/>
+	<div class="h-full min-h-0 overflow-y-auto">
+		<EmptyState
+			icon={ListChecksIcon}
+			title="Nothing to buy yet"
+			description="Add recipes to generate a shopping list."
+		/>
+	</div>
 {:else}
-	<div>
+	<div class="flex h-full min-h-0 flex-col">
 		<!-- Trip progress: the reason to come back to the page mid-shop. This is
 		     a workbench strip rather than a floating card; the aisle sections
 		     below supply the divider. -->
 		<section
-			class="relative overflow-hidden p-4 transition-colors duration-300 sm:p-5 {allDone
+			class="relative shrink-0 overflow-hidden p-4 transition-colors duration-300 sm:p-5 {allDone
 				? 'bg-ok-soft/40'
 				: 'bg-surface'}"
 			aria-label="Shopping progress"
@@ -357,170 +359,174 @@
 			column left empty. Columns rather than a grid so tiles of different
 			heights pack without ragged gaps.
 		-->
-		<div class="@container">
-			<div
-				class="columns-1 [column-gap:0] [column-rule:1px_solid_var(--color-border)] @2xl:columns-2 @5xl:columns-3 @7xl:columns-4 @min-[100rem]:columns-5"
-			>
-				{#each shoppingList.categories as category (category.name)}
-					{@const done = doneIn(category)}
-					{@const categoryDone = done === category.items.length}
-					{@const placeable = category.name === UNCATEGORIZED && aisleCategories.length > 0}
-					<!-- A placeable aisle carries a select and a button in every row,
+		<div class="min-h-0 flex-1 overflow-y-auto">
+			<div class="@container flex min-h-full flex-col">
+				<div
+					class="flex-1 columns-1 [column-gap:0] [column-rule:1px_solid_var(--color-border)] @2xl:columns-2 @5xl:columns-3 @7xl:columns-4 @min-[100rem]:columns-5"
+				>
+					{#each shoppingList.categories as category (category.name)}
+						{@const done = doneIn(category)}
+						{@const categoryDone = done === category.items.length}
+						{@const placeable = category.name === UNCATEGORIZED && aisleCategories.length > 0}
+						<!-- A placeable aisle carries a select and a button in every row,
 					     which leaves no room for the name inside a column. -->
-					<section
-						class="border-border break-inside-avoid border-t {placeable ? '[column-span:all]' : ''}"
-						class:aisle-complete={celebrating === category.name}
-					>
-						<header class="bg-surface-muted/40 flex items-center justify-between gap-3 px-4 py-2">
-							<h3 class="min-w-0 flex-1 text-sm font-semibold">
-								<!-- The aisle heading doubles as a select-all: an empty circle
+						<section
+							class="border-border break-inside-avoid border-t {placeable
+								? '[column-span:all]'
+								: ''}"
+							class:aisle-complete={celebrating === category.name}
+						>
+							<header class="bg-surface-muted/40 flex items-center justify-between gap-3 px-4 py-2">
+								<h3 class="min-w-0 flex-1 text-sm font-semibold">
+									<!-- The aisle heading doubles as a select-all: an empty circle
 								     when nothing is ticked, a dash when some are, a check when
 								     the whole aisle is done. -->
-								<button
-									type="button"
-									role="checkbox"
-									aria-checked={categoryDone ? true : done > 0 ? 'mixed' : false}
-									aria-label={categoryDone
-										? `Uncheck all in ${category.displayName}`
-										: `Check off all in ${category.displayName}`}
-									title={categoryDone ? 'Uncheck this aisle' : 'Check off this aisle'}
-									onclick={() => toggleCategory(category)}
-									class="group/all hover:bg-surface-muted -ml-1 flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-left transition-colors"
-								>
-									<span class="relative flex size-5 shrink-0 items-center justify-center">
-										<span
-											class="group-hover/all:border-ok flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ease-out group-active/all:scale-90 {categoryDone
-												? 'border-ok bg-ok text-ok-fg'
-												: done > 0
-													? 'border-ok bg-surface text-ok'
-													: 'border-border-strong bg-surface'}"
-											aria-hidden="true"
-										>
-											{#if categoryDone}
-												<span
-													class="flex items-center justify-center"
-													class:aisle-check-pop={celebrating === category.name}
-												>
-													<CheckIcon class="size-3.5" strokeWidth={3.5} />
+									<button
+										type="button"
+										role="checkbox"
+										aria-checked={categoryDone ? true : done > 0 ? 'mixed' : false}
+										aria-label={categoryDone
+											? `Uncheck all in ${category.displayName}`
+											: `Check off all in ${category.displayName}`}
+										title={categoryDone ? 'Uncheck this aisle' : 'Check off this aisle'}
+										onclick={() => toggleCategory(category)}
+										class="group/all hover:bg-surface-muted -ml-1 flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-left transition-colors"
+									>
+										<span class="relative flex size-5 shrink-0 items-center justify-center">
+											<span
+												class="group-hover/all:border-ok flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ease-out group-active/all:scale-90 {categoryDone
+													? 'border-ok bg-ok text-ok-fg'
+													: done > 0
+														? 'border-ok bg-surface text-ok'
+														: 'border-border-strong bg-surface'}"
+												aria-hidden="true"
+											>
+												{#if categoryDone}
+													<span
+														class="flex items-center justify-center"
+														class:aisle-check-pop={celebrating === category.name}
+													>
+														<CheckIcon class="size-3.5" strokeWidth={3.5} />
+													</span>
+												{:else if done > 0}
+													<MinusIcon class="size-3.5" strokeWidth={3.5} />
+												{/if}
+											</span>
+
+											{#if celebrating === category.name}
+												<span class="pointer-events-none absolute inset-0" aria-hidden="true">
+													{#each AISLE_CONFETTI as piece, index (index)}
+														<span
+															class="confetti-piece"
+															style="--dx: {piece.dx}px; --dy: {piece.dy}px; --rot: {piece.rot}deg; --delay: {piece.delay}ms; background-color: {piece.color}"
+														></span>
+													{/each}
 												</span>
-											{:else if done > 0}
-												<MinusIcon class="size-3.5" strokeWidth={3.5} />
 											{/if}
 										</span>
-
-										{#if celebrating === category.name}
-											<span class="pointer-events-none absolute inset-0" aria-hidden="true">
-												{#each AISLE_CONFETTI as piece, index (index)}
-													<span
-														class="confetti-piece"
-														style="--dx: {piece.dx}px; --dy: {piece.dy}px; --rot: {piece.rot}deg; --delay: {piece.delay}ms; background-color: {piece.color}"
-													></span>
-												{/each}
-											</span>
-										{/if}
-									</span>
-									<span class="min-w-0">{category.displayName}</span>
-								</button>
-							</h3>
-							<span
-								class="shrink-0 text-xs font-medium tabular-nums {categoryDone
-									? 'text-ok'
-									: 'text-fg-subtle'}"
-							>
-								{done}/{category.items.length}
-							</span>
-						</header>
-
-						<div class="bg-surface-muted h-1 w-full" aria-hidden="true">
-							<div
-								class="bg-ok h-full transition-[width] duration-500 ease-out"
-								style="width: {(done / category.items.length) * 100}%"
-							></div>
-						</div>
-
-						{#if placeable}
-							<p class="text-fg-muted px-4 pt-3 text-xs">
-								Not in your <a href="/aisles/unassigned" class="link">aisles</a> yet. Give each one an
-								aisle and it will be grouped with the rest next time.
-							</p>
-						{/if}
-
-						<ul class="space-y-0.5 p-2">
-							{#each category.items as item (item.name)}
-								{@const key = `${category.name}/${item.name}`}
-								{@const isChecked = checked.has(key)}
-								<li
-									class="flex flex-wrap items-center gap-x-2 rounded-sm transition-colors duration-200 {isChecked
-										? 'bg-ok-soft/60'
-										: 'hover:bg-surface-muted'}"
+										<span class="min-w-0">{category.displayName}</span>
+									</button>
+								</h3>
+								<span
+									class="shrink-0 text-xs font-medium tabular-nums {categoryDone
+										? 'text-ok'
+										: 'text-fg-subtle'}"
 								>
-									<!-- The picker is a sibling of the label, never inside it: a
+									{done}/{category.items.length}
+								</span>
+							</header>
+
+							<div class="bg-surface-muted h-1 w-full" aria-hidden="true">
+								<div
+									class="bg-ok h-full transition-[width] duration-500 ease-out"
+									style="width: {(done / category.items.length) * 100}%"
+								></div>
+							</div>
+
+							{#if placeable}
+								<p class="text-fg-muted px-4 pt-3 text-xs">
+									Not in your <a href="/aisles/unassigned" class="link">aisles</a> yet. Give each one
+									an aisle and it will be grouped with the rest next time.
+								</p>
+							{/if}
+
+							<ul class="space-y-0.5 p-2">
+								{#each category.items as item (item.name)}
+									{@const key = `${category.name}/${item.name}`}
+									{@const isChecked = checked.has(key)}
+									<li
+										class="flex flex-wrap items-center gap-x-2 rounded-sm transition-colors duration-200 {isChecked
+											? 'bg-ok-soft/60'
+											: 'hover:bg-surface-muted'}"
+									>
+										<!-- The picker is a sibling of the label, never inside it: a
 									     select nested in a label ticks the checkbox on every click
 									     that opens the dropdown. -->
-									<label
-										class="group flex min-w-52 flex-1 cursor-pointer items-center gap-3 rounded-sm px-2 py-2"
-									>
-										<input
-											type="checkbox"
-											class="peer sr-only"
-											checked={isChecked}
-											onchange={() => toggle(key, category)}
-										/>
-
-										<!-- The native box is hidden, so this is the visible one; the
-										     peer variants keep its keyboard focus ring reachable. -->
-										<span
-											class="peer-focus-visible:ring-ring peer-focus-visible:ring-offset-surface group-hover:border-ok flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ease-out group-active:scale-90 peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 {isChecked
-												? 'border-ok bg-ok text-ok-fg'
-												: 'border-border-strong bg-surface'}"
-											aria-hidden="true"
+										<label
+											class="group flex min-w-52 flex-1 cursor-pointer items-center gap-3 rounded-sm px-2 py-2"
 										>
-											<CheckIcon
-												class="size-3.5 transition-transform duration-200 ease-out {isChecked
-													? 'scale-100'
-													: 'scale-0'}"
-												strokeWidth={3.5}
+											<input
+												type="checkbox"
+												class="peer sr-only"
+												checked={isChecked}
+												onchange={() => toggle(key, category)}
 											/>
-										</span>
 
-										<span class="min-w-0 flex-1">
-											<!-- Inline, so the strike background paints per line box when a
-											     long name wraps. -->
-											<span class="strike {isChecked ? 'struck text-fg-muted' : 'text-fg'}"
-												>{item.displayName}</span
-											>
-										</span>
-
-										{#if item.quantity}
+											<!-- The native box is hidden, so this is the visible one; the
+										     peer variants keep its keyboard focus ring reachable. -->
 											<span
-												class="text-fg-muted shrink-0 text-right text-sm tabular-nums transition-colors duration-200"
+												class="peer-focus-visible:ring-ring peer-focus-visible:ring-offset-surface group-hover:border-ok flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ease-out group-active:scale-90 peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 {isChecked
+													? 'border-ok bg-ok text-ok-fg'
+													: 'border-border-strong bg-surface'}"
+												aria-hidden="true"
 											>
-												{item.quantity}
+												<CheckIcon
+													class="size-3.5 transition-transform duration-200 ease-out {isChecked
+														? 'scale-100'
+														: 'scale-0'}"
+													strokeWidth={3.5}
+												/>
 											</span>
-										{/if}
-									</label>
 
-									{#if placeable}
-										<div class="ml-auto">
-											<ShoppingAislePicker
-												itemName={item.name}
-												categories={aisleCategories}
-												{returnTo}
-											/>
-										</div>
-									{/if}
-								</li>
-							{/each}
-						</ul>
-					</section>
-				{/each}
+											<span class="min-w-0 flex-1">
+												<!-- Inline, so the strike background paints per line box when a
+											     long name wraps. -->
+												<span class="strike {isChecked ? 'struck text-fg-muted' : 'text-fg'}"
+													>{item.displayName}</span
+												>
+											</span>
+
+											{#if item.quantity}
+												<span
+													class="text-fg-muted shrink-0 text-right text-sm tabular-nums transition-colors duration-200"
+												>
+													{item.quantity}
+												</span>
+											{/if}
+										</label>
+
+										{#if placeable}
+											<div class="ml-auto">
+												<ShoppingAislePicker
+													itemName={item.name}
+													categories={aisleCategories}
+													{returnTo}
+												/>
+											</div>
+										{/if}
+									</li>
+								{/each}
+							</ul>
+						</section>
+					{/each}
+				</div>
 			</div>
 		</div>
 
 		<!-- Status bar, in the spirit of the editor's: a quiet summary along the
 		     bottom edge of the workbench. -->
 		<footer
-			class="border-border text-fg-subtle flex flex-wrap items-center gap-x-4 gap-y-1 border-t px-4 py-1.5 text-xs"
+			class="border-border text-fg-subtle flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t px-4 py-1.5 text-xs"
 		>
 			<span class="inline-flex items-center gap-1.5 tabular-nums">
 				{#if allDone}
@@ -538,8 +544,8 @@
 	</div>
 
 	{#if showCompleteToast}
-		<!-- The hero may be scrolled away by the time the last item is ticked,
-		     so the celebration follows the shopper to wherever they are. -->
+		<!-- The celebration follows the shopper to wherever they are, even when
+		     the shopping list pane has been scrolled to its end. -->
 		<div
 			class="pointer-events-none fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 md:bottom-6"
 			role="status"

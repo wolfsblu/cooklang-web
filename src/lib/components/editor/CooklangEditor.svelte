@@ -839,11 +839,9 @@
 
 <svelte:window onbeforeunload={handleBeforeUnload} />
 
-<div
-	class="mx-auto flex h-full min-h-0 w-full max-w-[110rem] flex-col overflow-hidden px-4 py-3 sm:px-6"
->
+<div class="flex h-full min-h-0 w-full flex-col overflow-hidden">
 	<!-- Header -->
-	<header class="mb-3 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2">
+	<header class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
 		<a
 			href="/recipe/{slug}"
 			class="text-fg-muted hover:text-fg inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-150"
@@ -891,7 +889,7 @@
 
 	{#if saveError}
 		<div
-			class="border-danger/30 bg-danger-soft text-danger-soft-fg mb-3 flex flex-wrap items-center gap-3 rounded-lg border px-4 py-2.5 text-sm"
+			class="border-danger/30 bg-danger-soft text-danger-soft-fg mb-3 flex flex-wrap items-center gap-3 border-b px-4 py-2.5 text-sm"
 			role="alert"
 		>
 			<TriangleAlertIcon class="size-4 shrink-0" />
@@ -915,7 +913,7 @@
 		method="POST"
 		action="?/save"
 		use:enhance={handleEnhance}
-		class="border-border bg-surface flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border"
+		class="border-border bg-surface flex min-h-0 flex-1 flex-col overflow-hidden border md:border-l-0"
 	>
 		<input type="hidden" name="expectedMtime" value={expectedMtime} />
 

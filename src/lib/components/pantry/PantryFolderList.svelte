@@ -28,79 +28,89 @@
 		'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap';
 </script>
 
-<nav aria-label="Pantry folders" class="min-w-0">
-	<!-- Below `lg` this is a sideways-scrolling strip of chips, so a long folder
-	     list never pushes the page wider than the viewport. -->
-	<ul
-		class="no-scrollbar flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-x-visible lg:pb-0"
-	>
-		<li class="shrink-0">
-			<a
-				href={href(null)}
-				aria-current={selected === null ? 'page' : undefined}
-				class="{entry} {selected === null
-					? 'bg-accent-soft text-accent-soft-fg font-medium'
-					: 'text-fg hover:bg-surface-muted'}"
-			>
-				<FolderOpenIcon class="size-4 shrink-0" />
-				<span class="truncate">All items</span>
-				<span class="ml-auto pl-2 text-xs tabular-nums opacity-70">{total}</span>
-			</a>
-		</li>
-
-		<li class="border-border hidden lg:my-1 lg:block lg:border-t" aria-hidden="true"></li>
-
-		{#each sections as section (section)}
+<div class="flex h-full min-h-0 flex-col">
+	<!-- The list owns the sidebar's scroll (above `lg` only): the New folder
+	     form below stays pinned to the bottom edge instead of scrolling away. -->
+	<nav aria-label="Pantry folders" class="min-w-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+		<!-- Below `lg` this is a sideways-scrolling strip of chips, so a long folder
+		     list never pushes the page wider than the viewport. -->
+		<ul class="no-scrollbar flex gap-1 overflow-x-auto p-2 lg:flex-col lg:overflow-x-visible">
 			<li class="shrink-0">
 				<a
-					href={href(section)}
-					aria-current={selected === section ? 'page' : undefined}
-					class="{entry} {selected === section
+					href={href(null)}
+					aria-current={selected === null ? 'page' : undefined}
+					class="{entry} {selected === null
 						? 'bg-accent-soft text-accent-soft-fg font-medium'
 						: 'text-fg hover:bg-surface-muted'}"
 				>
-					<FolderIcon class="size-4 shrink-0" />
-					<span class="truncate capitalize">{section}</span>
-					<span class="ml-auto pl-2 text-xs tabular-nums opacity-70">{counts[section] ?? 0}</span>
+					<FolderOpenIcon class="size-4 shrink-0" />
+					<span class="truncate">All items</span>
+					<span class="ml-auto pl-2 text-xs tabular-nums opacity-70">{total}</span>
 				</a>
 			</li>
-		{/each}
 
-		<!-- On narrow screens the strip has no room beneath it for a form, so the
+			<li class="border-border hidden lg:my-1 lg:block lg:border-t" aria-hidden="true"></li>
+
+			{#each sections as section (section)}
+				<li class="shrink-0">
+					<a
+						href={href(section)}
+						aria-current={selected === section ? 'page' : undefined}
+						class="{entry} {selected === section
+							? 'bg-accent-soft text-accent-soft-fg font-medium'
+							: 'text-fg hover:bg-surface-muted'}"
+					>
+						<FolderIcon class="size-4 shrink-0" />
+						<span class="truncate capitalize">{section}</span>
+						<span class="ml-auto pl-2 text-xs tabular-nums opacity-70">{counts[section] ?? 0}</span>
+					</a>
+				</li>
+			{/each}
+
+			<!-- On narrow screens the strip has no room beneath it for a form, so the
 		     trailing chip opens one in a dialog instead. -->
-		<li class="shrink-0 lg:hidden">
-			<button
-				type="button"
-				onclick={() => (addOpen = true)}
-				class="{entry} border-border text-fg-muted hover:text-fg hover:border-border-strong border border-dashed"
-			>
-				<FolderPlusIcon class="size-4 shrink-0" />
-				New folder
-			</button>
-		</li>
-	</ul>
+			<li class="shrink-0 lg:hidden">
+				<button
+					type="button"
+					onclick={() => (addOpen = true)}
+					class="{entry} border-border text-fg-muted hover:text-fg hover:border-border-strong border border-dashed"
+				>
+					<FolderPlusIcon class="size-4 shrink-0" />
+					New folder
+				</button>
+			</li>
+		</ul>
+	</nav>
 
 	<form
 		method="POST"
 		action="?/addSection"
 		use:enhance
-		class="mt-2 hidden items-stretch gap-2 lg:flex"
+		class="border-border hidden shrink-0 border-t p-2 lg:block"
 	>
-		<input
-			name="name"
-			class="field"
-			placeholder="New folder"
-			aria-label="New folder name"
-			required
-		/>
-		<!-- h-auto so the button stretches to the input's height instead of
-		     keeping the size variant's fixed one. -->
-		<Button type="submit" variant="outline" size="sm" class="h-auto shrink-0">
-			<PlusIcon class="size-4" />
-			Add
-		</Button>
+		<!-- One integrated control: the standard field owns the border and focus
+		     ring at a taller-than-usual height, and the action sits inside its
+		     trailing edge rather than beside it. -->
+		<div class="relative">
+			<input
+				name="name"
+				class="field h-11 pr-20"
+				placeholder="New folder"
+				aria-label="New folder name"
+				required
+			/>
+			<Button
+				type="submit"
+				variant="soft"
+				size="sm"
+				class="absolute top-1/2 right-1.5 -translate-y-1/2"
+			>
+				<PlusIcon class="size-4" />
+				Add
+			</Button>
+		</div>
 	</form>
-</nav>
+</div>
 
 <Dialog.Root bind:open={addOpen}>
 	<Dialog.Portal>

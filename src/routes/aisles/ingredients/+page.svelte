@@ -99,35 +99,33 @@
 				{#if category === null}
 					<AisleGroupedList entries={data.entries} categories={data.categories} onedit={openEdit} />
 				{:else}
-					<div
-						class="border-border flex shrink-0 flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5"
-					>
-						<h2 class="text-fg flex items-baseline gap-2 text-sm font-semibold">
-							<span class="capitalize">{category}</span>
-							<span class="text-fg-subtle text-xs font-normal tabular-nums">
-								{visibleEntries.length}
-								{visibleEntries.length === 1 ? 'ingredient' : 'ingredients'}
-							</span>
-						</h2>
-
-						<Button size="sm" onclick={openAdd}>
-							<PlusIcon class="size-4" />
-							Add ingredient
-						</Button>
-					</div>
-
 					<div class="min-h-0 flex-1 overflow-y-auto">
+						<div
+							class="border-border flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5"
+						>
+							<h2 class="text-fg flex items-baseline gap-2 text-sm font-semibold">
+								<span class="capitalize">{category}</span>
+								<span class="text-fg-subtle text-xs font-normal tabular-nums">
+									{visibleEntries.length}
+									{visibleEntries.length === 1 ? 'ingredient' : 'ingredients'}
+								</span>
+							</h2>
+
+							<Button size="sm" onclick={openAdd}>
+								<PlusIcon class="size-4" />
+								Add ingredient
+							</Button>
+						</div>
+
 						{#if visibleEntries.length > 0}
-							<div class="px-4">
-								<AisleEntryTable
-									entries={visibleEntries}
-									showCategory={false}
-									onedit={openEdit}
-									selectable
-									{selected}
-									formId="aisle-bulk-edit"
-								/>
-							</div>
+							<AisleEntryTable
+								entries={visibleEntries}
+								showCategory={false}
+								onedit={openEdit}
+								selectable
+								{selected}
+								formId="aisle-bulk-edit"
+							/>
 						{:else}
 							<EmptyState
 								icon={SignpostIcon}

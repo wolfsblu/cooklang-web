@@ -39,7 +39,9 @@
 	pantry table sorts because its order means nothing; here the order shown is
 	the order stored, and a sortable column would misrepresent what Save writes.
 -->
-<table class="w-full text-left">
+<table
+	class="w-full text-left [&_tbody_td:first-child]:pl-4 [&_tbody_td:last-child]:pr-4 [&_thead_th:first-child]:pl-4 [&_thead_th:last-child]:pr-4"
+>
 	<thead>
 		<tr class="border-border text-fg-muted border-b text-xs">
 			{#if selectable}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { MinusIcon, PlusIcon, Trash2Icon } from '@lucide/svelte';
+	import { ChevronDownIcon, ChevronUpIcon, MinusIcon, PlusIcon, Trash2Icon } from '@lucide/svelte';
 	import type { ResolvedSelection } from '$lib/server/shopping/store';
 	import { formatScale, stepScaleDown, stepScaleUp } from '$lib/utils/scale';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -9,24 +9,66 @@
 
 	interface Props {
 		selections: ResolvedSelection[];
+		/** Mobile only: whether the bottom sheet is expanded. */
+		open?: boolean;
+		ontoggle?: () => void;
 	}
 
-	const { selections }: Props = $props();
+	const { selections, open = true, ontoggle }: Props = $props();
 
 	let confirmingClear = $state(false);
 	let clearForm = $state<HTMLFormElement | null>(null);
 </script>
 
-<section class="space-y-3 p-4">
-	<div class="border-border flex items-center justify-between gap-2 border-b pb-2">
-		<h2 class="text-fg text-sm font-semibold">Recipes ({selections.length})</h2>
+<section class="flex h-full min-h-0 flex-col">
+	<div
+		class="border-border flex h-10 shrink-0 items-stretch justify-between gap-0 border-b px-0 lg:h-auto lg:items-center lg:gap-2 lg:px-4 lg:py-2"
+	>
+		<h2 class="text-fg flex min-w-0 flex-1 text-sm font-semibold">
+			<!-- On phones the title is the drawer handle; from lg the pane is a
+			     permanent sidebar, so the plain heading is enough. -->
+			<button
+				type="button"
+				class="hover:bg-surface-muted flex w-full items-center gap-2 px-4 py-2 text-left transition-colors lg:hidden"
+				aria-expanded={open}
+				aria-controls="shopping-recipes-list"
+				aria-label={open
+					? `Hide recipes (${selections.length})`
+					: `Show recipes (${selections.length})`}
+				onclick={() => ontoggle?.()}
+			>
+				{#if open}
+					<ChevronDownIcon class="text-fg-subtle size-4 shrink-0" aria-hidden="true" />
+				{:else}
+					<ChevronUpIcon class="text-fg-subtle size-4 shrink-0" aria-hidden="true" />
+				{/if}
+				<span class="truncate">Recipes ({selections.length})</span>
+			</button>
+			<span class="hidden lg:block">Recipes ({selections.length})</span>
+		</h2>
 
 		{#if selections.length > 0}
-			<form method="POST" action="?/clear" use:enhance bind:this={clearForm}>
+			<form
+				method="POST"
+				action="?/clear"
+				use:enhance
+				bind:this={clearForm}
+				class="flex shrink-0 self-stretch lg:self-center"
+			>
+				<button
+					type="button"
+					class="text-danger-soft-fg bg-danger-soft hover:bg-danger-soft/70 flex h-full w-10 items-center justify-center transition-colors duration-150 lg:hidden"
+					aria-label="Clear all"
+					title="Clear all"
+					onclick={() => (confirmingClear = true)}
+				>
+					<Trash2Icon class="size-4" />
+				</button>
 				<Button
 					type="button"
 					variant="dangerSoft"
 					size="sm"
+					class="hidden lg:inline-flex"
 					onclick={() => (confirmingClear = true)}
 				>
 					<Trash2Icon class="size-4" />
@@ -36,7 +78,12 @@
 		{/if}
 	</div>
 
-	<ul class="divide-border divide-y">
+	<ul
+		id="shopping-recipes-list"
+		class="divide-border min-h-0 flex-1 divide-y overflow-y-auto px-4 pb-4 {open
+			? 'block'
+			: 'hidden'} lg:block"
+	>
 		{#each selections as selection (selection.slug)}
 			<li class="space-y-1.5 py-2 first:pt-0">
 				<!-- A line of its own, so the title is not truncated to whatever the

@@ -10,6 +10,7 @@
 	} from '@lucide/svelte';
 	import type { PantryItemView } from '../../../routes/pantry/+page.server';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import ButtonGroup from '$lib/components/ui/ButtonGroup.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 
 	interface Props {
@@ -29,7 +30,7 @@
 </script>
 
 <tr class="hover:bg-surface-muted/60 transition-colors" data-testid="pantry-item">
-	<td class="py-2 pr-2">
+	<td class="py-2 pr-2 pl-4">
 		<div class="flex min-w-0 items-center gap-2">
 			<!-- An open box reads as the greyed-out file: kept in the list, not stocked. -->
 			{#if item.disabled}
@@ -102,7 +103,7 @@
 		{item.expire ?? ''}
 	</td>
 
-	<td class="py-2">
+	<td class="py-2 pr-4">
 		<div class="flex shrink-0 items-center justify-end gap-1">
 			<form method="POST" action="?/toggle" use:enhance>
 				<input type="hidden" name="section" value={item.section} />
@@ -120,17 +121,19 @@
 				</IconButton>
 			</form>
 
-			<IconButton size="sm" label="Edit {item.name}" onclick={() => onedit(item)}>
-				<PencilIcon class="size-4" />
-			</IconButton>
-
-			<form method="POST" action="?/remove" use:enhance>
-				<input type="hidden" name="section" value={item.section} />
-				<input type="hidden" name="name" value={item.name} />
-				<IconButton type="submit" size="sm" variant="dangerSoft" label="Remove {item.name}">
-					<Trash2Icon class="size-4" />
+			<ButtonGroup>
+				<IconButton size="sm" label="Edit {item.name}" onclick={() => onedit(item)}>
+					<PencilIcon class="size-4" />
 				</IconButton>
-			</form>
+
+				<form method="POST" action="?/remove" use:enhance class="flex">
+					<input type="hidden" name="section" value={item.section} />
+					<input type="hidden" name="name" value={item.name} />
+					<IconButton type="submit" size="sm" variant="dangerSoft" label="Remove {item.name}">
+						<Trash2Icon class="size-4" />
+					</IconButton>
+				</form>
+			</ButtonGroup>
 		</div>
 	</td>
 </tr>

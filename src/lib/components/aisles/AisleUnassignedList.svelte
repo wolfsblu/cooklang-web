@@ -27,14 +27,6 @@
 </script>
 
 <div class="flex h-full min-h-0 flex-col">
-	<div class="border-border shrink-0 border-b px-4 py-3">
-		<h2 class="text-fg text-sm font-semibold">Unassigned ingredients</h2>
-		<p class="text-fg-muted mt-1 max-w-4xl text-sm">
-			These appear in your recipes but not in any aisle, so they land under “Other” at the bottom of
-			the shopping list. Tick several to file them all at once.
-		</p>
-	</div>
-
 	{#if items.length === 0}
 		<div class="min-h-0 flex-1 overflow-y-auto">
 			<EmptyState
@@ -58,64 +50,79 @@
 
 		<ul class="divide-border min-h-0 flex-1 divide-y overflow-y-auto">
 			{#each items as item (item.name)}
-				<li class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
-					<!-- The real bulk-form input, associated with the sticky bar's form
-					     by id so it submits from out here in the row. -->
-					<input
-						type="checkbox"
-						name="name"
-						value={item.name}
-						form="aisle-bulk-assign"
-						checked={selected.has(item.name)}
-						onchange={(event) =>
-							event.currentTarget.checked ? selected.add(item.name) : selected.delete(item.name)}
-						class="border-border text-accent focus:ring-accent size-4 shrink-0 rounded"
-						aria-label="Select {item.name}"
-					/>
+				<li class="px-4 py-3">
+					<div class="flex items-start gap-3">
+						<!-- The real bulk-form input, associated with the sticky bar's form
+						     by id so it submits from out here in the row. -->
+						<input
+							type="checkbox"
+							name="name"
+							value={item.name}
+							form="aisle-bulk-assign"
+							checked={selected.has(item.name)}
+							onchange={(event) =>
+								event.currentTarget.checked ? selected.add(item.name) : selected.delete(item.name)}
+							class="border-border text-accent focus:ring-accent mt-0.5 size-4 shrink-0 rounded"
+							aria-label="Select {item.name}"
+						/>
 
-					<div class="min-w-0 flex-1">
-						<span class="text-fg font-medium capitalize">{item.name}</span>
-						<span class="text-fg-subtle ml-2 text-xs tabular-nums">
-							{item.recipeCount}
-							{item.recipeCount === 1 ? 'recipe' : 'recipes'}
-						</span>
-						<div class="text-fg-muted truncate text-xs">
-							{item.recipes.map((recipe) => recipe.title).join(', ')}
+						<div class="min-w-0 flex-1">
+							<div class="flex flex-wrap items-baseline gap-x-2">
+								<span class="text-fg font-medium break-words capitalize">{item.name}</span>
+								<span class="text-fg-subtle text-xs tabular-nums">
+									{item.recipeCount}
+									{item.recipeCount === 1 ? 'recipe' : 'recipes'}
+								</span>
+							</div>
+							<div class="text-fg-muted line-clamp-2 text-xs sm:line-clamp-none sm:truncate">
+								{item.recipes.map((recipe) => recipe.title).join(', ')}
+							</div>
 						</div>
 					</div>
 
-					{#if item.suggestedAliasOf}
-						<!-- The far better fix for a plural. Adding "onions" as its own
-						     entry works, but the file then grows a second line for every
-						     spelling of everything. -->
-						<form method="POST" action="?/assign" use:enhance class="shrink-0">
-							<input type="hidden" name="name" value={item.name} />
-							<input type="hidden" name="aliasOf" value={item.suggestedAliasOf} />
-							<input type="hidden" name="category" value={categories[0] ?? ''} />
-							<input type="hidden" name="returnTo" value={returnTo} />
-							<Button type="submit" size="sm" variant="soft">
-								Same as {item.suggestedAliasOf}
-							</Button>
-						</form>
-					{/if}
+					<div class="mt-2 flex flex-col gap-2 pl-7 sm:flex-row sm:flex-wrap sm:items-center">
+						{#if item.suggestedAliasOf}
+							<!-- The far better fix for a plural. Adding "onions" as its own
+							     entry works, but the file then grows a second line for every
+							     spelling of everything. -->
+							<form method="POST" action="?/assign" use:enhance class="sm:shrink-0">
+								<input type="hidden" name="name" value={item.name} />
+								<input type="hidden" name="aliasOf" value={item.suggestedAliasOf} />
+								<input type="hidden" name="category" value={categories[0] ?? ''} />
+								<input type="hidden" name="returnTo" value={returnTo} />
+								<Button type="submit" size="sm" variant="soft" class="w-full sm:w-auto">
+									Same as {item.suggestedAliasOf}
+								</Button>
+							</form>
+						{/if}
 
-					<form method="POST" action="?/assign" use:enhance class="flex shrink-0 gap-2">
-						<input type="hidden" name="name" value={item.name} />
-						<input type="hidden" name="returnTo" value={returnTo} />
-						<!-- A native select: this is a real POST form and the Bits UI
-						     select does not contribute a form value. -->
-						<select
-							name="category"
-							class="field w-auto capitalize"
-							aria-label="Aisle for {item.name}"
+						<form
+							method="POST"
+							action="?/assign"
+							use:enhance
+							class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center"
 						>
-							{#each categories as category (category)}
-								<option value={category}>{category}</option>
-							{/each}
-						</select>
-						<Button type="submit" size="sm" variant="outline" class="h-auto shrink-0">Assign</Button
-						>
-					</form>
+							<input type="hidden" name="name" value={item.name} />
+							<input type="hidden" name="returnTo" value={returnTo} />
+							<!-- A native select: this is a real POST form and the Bits UI
+							     select does not contribute a form value. -->
+							<select
+								name="category"
+								class="field w-full min-w-0 capitalize sm:w-auto"
+								aria-label="Aisle for {item.name}"
+							>
+								{#each categories as category (category)}
+									<option value={category}>{category}</option>
+								{/each}
+							</select>
+							<Button
+								type="submit"
+								size="sm"
+								variant="outline"
+								class="h-auto w-full shrink-0 sm:w-auto">Assign</Button
+							>
+						</form>
+					</div>
 				</li>
 			{/each}
 		</ul>

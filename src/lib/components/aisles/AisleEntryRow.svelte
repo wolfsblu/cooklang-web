@@ -4,6 +4,7 @@
 	import type { SvelteSet } from 'svelte/reactivity';
 	import type { AisleEntryView } from '../../../routes/aisles/ingredients/+page.server';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import ButtonGroup from '$lib/components/ui/ButtonGroup.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 
 	interface Props {
@@ -82,18 +83,18 @@
 	{/if}
 
 	<td class="py-2">
-		<div class="flex shrink-0 items-center justify-end gap-1">
+		<ButtonGroup>
 			<IconButton size="sm" label="Edit {entry.name}" onclick={() => onedit(entry)}>
 				<PencilIcon class="size-4" />
 			</IconButton>
 
-			<form method="POST" action="?/remove" use:enhance>
+			<form method="POST" action="?/remove" use:enhance class="flex">
 				<input type="hidden" name="category" value={entry.category} />
 				<input type="hidden" name="name" value={entry.name} />
 				<IconButton type="submit" size="sm" variant="dangerSoft" label="Remove {entry.name}">
 					<Trash2Icon class="size-4" />
 				</IconButton>
 			</form>
-		</div>
+		</ButtonGroup>
 	</td>
 </tr>
