@@ -82,6 +82,7 @@
 			page.url.searchParams.get('q') || '',
 			{
 				tags: [],
+				ingredients: [],
 				course: null,
 				timeRange: { min: 0, max: Infinity },
 				servingsRange: { min: 0, max: Infinity }

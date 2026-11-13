@@ -11,12 +11,13 @@
 		isOpen: boolean;
 		/** Facets come from the whole library, not the filtered view. */
 		allTags: string[];
+		allIngredients: string[];
 		allCourses: string[];
 	};
 
-	let { isOpen = $bindable(), allTags, allCourses }: Props = $props();
+	let { isOpen = $bindable(), allTags, allIngredients, allCourses }: Props = $props();
 </script>
 
 <Drawer bind:open={isOpen} title="Filter recipes">
-	<RecipeFilterForm {allTags} {allCourses} />
+	<RecipeFilterForm {allTags} {allIngredients} {allCourses} />
 </Drawer>

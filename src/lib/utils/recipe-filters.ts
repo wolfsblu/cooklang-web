@@ -17,10 +17,16 @@ export interface FilterableRecipe {
 	course: string | null;
 	servings: number | null;
 	timeMinutes: number | null;
+	/**
+	 * Listed ingredient names. Only index entries carry these; the projected
+	 * card models leave the field out, since the grid does not render it.
+	 */
+	ingredientNames?: string[];
 }
 
 export interface FilterState {
 	tags: string[];
+	ingredients: string[];
 	course: string | null;
 	timeRange: { min: number; max: number };
 	servingsRange: { min: number; max: number };
@@ -39,7 +45,7 @@ export function getRecipeServings(recipe: FilterableRecipe): number {
 	return recipe.servings ?? 0;
 }
 
-/** Keep recipes matching every active filter. Tags use AND logic. */
+/** Keep recipes matching every active filter. Tags and ingredients use AND logic. */
 export function applyFilters<T extends FilterableRecipe>(
 	recipes: readonly T[],
 	filters: FilterState
@@ -47,6 +53,16 @@ export function applyFilters<T extends FilterableRecipe>(
 	return recipes.filter((recipe) => {
 		if (filters.tags.length > 0 && !filters.tags.every((tag) => recipe.tags.includes(tag))) {
 			return false;
+		}
+
+		if (filters.ingredients.length > 0) {
+			// Ingredient names keep the spelling a recipe used, so compare without
+			// case: "Salt" in the facet must still match a recipe writing "salt".
+			const ingredientNames = recipe.ingredientNames ?? [];
+			const matches = filters.ingredients.every((wanted) =>
+				ingredientNames.some((name) => name.toLowerCase() === wanted.toLowerCase())
+			);
+			if (!matches) return false;
 		}
 
 		if (filters.course && recipe.course !== filters.course) {

@@ -171,7 +171,8 @@
 		color: var(--color-fg-subtle);
 	}
 
-	.field:focus {
+	.field:focus,
+	.field:focus-within {
 		border-color: var(--color-accent);
 		outline: none;
 		box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 25%, transparent);

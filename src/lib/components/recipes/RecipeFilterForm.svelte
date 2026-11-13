@@ -19,11 +19,12 @@
 	type Props = {
 		/** Facets come from the whole library, not the filtered view. */
 		allTags: string[];
+		allIngredients: string[];
 		allCourses: string[];
 		class?: string;
 	};
 
-	const { allTags, allCourses, class: className }: Props = $props();
+	const { allTags, allIngredients, allCourses, class: className }: Props = $props();
 
 	/** Slider ceilings; at the top of the range the filter means "no upper bound". */
 	const TIME_MAX = 180;
@@ -34,6 +35,7 @@
 	const initial = parseFilterParams(page.url.searchParams);
 
 	let selectedTags = $state<string[]>([...initial.tags]);
+	let selectedIngredients = $state<string[]>([...initial.ingredients]);
 	let selectedCourse = $state(initial.course ?? '');
 	let timeRange = $state<number[]>([
 		initial.timeRange.min,
@@ -52,6 +54,7 @@
 	$effect(() => {
 		const current = parseFilterParams(page.url.searchParams);
 		selectedTags = [...current.tags];
+		selectedIngredients = [...current.ingredients];
 		selectedCourse = current.course ?? '';
 		timeRange = [
 			current.timeRange.min,
@@ -82,18 +85,21 @@
 	function commit(
 		changes: Partial<{
 			tags: string[];
+			ingredients: string[];
 			course: string | null;
 			timeRange: number[];
 			servingsRange: number[];
 		}>
 	) {
 		const tags = changes.tags ?? selectedTags;
+		const ingredients = changes.ingredients ?? selectedIngredients;
 		const course = changes.course === undefined ? selectedCourse || null : changes.course;
 		const time = changes.timeRange ?? timeRange;
 		const servings = changes.servingsRange ?? servingsRange;
 
 		navigate({
 			tags,
+			ingredients,
 			course,
 			timeRange: {
 				min: time[0],
@@ -109,6 +115,11 @@
 	function applyTags(tags: string[]) {
 		selectedTags = tags;
 		commit({ tags });
+	}
+
+	function applyIngredients(ingredients: string[]) {
+		selectedIngredients = ingredients;
+		commit({ ingredients });
 	}
 
 	function applyCourse(course: string) {
@@ -129,12 +140,14 @@
 	/** Clear every filter in one go; search and sort are left alone. */
 	function clearAll() {
 		selectedTags = [];
+		selectedIngredients = [];
 		selectedCourse = '';
 		timeRange = [0, TIME_MAX];
 		servingsRange = [0, SERVINGS_MAX];
 
 		navigate({
 			tags: [],
+			ingredients: [],
 			course: null,
 			timeRange: { min: 0, max: Infinity },
 			servingsRange: { min: 0, max: Infinity }
@@ -151,6 +164,18 @@
 				options={allTags}
 				label="Tags"
 				onchange={applyTags}
+			/>
+		</div>
+	{/if}
+
+	{#if allIngredients.length > 0}
+		<div>
+			<h3 class="text-fg mb-2 text-sm font-medium">Ingredients</h3>
+			<MultiSelect
+				bind:selected={selectedIngredients}
+				options={allIngredients}
+				label="Ingredients"
+				onchange={applyIngredients}
 			/>
 		</div>
 	{/if}

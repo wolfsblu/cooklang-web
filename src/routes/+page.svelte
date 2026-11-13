@@ -31,6 +31,7 @@
 
 	const activeFilterCount = $derived(
 		(filters.tags.length > 0 ? 1 : 0) +
+			(filters.ingredients.length > 0 ? 1 : 0) +
 			(filters.course !== null ? 1 : 0) +
 			(filters.timeRange.min > 0 || filters.timeRange.max !== Infinity ? 1 : 0) +
 			(filters.servingsRange.min > 0 || filters.servingsRange.max !== Infinity ? 1 : 0)
@@ -40,6 +41,7 @@
 		const parts: string[] = [];
 
 		if (filters.tags.length > 0) parts.push(filters.tags.join(', '));
+		if (filters.ingredients.length > 0) parts.push(filters.ingredients.join(', '));
 		if (filters.course) parts.push(filters.course);
 
 		const { min: timeMin, max: timeMax } = filters.timeRange;
@@ -150,7 +152,11 @@
 						</div>
 
 						<div class="min-h-0 flex-1 overflow-y-auto p-4">
-							<RecipeFilterForm allTags={data.allTags} allCourses={data.allCourses} />
+							<RecipeFilterForm
+								allTags={data.allTags}
+								allIngredients={data.allIngredients}
+								allCourses={data.allCourses}
+							/>
 						</div>
 					</div>
 				</aside>
@@ -210,4 +216,9 @@
 	</div>
 </Page>
 
-<FilterDrawer bind:isOpen={isDrawerOpen} allTags={data.allTags} allCourses={data.allCourses} />
+<FilterDrawer
+	bind:isOpen={isDrawerOpen}
+	allTags={data.allTags}
+	allIngredients={data.allIngredients}
+	allCourses={data.allCourses}
+/>

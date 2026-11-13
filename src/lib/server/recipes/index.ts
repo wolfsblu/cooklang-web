@@ -87,6 +87,8 @@ export interface RecipeIndex {
 	bySlug: ReadonlyMap<string, RecipeEntry>;
 	allTags: string[];
 	allCourses: string[];
+	/** Distinct listed ingredient names across the library, for the filter facet. */
+	allIngredients: string[];
 	scannedAt: number;
 	/** Newest mtime across all recipes; used as a cache key by the shopping list. */
 	maxMtimeMs: number;
@@ -358,6 +360,7 @@ async function buildIndex(): Promise<RecipeIndex> {
 			bySlug: new Map(),
 			allTags: [],
 			allCourses: [],
+			allIngredients: [],
 			scannedAt,
 			maxMtimeMs: 0,
 			readable: false
@@ -446,6 +449,15 @@ async function buildIndex(): Promise<RecipeIndex> {
 		allCourses: [...new Set(live.map((entry) => entry.course).filter((c) => c !== null))].sort(
 			(a, b) => a.localeCompare(b)
 		),
+		// One entry per name regardless of spelling, keeping the first spelling
+		// seen; filtering compares case-insensitively either way.
+		allIngredients: [
+			...new Map(
+				live
+					.flatMap((entry) => entry.ingredientNames)
+					.map((name) => [name.toLowerCase(), name] as const)
+			).values()
+		].sort((a, b) => a.localeCompare(b)),
 		scannedAt,
 		maxMtimeMs: live.reduce((max, entry) => Math.max(max, entry.mtimeMs), 0),
 		readable: true

@@ -50,6 +50,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		// Facets come from the whole library rather than the filtered view, so
 		// filter options do not vanish as you narrow the results.
 		allTags: index.allTags,
-		allCourses: index.allCourses
+		allCourses: index.allCourses,
+		allIngredients: index.allIngredients
 	};
 };

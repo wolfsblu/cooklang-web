@@ -4,6 +4,7 @@ import type { FilterState } from './recipe-filters';
 
 const EMPTY: FilterState = {
 	tags: [],
+	ingredients: [],
 	course: null,
 	timeRange: { min: 0, max: Infinity },
 	servingsRange: { min: 0, max: Infinity }
@@ -17,6 +18,11 @@ describe('parseFilterParams', () => {
 	it('splits tags and drops empty segments', () => {
 		const filters = parseFilterParams(new URLSearchParams('tags=quick,,vegan,'));
 		expect(filters.tags).toEqual(['quick', 'vegan']);
+	});
+
+	it('splits ingredients and drops empty segments', () => {
+		const filters = parseFilterParams(new URLSearchParams('ingredients=olive%20oil,,garlic,'));
+		expect(filters.ingredients).toEqual(['olive oil', 'garlic']);
 	});
 
 	it('reads numeric ranges', () => {
@@ -47,6 +53,7 @@ describe('buildFilterUrl', () => {
 	it('round-trips through parseFilterParams', () => {
 		const filters: FilterState = {
 			tags: ['quick', 'vegan'],
+			ingredients: ['olive oil', 'garlic'],
 			course: 'dinner',
 			timeRange: { min: 10, max: 45 },
 			servingsRange: { min: 2, max: 6 }

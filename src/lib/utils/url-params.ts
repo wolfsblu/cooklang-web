@@ -10,6 +10,7 @@ import type { FilterState } from './recipe-filters';
 export function parseFilterParams(searchParams: URLSearchParams): FilterState {
 	return {
 		tags: searchParams.get('tags')?.split(',').filter(Boolean) || [],
+		ingredients: searchParams.get('ingredients')?.split(',').filter(Boolean) || [],
 		course: searchParams.get('course') || null,
 		timeRange: {
 			min: Number(searchParams.get('time_min')) || 0,
@@ -39,6 +40,7 @@ export function buildFilterUrl(
 
 	if (query) params.set('q', query);
 	if (filters.tags.length) params.set('tags', filters.tags.join(','));
+	if (filters.ingredients.length) params.set('ingredients', filters.ingredients.join(','));
 	if (filters.course) params.set('course', filters.course);
 	if (filters.timeRange.min > 0) params.set('time_min', String(filters.timeRange.min));
 	if (filters.timeRange.max !== Infinity) params.set('time_max', String(filters.timeRange.max));
