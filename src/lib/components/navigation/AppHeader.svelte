@@ -1,64 +1,47 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
-	import { ChefHatIcon, MoonIcon, SearchIcon, SunIcon, XIcon } from '@lucide/svelte';
+	import { onMount } from 'svelte';
+	import { ChefHatIcon, MoonIcon, SearchIcon, SunIcon } from '@lucide/svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import SearchDialog from '$lib/components/search/SearchDialog.svelte';
 	import { themeStore } from '$lib/stores/theme.svelte';
 
 	/**
-	 * Sticky header with the brand, global recipe search and the theme toggle.
-	 * The app previously had no header at all.
+	 * Sticky header with the brand, the global search trigger and the theme
+	 * toggle.
 	 *
-	 * Search is a real GET form so it works without JavaScript; the debounced
-	 * navigation below is an enhancement on top of that, not a replacement.
+	 * The trigger is a real link to `/search` so the feature works without
+	 * JavaScript; the overlay is an enhancement layered on top of it. On
+	 * desktop the link looks like the search field it used to be, because that
+	 * is what people click, but it no longer navigates on every typed
+	 * character: search is a command palette now.
 	 */
-	let query = $state(page.url.searchParams.get('q') ?? '');
-	let input = $state<HTMLInputElement | null>(null);
-	let timer: ReturnType<typeof setTimeout> | null = null;
+	let searchOpen = $state(false);
+	let shortcut = $state('Ctrl K');
 
-	// Follow external navigation (back button, clearing filters) without
-	// clobbering what is being typed.
-	$effect(() => {
-		const fromUrl = page.url.searchParams.get('q') ?? '';
-		if (document.activeElement !== input) query = fromUrl;
+	onMount(() => {
+		if (/mac|iphone|ipad/i.test(navigator.userAgent)) shortcut = '⌘K';
 	});
 
-	function navigate(value: string) {
-		const params = new URLSearchParams(page.url.searchParams);
-
-		// A new search is a new result set; carrying the old page number over
-		// would land on page 4 of something that now has two pages.
-		params.delete('page');
-
-		if (value) params.set('q', value);
-		else params.delete('q');
-
-		const search = params.toString();
-		goto(search ? `/?${search}` : '/', {
-			keepFocus: true,
-			noScroll: true,
-			replaceState: true
-		});
-	}
-
-	function onInput() {
-		if (timer) clearTimeout(timer);
-		timer = setTimeout(() => navigate(query), 250);
-	}
-
-	function clear() {
-		query = '';
-		navigate('');
-		input?.focus();
+	function isEditable(target: EventTarget | null): boolean {
+		return (
+			target instanceof HTMLElement &&
+			target.matches('input, textarea, select, [contenteditable="true"]')
+		);
 	}
 
 	function onKeydown(event: KeyboardEvent) {
-		// "/" focuses search, the way it does almost everywhere else.
-		if (event.key === '/' && document.activeElement !== input) {
-			const target = event.target as HTMLElement | null;
-			if (target?.matches('input, textarea, [contenteditable]')) return;
+		// Cmd/Ctrl+K is the palette shortcut everywhere it has become expected.
+		if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
 			event.preventDefault();
-			input?.focus();
+			searchOpen = !searchOpen;
+			return;
+		}
+
+		// "/" opens search the way it does almost everywhere else, but only
+		// outside a field or the browser's own quick-find behaves unexpectedly.
+		if (event.key === '/' && !searchOpen && !isEditable(event.target)) {
+			event.preventDefault();
+			searchOpen = true;
 		}
 	}
 </script>
@@ -73,31 +56,27 @@
 			<ChefHatIcon class="text-accent size-6" />
 		</a>
 
-		<form method="GET" action="/" class="relative min-w-0 flex-1 sm:max-w-md">
-			<SearchIcon
-				class="text-fg-subtle pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
-			/>
-			<input
-				bind:this={input}
-				bind:value={query}
-				oninput={onInput}
-				type="search"
-				name="q"
-				placeholder="Search recipes"
-				aria-label="Search recipes"
-				class="field pr-9 pl-9"
-			/>
-			{#if query}
-				<button
-					type="button"
-					onclick={clear}
-					class="text-fg-subtle hover:text-fg absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 transition-colors duration-150"
-					aria-label="Clear search"
-				>
-					<XIcon class="size-4" />
-				</button>
-			{/if}
-		</form>
+		<a
+			href="/search"
+			onclick={(event) => {
+				// Plain left-click opens the palette; modified clicks keep the
+				// link's normal behaviour so a results page can be opened in a
+				// new tab.
+				if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) return;
+				event.preventDefault();
+				searchOpen = true;
+			}}
+			class="border-border bg-surface text-fg-subtle hover:border-border-strong hover:text-fg-muted flex h-10 min-w-0 flex-1 items-center gap-2 rounded-md border px-3 text-sm transition-colors duration-150 sm:max-w-md"
+			aria-label="Search recipes, ingredients, aisles and pantry"
+		>
+			<SearchIcon class="size-4 shrink-0" />
+			<span class="min-w-0 flex-1 truncate text-left">Search…</span>
+			<kbd
+				class="border-border bg-surface-muted text-fg-subtle text-2xs hidden shrink-0 items-center rounded border px-1.5 py-0.5 font-medium sm:inline-flex"
+			>
+				{shortcut}
+			</kbd>
+		</a>
 
 		<div class="ml-auto">
 			<IconButton
@@ -113,3 +92,5 @@
 		</div>
 	</div>
 </header>
+
+<SearchDialog bind:open={searchOpen} />
