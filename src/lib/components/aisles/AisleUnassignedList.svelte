@@ -4,7 +4,6 @@
 	import {
 		ArrowRightIcon,
 		CheckIcon,
-		ChevronDownIcon,
 		CircleCheckIcon,
 		FlameIcon,
 		SignpostIcon,
@@ -17,6 +16,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import AisleBulkBar from './AisleBulkBar.svelte';
+	import AisleCategoryField from './AisleCategoryField.svelte';
 
 	interface Props {
 		items: AisleCoverageItem[];
@@ -448,38 +448,22 @@
 								<form method="POST" action="?/assign" use:enhance={submit}>
 									<input type="hidden" name="name" value={item.name} />
 									<input type="hidden" name="returnTo" value={returnTo} />
-									<!-- A native select: this is a real POST form and the Bits UI
-									     select does not contribute a form value. The action sits
-									     inside the field's trailing edge, matching the pantry's
-									     New folder control. -->
-									<div class="relative">
-										<select
-											name="category"
-											class="field h-11 w-full appearance-none py-0 pr-30 text-sm capitalize"
-											aria-label="Aisle for {item.name}"
-										>
-											{#each categories as category (category)}
-												<option value={category}>{category}</option>
-											{/each}
-										</select>
-										<ChevronDownIcon
-											class="text-fg-subtle pointer-events-none absolute top-1/2 right-[6.5rem] size-4 -translate-y-1/2"
-											aria-hidden="true"
-										/>
-										<Button
-											type="submit"
-											size="sm"
-											variant="soft"
-											class="absolute top-1/2 right-1.5 -translate-y-1/2"
-											loading={pending?.name === item.name && !pending.alias}
-											disabled={pending?.name === item.name}
-										>
-											{#if !(pending?.name === item.name && !pending.alias)}
-												<ArrowRightIcon class="size-3.5" />
-											{/if}
-											Assign
-										</Button>
-									</div>
+									<AisleCategoryField {categories} label="Aisle for {item.name}">
+										{#snippet action()}
+											<Button
+												type="submit"
+												size="sm"
+												variant="soft"
+												loading={pending?.name === item.name && !pending.alias}
+												disabled={pending?.name === item.name}
+											>
+												{#if !(pending?.name === item.name && !pending.alias)}
+													<ArrowRightIcon class="size-3.5" />
+												{/if}
+												Assign
+											</Button>
+										{/snippet}
+									</AisleCategoryField>
 								</form>
 							</div>
 						</article>
@@ -498,12 +482,14 @@
 	>
 		{#snippet controls()}
 			<input type="hidden" name="returnTo" value={returnTo} />
-			<select name="category" class="field w-auto capitalize" aria-label="Assign selected to aisle">
-				{#each categories as category (category)}
-					<option value={category}>{category}</option>
-				{/each}
-			</select>
-			<Button type="submit" size="sm" variant="primary">Assign</Button>
+			<AisleCategoryField {categories} label="Assign selected to aisle" class="sm:w-80">
+				{#snippet action()}
+					<Button type="submit" size="sm" variant="soft">
+						<ArrowRightIcon class="size-3.5" />
+						Assign
+					</Button>
+				{/snippet}
+			</AisleCategoryField>
 		{/snippet}
 	</AisleBulkBar>
 </div>

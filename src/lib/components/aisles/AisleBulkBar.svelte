@@ -58,7 +58,7 @@
 		Clear
 	</button>
 
-	<div class="ml-auto flex flex-wrap items-center gap-2">
+	<div class="ml-auto flex w-full flex-wrap items-center gap-2 sm:w-auto">
 		{@render controls()}
 	</div>
 </form>
