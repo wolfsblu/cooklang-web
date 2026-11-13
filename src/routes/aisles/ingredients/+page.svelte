@@ -99,7 +99,7 @@
 				{#if category === null}
 					<AisleGroupedList entries={data.entries} categories={data.categories} onedit={openEdit} />
 				{:else}
-					<div class="min-h-0 flex-1 overflow-y-auto">
+					<div class="relative min-h-0 flex-1 overflow-y-auto">
 						<div
 							class="border-border flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5"
 						>

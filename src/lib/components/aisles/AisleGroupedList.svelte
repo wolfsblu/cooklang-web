@@ -24,8 +24,11 @@
 </script>
 
 <!-- Groups are sections of the single workbench pane, separated by hairlines
-     rather than each sitting in its own card. -->
-<div class="min-h-0 flex-1 overflow-y-auto">
+     rather than each sitting in its own card. `relative` keeps the absolutely
+     positioned screen-reader text inside the pane's clipping: without a
+     containing block here, a label low in the list stretches the document's
+     scroll height and the whole workbench scrolls with it. -->
+<div class="relative min-h-0 flex-1 overflow-y-auto">
 	{#each categories as category (category)}
 		{@const group = byCategory[category] ?? []}
 		<section class="border-border border-t first:border-t-0">
