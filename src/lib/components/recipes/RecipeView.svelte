@@ -551,13 +551,7 @@
 											<p class="text-fg-muted text-sm">{recipe.description}</p>
 										</div>
 									{/if}
-									<RecipeMeta
-										{recipe}
-										{baseServings}
-										{scale}
-										onscale={handleScale}
-										header={false}
-									/>
+									<RecipeMeta {recipe} {baseServings} {scale} onscale={handleScale} />
 								{:else if panelTab === 'ingredients'}
 									<RecipeIngredients
 										ingredients={recipe.ingredients}

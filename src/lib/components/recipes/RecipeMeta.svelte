@@ -3,9 +3,7 @@
 		ClockIcon,
 		ExternalLinkIcon,
 		FlameIcon,
-		InfoIcon,
 		SoupIcon,
-		TagIcon,
 		TimerIcon,
 		UserIcon
 	} from '@lucide/svelte';
@@ -30,11 +28,9 @@
 		 * pane without them rather than repeating the row.
 		 */
 		showTags?: boolean;
-		/** When false, the tab strip already names the pane; omit its heading. */
-		header?: boolean;
 	}
 
-	const { recipe, baseServings, scale, onscale, showTags = true, header = true }: Props = $props();
+	const { recipe, baseServings, scale, onscale, showTags = true }: Props = $props();
 
 	function minutes(value: number): string {
 		if (value < 60) return `${value} min`;
@@ -92,7 +88,7 @@
 </script>
 
 {#snippet values()}
-	<dl class="divide-border divide-y px-4 pb-3 text-sm">
+	<dl class="divide-border divide-y px-4 py-3 text-sm">
 		<ServingsControl {baseServings} {scale} {onscale} />
 
 		{#each times as row (row.label)}
@@ -152,12 +148,9 @@
 		{/if}
 
 		{#if showTags && recipe.tags.length > 0}
-			<div class="flex items-start justify-between gap-3 py-1.5">
-				<dt class="text-fg-muted flex items-center gap-2">
-					<TagIcon class="size-4 shrink-0" />
-					Tags
-				</dt>
-				<dd class="flex min-w-0 flex-wrap justify-end gap-1">
+			<div class="py-1.5">
+				<dt class="sr-only">Tags</dt>
+				<dd class="flex min-w-0 flex-wrap gap-1">
 					{#each recipe.tags as tag (tag)}
 						<Badge>{tag}</Badge>
 					{/each}
@@ -167,16 +160,6 @@
 	</dl>
 {/snippet}
 
-{#if header}
-	<section class="border-border border-b last:border-b-0">
-		<h2 class="text-fg flex items-center gap-2 px-4 py-2 text-sm font-semibold">
-			<InfoIcon class="text-fg-subtle size-4 shrink-0" />
-			Details
-		</h2>
-		{@render values()}
-	</section>
-{:else}
-	<div class="pt-1">
-		{@render values()}
-	</div>
-{/if}
+<section class="border-border border-b last:border-b-0">
+	{@render values()}
+</section>
