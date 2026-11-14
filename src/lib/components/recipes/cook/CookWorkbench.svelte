@@ -14,7 +14,6 @@
 	import type { ActiveTimer, ImageRef, RecipeDisplay } from '$lib/types/recipe';
 	import { countLabel } from '$lib/utils/pluralize';
 	import { formatScale } from '$lib/utils/scale';
-	import Badge from '$lib/components/ui/Badge.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
 	import RecipeIngredients from '../RecipeIngredients.svelte';
@@ -227,10 +226,7 @@
 				<span class="bg-border hidden h-5 w-px sm:block" aria-hidden="true"></span>
 
 				<div class="min-w-0 flex-1">
-					<div class="flex min-w-0 items-center gap-2">
-						<h1 class="text-fg truncate text-base font-semibold" {title}>{title}</h1>
-						<Badge tone="accent" class="shrink-0">Cooking</Badge>
-					</div>
+					<h1 class="text-fg truncate text-base font-semibold" {title}>{title}</h1>
 					{#if relPath}
 						<p class="text-fg-subtle truncate text-xs" title={relPath}>{relPath}</p>
 					{/if}
