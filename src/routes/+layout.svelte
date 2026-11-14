@@ -44,7 +44,7 @@
 		viewport with no document scrolling hand-off. Each pane inside the cook
 		frame owns its own overflow.
 	-->
-	<div class="h-dvh overflow-hidden">
+	<div class="h-dvh overflow-hidden overscroll-none">
 		{@render children()}
 	</div>
 {:else}

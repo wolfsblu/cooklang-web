@@ -162,7 +162,7 @@
 
 	<div
 		id="cook-timers-panel"
-		class="border-border max-h-44 overflow-y-auto border-t sm:max-h-52"
+		class="border-border max-h-44 overflow-y-auto overscroll-y-contain border-t sm:max-h-52"
 		hidden={!expanded}
 	>
 		{#if adding}

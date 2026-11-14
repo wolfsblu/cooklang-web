@@ -209,7 +209,7 @@
 
 <Page full flush class="flex h-full min-h-0 flex-col">
 	<div
-		class="border-border bg-surface flex min-h-0 flex-1 flex-col overflow-hidden border border-t-0 md:border-l-0"
+		class="border-border bg-surface flex min-h-0 flex-1 flex-col overflow-hidden overscroll-none border border-t-0 md:border-l-0"
 	>
 		<header
 			class="border-border bg-surface flex shrink-0 flex-wrap items-center border-b md:gap-x-3 md:px-4 md:py-2"
@@ -355,7 +355,7 @@
 
 					<div
 						id="cook-outline-panel"
-						class="border-border max-h-64 min-h-0 overflow-y-auto border-t lg:hidden {paneOpen
+						class="border-border max-h-64 min-h-0 overflow-y-auto overscroll-y-contain border-t lg:hidden {paneOpen
 							? 'block'
 							: 'hidden'}"
 						role="tabpanel"
@@ -388,7 +388,7 @@
 					</div>
 
 					<!-- Desktop: all panes stacked in one scrolling column. -->
-					<div class="hidden min-h-0 flex-1 overflow-y-auto lg:block">
+					<div class="hidden min-h-0 flex-1 overflow-y-auto overscroll-y-contain lg:block">
 						<CookStepOutline {steps} {currentStep} ongoto={goToStep} />
 
 						<div class="border-border border-b px-4 py-1">

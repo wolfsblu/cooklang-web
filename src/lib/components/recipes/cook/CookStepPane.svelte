@@ -149,7 +149,7 @@
 		if (!axis) {
 			if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
 
-			if (Math.abs(dx) > Math.abs(dy) * 1.2) {
+			if (Math.abs(dx) > Math.abs(dy) * 0.8) {
 				axis = 'horizontal';
 				dragging = true;
 			} else {
@@ -301,7 +301,7 @@
 
 		<div
 			bind:this={scrollContainer}
-			class="relative z-10 h-full min-h-0 overflow-x-hidden overflow-y-auto"
+			class="relative z-10 h-full min-h-0 overflow-x-hidden overflow-y-auto overscroll-y-contain"
 			style:touch-action="pan-y pinch-zoom"
 			ontouchstart={handleTouchStart}
 			ontouchmove={handleTouchMove}
