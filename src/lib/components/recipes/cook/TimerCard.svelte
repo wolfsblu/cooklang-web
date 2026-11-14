@@ -3,7 +3,6 @@
 	import type { ActiveTimer } from '$lib/types/recipe';
 	import { formatTimeRemaining } from '$lib/utils/timer';
 	import Card from '$lib/components/ui/Card.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import TimerCircleProgress from './TimerCircleProgress.svelte';
 
 	interface Props {
@@ -24,39 +23,54 @@
 
 <Card
 	variant="outline"
-	class="p-3 {isComplete ? 'bg-warn-soft text-warn-soft-fg border-warn animate-pulse' : ''}"
+	class="overflow-hidden p-0 {isComplete
+		? 'bg-warn-soft text-warn-soft-fg border-warn animate-pulse'
+		: ''}"
 >
-	<div class="flex items-center gap-3">
-		<TimerCircleProgress {progress} complete={isComplete} />
+	<div class="flex items-stretch">
+		<div class="flex min-w-0 flex-1 items-center gap-3 p-3">
+			<TimerCircleProgress {progress} complete={isComplete} />
 
-		<div class="min-w-0 flex-1">
-			<p class="truncate font-medium">{timer.name}</p>
-			<p class="text-2xl tabular-nums" aria-live={isComplete ? 'assertive' : 'off'}>
-				{formatTimeRemaining(timer.remainingSeconds)}
-			</p>
-			<p class="text-fg-subtle text-xs">Step {timer.stepNumber}</p>
+			<div class="min-w-0 flex-1">
+				<p class="truncate font-medium">{timer.name}</p>
+				<p class="text-2xl tabular-nums" aria-live={isComplete ? 'assertive' : 'off'}>
+					{formatTimeRemaining(timer.remainingSeconds)}
+				</p>
+				{#if timer.stepNumber > 0}
+					<p class="text-fg-subtle text-xs">Step {timer.stepNumber}</p>
+				{:else}
+					<p class="text-fg-subtle text-xs">Custom timer</p>
+				{/if}
+			</div>
 		</div>
 
-		<div class="flex flex-col gap-1">
+		<!-- The actions are flush with the card edge, not inset on a padded panel. -->
+		<div class="border-border flex shrink-0 flex-col border-l">
 			{#if !isComplete}
-				{#if isPaused}
-					<IconButton size="sm" label="Resume {timer.name}" onclick={() => onresume(timer.id)}>
+				<button
+					type="button"
+					class="text-fg-muted hover:bg-surface-muted hover:text-fg flex min-h-9 flex-1 items-center justify-center px-3 transition-colors duration-100"
+					aria-label={isPaused ? `Resume ${timer.name}` : `Pause ${timer.name}`}
+					onclick={() => (isPaused ? onresume(timer.id) : onpause(timer.id))}
+				>
+					{#if isPaused}
 						<PlayIcon class="size-4" />
-					</IconButton>
-				{:else}
-					<IconButton size="sm" label="Pause {timer.name}" onclick={() => onpause(timer.id)}>
+					{:else}
 						<PauseIcon class="size-4" />
-					</IconButton>
-				{/if}
+					{/if}
+				</button>
 			{/if}
-			<IconButton
-				size="sm"
-				variant="dangerSoft"
-				label="Cancel {timer.name}"
+
+			<button
+				type="button"
+				class="text-danger-soft-fg hover:bg-danger-soft flex min-h-9 flex-1 items-center justify-center px-3 transition-colors duration-100 {!isComplete
+					? 'border-border border-t'
+					: ''}"
+				aria-label="Cancel {timer.name}"
 				onclick={() => oncancel(timer.id)}
 			>
 				<XIcon class="size-4" />
-			</IconButton>
+			</button>
 		</div>
 	</div>
 </Card>

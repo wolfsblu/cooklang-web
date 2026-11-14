@@ -1,98 +1,66 @@
 <script lang="ts">
-	import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, TimerIcon, XIcon } from '@lucide/svelte';
+	import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
 
+	/**
+	 * The workbench control row, inside the frame above the status bar.
+	 *
+	 * This used to be a fixed bar hovering over the document. It now sits in
+	 * normal flow, so it never covers the step and cannot overlap the timers
+	 * panel. Buttons keep a 44px touch target for use with messy hands.
+	 */
 	interface Props {
 		currentStep: number;
 		totalSteps: number;
-		activeTimerCount: number;
 		onprevious: () => void;
 		onnext: () => void;
-		onfinish: () => void;
-		ontoggletimers: () => void;
+		onexit: () => void;
 	}
 
-	const {
-		currentStep,
-		totalSteps,
-		activeTimerCount,
-		onprevious,
-		onnext,
-		onfinish,
-		ontoggletimers
-	}: Props = $props();
+	const { currentStep, totalSteps, onprevious, onnext, onexit }: Props = $props();
 
-	const isFirstStep = $derived(currentStep === 1);
-	const isLastStep = $derived(currentStep === totalSteps);
-	const progressPercent = $derived(totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0);
+	const max = $derived(Math.max(totalSteps, 1));
+	const clampedStep = $derived(Math.min(Math.max(currentStep, 1), max));
+	const isFirstStep = $derived(currentStep <= 1);
+	const isLastStep = $derived(totalSteps === 0 || currentStep >= totalSteps);
+	const progressPercent = $derived((clampedStep / max) * 100);
 </script>
 
-<div
-	class="bg-surface border-border shadow-pop fixed right-0 bottom-0 left-0 z-30 border-t"
-	style="padding-bottom: env(safe-area-inset-bottom)"
->
+<div class="border-border flex shrink-0 items-center gap-2 border-t px-3 py-2 sm:gap-3 sm:px-4">
+	<Button
+		variant="ghost"
+		class="min-h-11 shrink-0"
+		onclick={onprevious}
+		disabled={isFirstStep}
+		aria-label="Previous step"
+	>
+		<ChevronLeftIcon class="size-5" />
+		<span class="hidden sm:inline">Previous</span>
+	</Button>
+
 	<div
-		class="bg-surface-sunk h-1"
+		class="bg-surface-sunk h-1.5 min-w-0 flex-1 overflow-hidden rounded-full"
 		role="progressbar"
 		aria-label="Cooking progress"
-		aria-valuenow={currentStep}
+		aria-valuenow={clampedStep}
 		aria-valuemin={1}
-		aria-valuemax={totalSteps}
+		aria-valuemax={max}
 	>
 		<div
-			class="bg-accent h-full transition-all duration-300"
+			class="bg-accent h-full rounded-full transition-[width] duration-300"
 			style="width: {progressPercent}%"
 		></div>
 	</div>
 
-	<div class="flex items-center justify-between gap-4 px-4 py-3">
-		<Button variant="ghost" onclick={onprevious} disabled={isFirstStep}>
-			<ChevronLeftIcon class="size-5" />
-			<span class="hidden sm:inline">Previous</span>
+	{#if isLastStep}
+		<Button class="min-h-11 shrink-0" onclick={onexit} aria-label="Finish cooking">
+			<CheckIcon class="size-5" />
+			<span class="hidden sm:inline">Finish</span>
 		</Button>
-
-		<div class="flex items-center gap-3">
-			<IconButton label="Exit cook mode" onclick={onfinish}>
-				<XIcon class="size-5" />
-			</IconButton>
-
-			<span class="text-sm font-medium tabular-nums">
-				Step {currentStep} of {totalSteps}
-			</span>
-
-			<span class="relative">
-				<IconButton
-					label={activeTimerCount > 0
-						? `Show ${countLabel(activeTimerCount, 'active timer')}`
-						: 'Show timers'}
-					variant={activeTimerCount > 0 ? 'primary' : 'ghost'}
-					onclick={ontoggletimers}
-				>
-					<TimerIcon class="size-5" />
-				</IconButton>
-				{#if activeTimerCount > 0}
-					<span
-						class="bg-warn text-warn-fg pointer-events-none absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[0.625rem] font-semibold"
-						aria-hidden="true"
-					>
-						{activeTimerCount}
-					</span>
-				{/if}
-			</span>
-		</div>
-
-		{#if isLastStep}
-			<Button onclick={onfinish}>
-				<CheckIcon class="size-5" />
-				<span class="hidden sm:inline">Finish</span>
-			</Button>
-		{:else}
-			<Button onclick={onnext}>
-				<span class="hidden sm:inline">Next</span>
-				<ChevronRightIcon class="size-5" />
-			</Button>
-		{/if}
-	</div>
+	{:else}
+		<Button class="min-h-11 shrink-0" onclick={onnext} aria-label="Next step">
+			<span class="hidden sm:inline">Next</span>
+			<ChevronRightIcon class="size-5" />
+		</Button>
+	{/if}
 </div>

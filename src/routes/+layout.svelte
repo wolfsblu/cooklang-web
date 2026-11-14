@@ -20,8 +20,7 @@
 	// The recipe list joins the aisles, pantry, shopping list and recipe detail
 	// pages in using the same fixed-height workspace treatment: its panes
 	// scroll internally while the title bar, toolbars and status bar stay in
-	// place. Cook mode is handled above and keeps its own full-bleed document
-	// layout.
+	// place. Cook mode has no shell but keeps the same non-scrolling viewport.
 	const isRecipeList = $derived(page.url.pathname === '/');
 
 	const isWorkspace = $derived(
@@ -40,9 +39,14 @@
 </svelte:head>
 
 {#if isCookMode}
-	<main class="h-dvh overflow-auto">
+	<!--
+		Cook mode keeps the shell hidden, but it is still a workbench: a fixed
+		viewport with no document scrolling hand-off. Each pane inside the cook
+		frame owns its own overflow.
+	-->
+	<div class="h-dvh overflow-hidden">
 		{@render children()}
-	</main>
+	</div>
 {:else}
 	<!--
 		Workspaces are pinned to the viewport instead of being a `h-dvh` box in

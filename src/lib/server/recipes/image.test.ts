@@ -92,15 +92,19 @@ describe('writeRecipeImage', () => {
 		});
 	});
 
-	it('keeps the existing file permissions when replacing an image', async () => {
-		const target = path.join(directory, 'test.jpg');
-		await fs.writeFile(target, 'old');
-		await fs.chmod(target, 0o640);
+	// Windows has no POSIX permission bits; chmod only toggles read-only there.
+	it.skipIf(process.platform === 'win32')(
+		'keeps the existing file permissions when replacing an image',
+		async () => {
+			const target = path.join(directory, 'test.jpg');
+			await fs.writeFile(target, 'old');
+			await fs.chmod(target, 0o640);
 
-		await writeRecipeImage(entry(), JPEG, '.jpg');
+			await writeRecipeImage(entry(), JPEG, '.jpg');
 
-		expect((await fs.stat(target)).mode & 0o777).toBe(0o640);
-	});
+			expect((await fs.stat(target)).mode & 0o777).toBe(0o640);
+		}
+	);
 
 	it('leaves step images and the recipe itself alone', async () => {
 		const step = path.join(directory, 'test.1.jpg');

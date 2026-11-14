@@ -8,9 +8,11 @@
 		highlighted: boolean;
 		active: boolean;
 		onhover: (index: number | null) => void;
+		/** Cook mode sets body copy large, so the inline mark needs matching room. */
+		large?: boolean;
 	}
 
-	const { name, quantity, index, highlighted, active, onhover }: Props = $props();
+	const { name, quantity, index, highlighted, active, onhover, large = false }: Props = $props();
 
 	const state = $derived(resolveHighlight({ hovered: highlighted, active }));
 </script>
@@ -29,12 +31,14 @@
 -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <span
-	class="rounded-sm px-1 transition-colors duration-150 {highlightClass(state)}"
+	class="rounded-sm transition-colors duration-150 {large
+		? 'px-1.5 py-0.5'
+		: 'px-1'} {highlightClass(state)}"
 	onmouseenter={() => onhover(index)}
 	onmouseleave={() => onhover(null)}
 >
 	<span class="font-medium">{name}</span>
 	{#if quantity}
-		<span class="text-fg-muted text-sm">({quantity})</span>
+		<span class="text-fg-muted {large ? '' : 'text-sm'}">({quantity})</span>
 	{/if}
 </span>

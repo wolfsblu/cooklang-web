@@ -75,7 +75,8 @@ describe('writeFileAtomic', () => {
 		}
 	});
 
-	it('applies an explicit mode', async () => {
+	// Windows has no POSIX permission bits; chmod only toggles read-only there.
+	it.skipIf(process.platform === 'win32')('applies an explicit mode', async () => {
 		const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'cooklang-storage-'));
 		const target = path.join(directory, 'file.txt');
 

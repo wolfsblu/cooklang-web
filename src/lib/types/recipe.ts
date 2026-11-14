@@ -111,5 +111,6 @@ export interface ActiveTimer {
 	totalSeconds: number;
 	remainingSeconds: number;
 	status: 'running' | 'paused';
+	/** 1-based recipe step, or 0 for a timer created by hand. */
 	stepNumber: number;
 }

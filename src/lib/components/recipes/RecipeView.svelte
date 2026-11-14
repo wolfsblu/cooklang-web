@@ -11,12 +11,11 @@
 		ListOrderedIcon
 	} from '@lucide/svelte';
 	import type { ImageRef, RecipeDisplay, StepDisplay, ActiveTimer } from '$lib/types/recipe';
-	import { parseTimerQuantity } from '$lib/utils/timer';
+	import { formatTimeRemaining, parseTimerQuantity } from '$lib/utils/timer';
 	import { formatScale } from '$lib/utils/scale';
 	import { countLabel, pluralize } from '$lib/utils/pluralize';
 	import { playAlertSound } from '$lib/utils/audio';
 	import Page from '$lib/components/ui/Page.svelte';
-	import RecipeHeader from './RecipeHeader.svelte';
 	import RecipeMeta from './RecipeMeta.svelte';
 	import RecipeIngredients from './RecipeIngredients.svelte';
 	import RecipeCookware from './RecipeCookware.svelte';
@@ -25,8 +24,7 @@
 	import RecipeImageDialog from './RecipeImageDialog.svelte';
 	import RecipeCoverImage from './RecipeCoverImage.svelte';
 	import RecipeActionBar from './RecipeActionBar.svelte';
-	import CookControlBar from './cook/CookControlBar.svelte';
-	import ActiveTimersPanel from './cook/ActiveTimersPanel.svelte';
+	import CookWorkbench from './cook/CookWorkbench.svelte';
 
 	interface Props {
 		recipe: RecipeDisplay;
@@ -161,10 +159,18 @@
 	let hoveredIngredientIndex = $state<number | null>(null);
 	let hoveredCookwareIndex = $state<number | null>(null);
 
+	// Which way the current step change is travelling. The step pane uses this
+	// to slide in from the same direction as the swipe or the arrow key.
+	let stepDirection = $state<'next' | 'previous'>('next');
+
 	// Timer state
 	let activeTimers = $state<ActiveTimer[]>([]);
 	let audioEnabled = $state(true);
 	let showTimersPanel = $state(false);
+	let timersExpanded = $state(true);
+	// Custom timer ids must not collide with the recipe's `timer-step-index`
+	// ids, and they need no step number at all.
+	let customTimerSequence = 0;
 
 	// A single interval for as long as anything is actually counting down. The
 	// effect depends on that boolean rather than on `activeTimers` itself:
@@ -220,17 +226,19 @@
 		);
 	});
 
-	// Active timer indices (for highlighting in steps)
-	const activeTimerIndices = $derived(
-		new Set(
-			activeTimers
-				.map((t) => t.id)
-				.map((id) => {
-					const parts = id.split('-');
-					return parseInt(parts[parts.length - 1]);
-				})
-		)
-	);
+	// Active timer indices (for highlighting in steps). Only recipe timers use
+	// the `timer-step-index` shape; custom timers must not light up an inline
+	// timer that happens to share a numeric suffix.
+	const activeTimerIndices = $derived.by(() => {
+		const indices = new Set<number>();
+
+		for (const timer of activeTimers) {
+			const match = /^timer-\d+-(\d+)$/.exec(timer.id);
+			if (match) indices.add(Number(match[1]));
+		}
+
+		return indices;
+	});
 
 	// The parser rescales the recipe, so this is a navigation rather than local
 	// state. `keepFocus` matters: the servings field applies as you type, and
@@ -250,6 +258,7 @@
 			// Clear timers when exiting cook mode
 			activeTimers = [];
 			showTimersPanel = false;
+			timersExpanded = true;
 		} else {
 			url.searchParams.set('cook', '');
 			url.searchParams.set('step', '1');
@@ -258,6 +267,7 @@
 	}
 
 	function goToStep(step: number) {
+		stepDirection = step >= currentStep ? 'next' : 'previous';
 		const url = new URL(page.url);
 		url.searchParams.set('step', String(step));
 		goto(url.toString(), { replaceState: true, noScroll: true });
@@ -273,10 +283,6 @@
 		if (currentStep < totalSteps) {
 			goToStep(currentStep + 1);
 		}
-	}
-
-	function finishCooking() {
-		toggleCookMode();
 	}
 
 	// Timer controls
@@ -301,10 +307,33 @@
 			}
 		];
 
-		// Auto-show panel when first timer starts
+		// Auto-open the panel, expanded, when the first timer starts.
 		if (activeTimers.length === 1) {
 			showTimersPanel = true;
+			timersExpanded = true;
 		}
+	}
+
+	function addCustomTimer(name: string, totalSeconds: number) {
+		if (totalSeconds <= 0) return;
+
+		const id = `custom-${++customTimerSequence}`;
+
+		activeTimers = [
+			...activeTimers,
+			{
+				id,
+				name: name || `Timer ${formatTimeRemaining(totalSeconds)}`,
+				totalSeconds,
+				remainingSeconds: totalSeconds,
+				status: 'running',
+				// 0 means this timer was created by hand, not read from a step.
+				stepNumber: 0
+			}
+		];
+
+		showTimersPanel = true;
+		timersExpanded = true;
 	}
 
 	function pauseTimer(id: string) {
@@ -326,23 +355,38 @@
 	}
 
 	function toggleTimersPanel() {
-		showTimersPanel = !showTimersPanel;
+		if (!showTimersPanel) {
+			showTimersPanel = true;
+			timersExpanded = true;
+			return;
+		}
+
+		timersExpanded = !timersExpanded;
+	}
+
+	function toggleTimersExpanded() {
+		timersExpanded = !timersExpanded;
 	}
 
 	// Keyboard navigation
 	function handleKeydown(e: KeyboardEvent) {
 		if (!cookMode) return;
 
-		if (e.key === 'ArrowLeft') {
+		// Arrow keys belong to the text field while the user is editing the
+		// servings count; the step must not change and the caret must stay put.
+		const target = e.target as HTMLElement | null;
+		const editing =
+			target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName ?? '');
+
+		if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+			if (editing) return;
 			e.preventDefault();
-			goToPreviousStep();
-		} else if (e.key === 'ArrowRight') {
-			e.preventDefault();
-			goToNextStep();
+			if (e.key === 'ArrowLeft') goToPreviousStep();
+			else goToNextStep();
 		} else if (e.key === 'Escape') {
 			e.preventDefault();
-			if (showTimersPanel) {
-				showTimersPanel = false;
+			if (showTimersPanel && timersExpanded) {
+				timersExpanded = false;
 			} else {
 				toggleCookMode();
 			}
@@ -352,8 +396,8 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<!-- Rendered in the workspace title bar. Cook mode has no action bar at all: its
-     fixed control bar carries the only actions needed while cooking. -->
+<!-- The workspace title bar renders this in the document view. Cook mode has
+     its own title bar with cook-only actions. -->
 {#snippet actionBar()}
 	<RecipeActionBar {slug} {scale} {inShoppingList} {listedScale} onstartcooking={toggleCookMode} />
 {/snippet}
@@ -392,21 +436,47 @@
 {/snippet}
 
 {#if cookMode}
-	<!-- Cook mode stays a document rather than a workbench: it is full-bleed
-	     with no rail or tabs, and nothing should be pinned around a step. -->
-	<article class="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 pb-28 sm:px-6">
-		<RecipeHeader {recipe} {image} />
-
-		<div class="grid gap-6 lg:grid-cols-[300px_1fr]">
-			<aside class="space-y-4 lg:sticky lg:top-20 lg:self-start">
-				{@render recipePanes(false)}
-			</aside>
-
-			<main>
-				{@render steps()}
-			</main>
-		</div>
-	</article>
+	<!--
+		Cook mode keeps the full-bleed shell (no rail, header or navigation) but
+		uses the same workbench grammar as the rest of the app: a title bar,
+		split panes, a docked timers panel and a status bar in one frame.
+	-->
+	<CookWorkbench
+		{recipe}
+		{slug}
+		{relPath}
+		{scale}
+		{baseServings}
+		{stepImages}
+		{currentStep}
+		direction={stepDirection}
+		{timeSummary}
+		{servingsSummary}
+		{hoveredIngredientIndex}
+		{hoveredCookwareIndex}
+		activeIngredientIndices={currentStepIngredientIndices}
+		activeCookwareIndices={currentStepCookwareIndices}
+		{activeTimerIndices}
+		timers={activeTimers}
+		{audioEnabled}
+		timersPanelOpen={showTimersPanel}
+		{timersExpanded}
+		onhoverIngredient={(i) => (hoveredIngredientIndex = i)}
+		onhoverCookware={(i) => (hoveredCookwareIndex = i)}
+		onstartTimer={startTimer}
+		onscale={handleScale}
+		onprevious={goToPreviousStep}
+		onnext={goToNextStep}
+		ongoto={goToStep}
+		onexit={toggleCookMode}
+		ontoggletimers={toggleTimersPanel}
+		ontoggleaudio={toggleAudio}
+		ontoggleexpanded={toggleTimersExpanded}
+		onaddtimer={addCustomTimer}
+		onpause={pauseTimer}
+		onresume={resumeTimer}
+		oncancel={cancelTimer}
+	/>
 {:else}
 	<!--
 		The recipe as a workbench, matching the aisles, pantry, shopping list and
@@ -656,30 +726,6 @@
 			</footer>
 		</div>
 	</Page>
-{/if}
-
-{#if cookMode}
-	<CookControlBar
-		{currentStep}
-		{totalSteps}
-		activeTimerCount={activeTimers.length}
-		onprevious={goToPreviousStep}
-		onnext={goToNextStep}
-		onfinish={finishCooking}
-		ontoggletimers={toggleTimersPanel}
-	/>
-{/if}
-
-{#if showTimersPanel}
-	<ActiveTimersPanel
-		timers={activeTimers}
-		{audioEnabled}
-		onclose={() => (showTimersPanel = false)}
-		ontoggleaudio={toggleAudio}
-		onpause={pauseTimer}
-		onresume={resumeTimer}
-		oncancel={cancelTimer}
-	/>
 {/if}
 
 <RecipeImageDialog bind:open={imageDialogOpen} {image} title={recipe.title ?? 'Recipe'} />

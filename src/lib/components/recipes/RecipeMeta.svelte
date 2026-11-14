@@ -24,8 +24,8 @@
 		scale: number;
 		onscale: (newScale: number) => void;
 		/**
-		 * Cook mode already shows the tags in RecipeHeader, so it asks for the
-		 * pane without them rather than repeating the row.
+		 * Set false when the surrounding pane already repeats the tags, rather
+		 * than showing the same row twice.
 		 */
 		showTags?: boolean;
 	}
