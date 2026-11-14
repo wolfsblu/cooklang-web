@@ -60,8 +60,22 @@
 	);
 
 	$effect(() => {
-		if (adding) nameInput?.focus();
+		if (!adding) return;
+
+		// Focusing the name is convenient with a mouse. On a phone it opens the
+		// keyboard before the user asks for it, shrinking the viewport around the
+		// docked panel, so touch layouts wait for a tap on the field.
+		if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+			nameInput?.focus();
+		}
 	});
+
+	function closeForm() {
+		// Blur before unmounting the focused field so the software keyboard
+		// starts closing before the panel changes height.
+		if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+		adding = false;
+	}
 
 	function toggleForm() {
 		// The plus button is visible even while collapsed; opening the form
@@ -72,7 +86,8 @@
 			return;
 		}
 
-		adding = !adding;
+		if (adding) closeForm();
+		else adding = true;
 	}
 
 	function submit(event: SubmitEvent) {
@@ -83,7 +98,7 @@
 		name = '';
 		minutes = 5;
 		seconds = 0;
-		adding = false;
+		closeForm();
 	}
 
 	function handleFormKeydown(event: KeyboardEvent) {
@@ -93,7 +108,7 @@
 		// cook mode, so this stops before the window-level shortcut sees it.
 		event.preventDefault();
 		event.stopPropagation();
-		adding = false;
+		closeForm();
 	}
 </script>
 
@@ -215,9 +230,7 @@
 
 				<div class="flex items-center gap-1">
 					<Button type="submit" size="sm" disabled={totalSeconds <= 0}>Start</Button>
-					<Button type="button" size="sm" variant="ghost" onclick={() => (adding = false)}>
-						Cancel
-					</Button>
+					<Button type="button" size="sm" variant="ghost" onclick={closeForm}>Cancel</Button>
 				</div>
 			</form>
 		{/if}
