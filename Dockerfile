@@ -21,8 +21,11 @@ ARG COOK_CLI_SHA256=c8f43e475a585c96e78f32560d28368bc90a9dff5d8325c5ef5ddacd5b9f
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+# The build output is self-contained: adapter-node bundles every dependency
+# into build/, because none of them are production dependencies any more. So
+# the runtime stage installs nothing. package.json is copied only so that
+# Node resolves the .js files in build/ as ES modules.
+COPY package.json ./
 
 COPY --from=builder /app/build ./build
 
