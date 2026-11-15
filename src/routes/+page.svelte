@@ -195,8 +195,6 @@
 			class="border-border text-fg-subtle flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-t px-3 py-1.5 text-xs sm:px-4"
 		>
 			<span class="tabular-nums">{countLabel(data.totalRecipes, 'recipe')}</span>
-			<span class="text-border" aria-hidden="true">·</span>
-			<span class="tabular-nums">page {data.pageNumber} of {data.totalPages}</span>
 
 			{#if activeFilterSummary.length > 0}
 				<span class="text-border" aria-hidden="true">·</span>
