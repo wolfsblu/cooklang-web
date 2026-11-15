@@ -491,6 +491,8 @@
 			Recipe
 		</a>
 
+		<span class="bg-border hidden h-5 w-px sm:block" aria-hidden="true"></span>
+
 		<div class="min-w-0">
 			<div class="flex min-w-0 items-center gap-2">
 				<h1 class="text-fg truncate text-lg font-semibold">
