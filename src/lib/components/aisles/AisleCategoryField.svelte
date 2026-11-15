@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { ChevronDownIcon } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
+	import FieldWithAction from '#lib/components/ui/FieldWithAction.svelte';
 
 	/**
 	 * The integrated aisle picker used by the per-ingredient cards, the sticky
-	 * bulk bars and the shopping list: the field owns the border and focus ring,
-	 * the action sits inside its trailing edge, and the chevron is explicit
-	 * because the native arrow would be hidden under that action.
+	 * bulk bars and the shopping list. The select *is* the field, so the whole
+	 * control opens the picker, including the chevron that overlays its trailing
+	 * edge. `bg-none` drops the chevron that `@tailwindcss/forms` paints into
+	 * every select; ours is the one the user sees (and clicks).
 	 */
 	interface Props {
 		categories: string[];
@@ -19,15 +20,24 @@
 		action: Snippet;
 	}
 
-	const { categories, label, class: className, size = 'md', action }: Props = $props();
+	const {
+		categories,
+		label,
+		class: className,
+		size = 'md',
+		action: actionSnippet
+	}: Props = $props();
 </script>
 
-<div class="relative {size === 'sm' ? 'inline-block' : 'w-full'} {className ?? ''}">
+<FieldWithAction
+	chevron={size}
+	class="{size === 'sm' ? 'inline-block max-w-full' : 'w-full'} {className ?? ''}"
+>
 	<select
 		name="category"
-		class="field appearance-none py-0 capitalize {size === 'sm'
-			? 'h-8 w-auto pr-20 text-xs'
-			: 'h-11 w-full pr-30 text-sm'}"
+		class="field appearance-none bg-none capitalize {size === 'sm'
+			? 'w-auto pr-24 text-xs'
+			: 'w-full pr-32 text-sm'}"
 		aria-label={label}
 	>
 		{#each categories as category (category)}
@@ -35,14 +45,7 @@
 		{/each}
 	</select>
 
-	<ChevronDownIcon
-		class={size === 'sm'
-			? 'text-fg-subtle pointer-events-none absolute top-1/2 right-16 size-3.5 -translate-y-1/2'
-			: 'text-fg-subtle pointer-events-none absolute top-1/2 right-[6.5rem] size-4 -translate-y-1/2'}
-		aria-hidden="true"
-	/>
-
-	<div class="absolute top-1/2 right-1.5 -translate-y-1/2">
-		{@render action()}
-	</div>
-</div>
+	{#snippet action()}
+		{@render actionSnippet()}
+	{/snippet}
+</FieldWithAction>

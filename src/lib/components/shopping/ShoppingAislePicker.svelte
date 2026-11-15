@@ -33,7 +33,7 @@
 
 	<AisleCategoryField {categories} label="Aisle for {itemName}" size="sm">
 		{#snippet action()}
-			<Button type="submit" size="sm" variant="soft" class="h-8 px-2 text-xs">Assign</Button>
+			<Button type="submit" size="sm" variant="soft" class="h-full px-2 text-xs">Assign</Button>
 		{/snippet}
 	</AisleCategoryField>
 </form>

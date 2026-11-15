@@ -379,6 +379,7 @@
 												type="submit"
 												size="sm"
 												variant="soft"
+												class="h-full"
 												loading={pending?.name === item.name && !pending.alias}
 												disabled={pending?.name === item.name}
 											>
@@ -409,7 +410,7 @@
 			<input type="hidden" name="returnTo" value={returnTo} />
 			<AisleCategoryField {categories} label="Assign selected to aisle" class="sm:w-80">
 				{#snippet action()}
-					<Button type="submit" size="sm" variant="soft">
+					<Button type="submit" size="sm" variant="soft" class="h-full">
 						<ArrowRightIcon class="size-3.5" />
 						Assign
 					</Button>

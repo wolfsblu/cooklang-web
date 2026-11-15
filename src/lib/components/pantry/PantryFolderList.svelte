@@ -3,6 +3,7 @@
 	import { Dialog } from 'bits-ui';
 	import { FolderIcon, FolderOpenIcon, FolderPlusIcon, PlusIcon, XIcon } from '@lucide/svelte';
 	import Button from '#lib/components/ui/Button.svelte';
+	import FieldWithAction from '#lib/components/ui/FieldWithAction.svelte';
 	import IconButton from '#lib/components/ui/IconButton.svelte';
 
 	interface Props {
@@ -88,27 +89,23 @@
 		use:enhance
 		class="border-border hidden shrink-0 border-t p-2 lg:block"
 	>
-		<!-- One integrated control: the standard field owns the border and focus
-		     ring at a taller-than-usual height, and the action sits inside its
-		     trailing edge rather than beside it. -->
-		<div class="relative">
+		<!-- One integrated control: the field owns the border and focus ring, and
+		     the action sits inside its trailing edge rather than beside it. -->
+		<FieldWithAction>
 			<input
 				name="name"
-				class="field h-11 pr-20"
+				class="field pr-24"
 				placeholder="New folder"
 				aria-label="New folder name"
 				required
 			/>
-			<Button
-				type="submit"
-				variant="soft"
-				size="sm"
-				class="absolute top-1/2 right-1.5 -translate-y-1/2"
-			>
-				<PlusIcon class="size-4" />
-				Add
-			</Button>
-		</div>
+			{#snippet action()}
+				<Button type="submit" variant="soft" size="sm" class="h-full">
+					<PlusIcon class="size-4" />
+					Add
+				</Button>
+			{/snippet}
+		</FieldWithAction>
 	</form>
 </div>
 

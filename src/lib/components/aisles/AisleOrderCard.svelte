@@ -4,6 +4,7 @@
 	import { flip } from 'svelte/animate';
 	import Button from '#lib/components/ui/Button.svelte';
 	import ButtonGroup from '#lib/components/ui/ButtonGroup.svelte';
+	import FieldWithAction from '#lib/components/ui/FieldWithAction.svelte';
 	import IconButton from '#lib/components/ui/IconButton.svelte';
 	import { countLabel } from '#lib/utils/pluralize.js';
 
@@ -135,24 +136,21 @@
 	<div class="border-border flex shrink-0 justify-end border-b px-4 py-3">
 		<form method="POST" action="?/addCategory" use:enhance class="w-full sm:w-72">
 			<!-- One integrated control, matching the pantry's New folder field. -->
-			<div class="relative">
+			<FieldWithAction>
 				<input
 					name="name"
-					class="field h-11 pr-20"
+					class="field pr-24"
 					placeholder="Add an aisle, e.g. frozen"
 					aria-label="New aisle name"
 					required
 				/>
-				<Button
-					type="submit"
-					variant="soft"
-					size="sm"
-					class="absolute top-1/2 right-1.5 -translate-y-1/2"
-				>
-					<PlusIcon class="size-4" />
-					Add
-				</Button>
-			</div>
+				{#snippet action()}
+					<Button type="submit" variant="soft" size="sm" class="h-full">
+						<PlusIcon class="size-4" />
+						Add
+					</Button>
+				{/snippet}
+			</FieldWithAction>
 		</form>
 	</div>
 

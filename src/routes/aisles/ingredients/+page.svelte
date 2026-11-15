@@ -160,7 +160,13 @@
 									class="sm:w-80"
 								>
 									{#snippet action()}
-										<Button type="submit" size="sm" variant="soft" formaction="?/bulkMove">
+										<Button
+											type="submit"
+											size="sm"
+											variant="soft"
+											class="h-full"
+											formaction="?/bulkMove"
+										>
 											<ArrowRightIcon class="size-3.5" />
 											Move
 										</Button>
