@@ -3,27 +3,31 @@
 	import type { Snippet } from 'svelte';
 
 	/**
-	 * The integrated aisle picker used by both the per-ingredient cards and the
-	 * sticky bulk bar: the field owns the border and focus ring, the action sits
-	 * inside its trailing edge, and the chevron is explicit because the native
-	 * arrow would be hidden under that action.
+	 * The integrated aisle picker used by the per-ingredient cards, the sticky
+	 * bulk bars and the shopping list: the field owns the border and focus ring,
+	 * the action sits inside its trailing edge, and the chevron is explicit
+	 * because the native arrow would be hidden under that action.
 	 */
 	interface Props {
 		categories: string[];
 		label: string;
-		/** Width/layout for the wrapper; the field itself always fills it. */
+		/** Width/layout for the wrapper. */
 		class?: string;
+		/** `sm` fits dense rows such as the shopping list; `md` is the default. */
+		size?: 'sm' | 'md';
 		/** The submit action rendered inside the field's trailing edge. */
 		action: Snippet;
 	}
 
-	const { categories, label, class: className, action }: Props = $props();
+	const { categories, label, class: className, size = 'md', action }: Props = $props();
 </script>
 
-<div class="relative w-full {className ?? ''}">
+<div class="relative {size === 'sm' ? 'inline-block' : 'w-full'} {className ?? ''}">
 	<select
 		name="category"
-		class="field h-11 w-full appearance-none py-0 pr-30 text-sm capitalize"
+		class="field appearance-none py-0 capitalize {size === 'sm'
+			? 'h-8 w-auto pr-20 text-xs'
+			: 'h-11 w-full pr-30 text-sm'}"
 		aria-label={label}
 	>
 		{#each categories as category (category)}
@@ -32,7 +36,9 @@
 	</select>
 
 	<ChevronDownIcon
-		class="text-fg-subtle pointer-events-none absolute top-1/2 right-[6.5rem] size-4 -translate-y-1/2"
+		class={size === 'sm'
+			? 'text-fg-subtle pointer-events-none absolute top-1/2 right-16 size-3.5 -translate-y-1/2'
+			: 'text-fg-subtle pointer-events-none absolute top-1/2 right-[6.5rem] size-4 -translate-y-1/2'}
 		aria-hidden="true"
 	/>
 

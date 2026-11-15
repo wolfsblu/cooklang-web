@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import AisleCategoryField from '$lib/components/aisles/AisleCategoryField.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	interface Props {
@@ -30,17 +31,9 @@
 	<input type="hidden" name="name" value={itemName} />
 	<input type="hidden" name="returnTo" value={returnTo} />
 
-	<!-- A native select: this is a real POST form and the Bits UI select does not
-	     contribute a form value. -->
-	<select
-		name="category"
-		class="field h-8 w-auto py-0 text-xs capitalize"
-		aria-label="Aisle for {itemName}"
-	>
-		{#each categories as category (category)}
-			<option value={category}>{category}</option>
-		{/each}
-	</select>
-
-	<Button type="submit" size="sm" variant="ghost" class="h-8 px-2 text-xs">Assign</Button>
+	<AisleCategoryField {categories} label="Aisle for {itemName}" size="sm">
+		{#snippet action()}
+			<Button type="submit" size="sm" variant="soft" class="h-8 px-2 text-xs">Assign</Button>
+		{/snippet}
+	</AisleCategoryField>
 </form>

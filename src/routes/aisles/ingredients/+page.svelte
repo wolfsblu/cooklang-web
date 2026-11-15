@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { PlusIcon, SignpostIcon } from '@lucide/svelte';
+	import { ArrowRightIcon, PlusIcon, SignpostIcon, Trash2Icon } from '@lucide/svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { PageProps } from './$types';
 	import type { AisleEntryView } from '$lib/types/aisle';
 	import AisleBulkBar from '$lib/components/aisles/AisleBulkBar.svelte';
+	import AisleCategoryField from '$lib/components/aisles/AisleCategoryField.svelte';
 	import AisleCategoryList from '$lib/components/aisles/AisleCategoryList.svelte';
 	import AisleDuplicateWarning from '$lib/components/aisles/AisleDuplicateWarning.svelte';
 	import AisleEntryDialog from '$lib/components/aisles/AisleEntryDialog.svelte';
@@ -12,6 +13,7 @@
 	import AisleGroupedList from '$lib/components/aisles/AisleGroupedList.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import { countLabel } from '$lib/utils/pluralize';
 
 	const { data }: PageProps = $props();
@@ -152,20 +154,28 @@
 						{#snippet controls()}
 							<input type="hidden" name="from" value={category} />
 							{#if moveTargets.length > 0}
-								<select
-									name="category"
-									class="field w-auto capitalize"
-									aria-label="Move selected to aisle"
+								<AisleCategoryField
+									categories={moveTargets}
+									label="Move selected to aisle"
+									class="sm:w-80"
 								>
-									{#each moveTargets as name (name)}
-										<option value={name}>{name}</option>
-									{/each}
-								</select>
-								<Button type="submit" size="sm" variant="soft" formaction="?/bulkMove">Move</Button>
+									{#snippet action()}
+										<Button type="submit" size="sm" variant="soft" formaction="?/bulkMove">
+											<ArrowRightIcon class="size-3.5" />
+											Move
+										</Button>
+									{/snippet}
+								</AisleCategoryField>
 							{/if}
-							<Button type="submit" size="sm" variant="dangerSoft" formaction="?/bulkRemove">
-								Remove
-							</Button>
+							<IconButton
+								type="submit"
+								label="Remove selected"
+								variant="dangerSoft"
+								size="sm"
+								formaction="?/bulkRemove"
+							>
+								<Trash2Icon class="size-4" />
+							</IconButton>
 						{/snippet}
 					</AisleBulkBar>
 				{/if}
