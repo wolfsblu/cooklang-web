@@ -86,7 +86,7 @@
 			: 'hidden'} lg:block"
 	>
 		{#each selections as selection (selection.slug)}
-			<li class="space-y-1.5 py-2 first:pt-0">
+			<li class="space-y-1.5 py-2">
 				<!-- A line of its own, so the title is not truncated to whatever the
 				     stepper and the remove button leave over. -->
 				<a href="/recipe/{selection.slug}" class="link block text-sm font-medium">
