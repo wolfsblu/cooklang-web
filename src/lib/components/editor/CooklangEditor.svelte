@@ -482,7 +482,7 @@
 
 <div class="flex h-full min-h-0 w-full flex-col overflow-hidden">
 	<!-- Header -->
-	<header class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
+	<header class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 md:px-4">
 		<a
 			href="/recipe/{slug}"
 			class="text-fg-muted hover:text-fg inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-150"
@@ -556,7 +556,7 @@
 
 		<!-- Toolbar: a compact editor strip rather than a row of labelled buttons. -->
 		<div
-			class="border-border bg-surface no-scrollbar flex shrink-0 flex-nowrap items-center gap-0.5 overflow-x-auto border-b px-1 py-0.5 [&_button]:shrink-0"
+			class="border-border bg-surface no-scrollbar flex shrink-0 flex-nowrap items-center gap-0.5 overflow-x-auto border-b px-3 py-1.5 md:px-4 [&_button]:shrink-0"
 		>
 			<div class="flex items-center gap-0.5" role="group" aria-label="History">
 				<IconButton
@@ -670,7 +670,7 @@
 				</IconButton>
 
 				<div
-					class="bg-surface-muted ml-1 flex items-center gap-0.5 rounded-md p-0.5"
+					class="bg-surface-muted ml-1 flex items-center gap-0.5 rounded-md"
 					role="group"
 					aria-label="Editor view"
 				>
