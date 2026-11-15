@@ -6,7 +6,6 @@
 		ArrowLeftIcon,
 		BoldIcon,
 		BookOpenIcon,
-		BracesIcon,
 		CarrotIcon,
 		ChevronDownIcon,
 		ChevronUpIcon,
@@ -15,39 +14,29 @@
 		Columns2Icon,
 		CookingPotIcon,
 		EyeIcon,
+		Heading2Icon,
 		LoaderCircleIcon,
 		MessageSquareIcon,
 		Redo2Icon,
 		SaveIcon,
 		SquarePenIcon,
+		TextWrapIcon,
 		TimerIcon,
 		TriangleAlertIcon,
 		Undo2Icon
 	} from '@lucide/svelte';
 	import { onMount, tick, untrack } from 'svelte';
-	import type {
-		CompletionTerm,
-		EditorVocabulary,
-		RecipeDiagnostic,
-		RecipePreview
-	} from '$lib/types/editor';
-	import {
-		applyCompletion,
-		detectCompletionContext,
-		isInsideEntity,
-		mergeCompletionTerms,
-		rankCompletions,
-		type CompletionContext
-	} from '$lib/utils/cooklang-completion';
-	import { highlightCooklang, type CooklangTokenKind } from '$lib/utils/cooklang-highlight';
+	import type { EditorVocabulary, RecipeDiagnostic, RecipePreview } from '$lib/types/editor';
+	import { isInsideEntity, mergeCompletionTerms } from '$lib/utils/cooklang-completion';
 	import { countLabel } from '$lib/utils/pluralize';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import Drawer from '$lib/components/ui/Drawer.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
-	import CompletionMenu from './CompletionMenu.svelte';
 	import CooklangCheatsheet from './CooklangCheatsheet.svelte';
+	import CooklangCodeMirror from './CooklangCodeMirror.svelte';
+	import type { SourceEditorHandle } from './CooklangCodeMirror.svelte';
 	import CooklangPreview from './CooklangPreview.svelte';
 
 	interface Props {
@@ -64,16 +53,20 @@
 
 	type ViewMode = 'write' | 'split' | 'preview';
 
+	// The server reads the file verbatim, which on Windows may include CRLF.
+	// CodeMirror normalizes line breaks internally, so the snapshot has to
+	// match that: otherwise the editor opens already "dirty" and saving
+	// silently rewrites every line ending.
+	const initialSource = untrack(() => source).replace(/\r\n?/gu, '\n');
+
 	// The component takes a snapshot of the server data and owns it from then
 	// on. `untrack` makes that explicit: typing must not be overwritten when
 	// SvelteKit re-runs the load function after a form action.
-	let text = $state(untrack(() => source));
-	let savedText = $state(untrack(() => source));
+	let text = $state(initialSource);
+	let savedText = $state(initialSource);
 	let expectedMtime = $state(untrack(() => mtimeMs));
-	let textarea = $state<HTMLTextAreaElement | null>(null);
+	let sourceEditor = $state<SourceEditorHandle | null>(null);
 	let formEl = $state<HTMLFormElement | null>(null);
-	let scrollTop = $state(0);
-	let scrollLeft = $state(0);
 	let caretLine = $state(1);
 	let caretColumn = $state(1);
 
@@ -92,40 +85,34 @@
 	let currentPreview = $state<RecipePreview>(untrack(() => preview));
 	let previewLoading = $state(false);
 	let previewError = $state<PreviewError | null>(null);
-	let lastPreviewed = $state(untrack(() => source));
+	let lastPreviewed = $state(initialSource);
 	let previewTimer: ReturnType<typeof setTimeout> | null = null;
 	let previewAbort: AbortController | null = null;
 
 	// View and aux panels
 	let viewMode = $state<ViewMode>('split');
+	let wrap = $state(true);
 	let cheatsheetOpen = $state(false);
 	let leaveOpen = $state(false);
 	let consoleOpen = $state(untrack(() => preview.diagnostics.length > 0));
 	let pendingNavigation: string | null = null;
 	let allowLeave = false;
 
-	// Autocomplete
-	let completion = $state<CompletionContext | null>(null);
-	let completionItems = $state<CompletionTerm[]>([]);
-	let activeCompletion = $state(0);
-	let menuPosition = $state<{ left: number; top: number; width: number } | null>(null);
-
-	// Undo history. Native textarea undo cannot see programmatic toolbar and
-	// completion edits, so the editor keeps one history for both.
-	interface Snapshot {
-		text: string;
-		caret: number;
-	}
-	let history = $state<Snapshot[]>([{ text: untrack(() => source), caret: 0 }]);
-	let historyIndex = $state(0);
-	let historyTimer: ReturnType<typeof setTimeout> | null = null;
-	let lastToolbarActionAt = 0;
+	// CodeMirror owns undo history; the toolbar mirrors its depth.
+	let cmHistory = $state({ undo: 0, redo: 0 });
 
 	const dirty = $derived(text !== savedText);
-	const tokens = $derived(highlightCooklang(text));
-	const lineCount = $derived(text.split('\n').length);
-	const lineNumbers = $derived(Array.from({ length: lineCount }, (_, index) => index + 1));
 	const wordCount = $derived((text.trim().match(/\S+/gu) ?? []).length);
+	const completionTerms = $derived({
+		ingredient: mergeCompletionTerms(
+			vocabulary.ingredients,
+			currentPreview.display.ingredients.map((ingredient) => ingredient.name)
+		),
+		cookware: mergeCompletionTerms(
+			vocabulary.cookware,
+			currentPreview.display.cookware.map((item) => item.name)
+		)
+	});
 	const stepCount = $derived(
 		currentPreview.display.sections.reduce(
 			(total, section) => total + section.content.filter((item) => item.type === 'step').length,
@@ -146,29 +133,8 @@
 			? 1
 			: currentPreview.diagnostics.filter((diagnostic) => diagnostic.severity !== 'help').length
 	);
-	const canUndo = $derived(historyIndex > 0 || text !== (history[0]?.text ?? ''));
-	const canRedo = $derived(historyIndex < history.length - 1);
-	const menuOpen = $derived(
-		completion !== null && menuPosition !== null && completionItems.length > 0
-	);
-
-	const TOKEN_CLASSES: Record<CooklangTokenKind, string> = {
-		text: '',
-		comment: 'text-fg-subtle italic',
-		section: 'text-fg font-semibold',
-		'metadata-key': 'text-accent2 font-medium',
-		'metadata-value': 'text-fg-muted',
-		frontmatter: 'text-fg-muted',
-		'frontmatter-key': 'text-accent2 font-medium',
-		'frontmatter-delimiter': 'text-fg-subtle',
-		ingredient: 'text-accent font-semibold',
-		'ingredient-quantity': 'text-accent/75',
-		cookware: 'text-accent2 font-semibold',
-		'cookware-quantity': 'text-accent2/75',
-		timer: 'text-warn-soft-fg font-semibold',
-		'timer-quantity': 'text-warn-soft-fg/80',
-		note: 'text-fg-subtle italic'
-	};
+	const canUndo = $derived(cmHistory.undo > 0);
+	const canRedo = $derived(cmHistory.redo > 0);
 
 	const statusLabel = $derived(
 		saving ? 'Saving…' : saveError ? 'Not saved' : dirty ? 'Unsaved changes' : 'Up to date'
@@ -184,99 +150,29 @@
 		return severity === 'help' ? CircleHelpIcon : TriangleAlertIcon;
 	}
 
-	// ---------------------------------------------------------------- history
-
-	function commitHistory(value = text, caret = textarea?.selectionStart ?? value.length): void {
-		if (history[historyIndex]?.text === value) return;
-
-		if (historyIndex < history.length - 1) {
-			history = history.slice(0, historyIndex + 1);
-		}
-
-		history = [...history, { text: value, caret }].slice(-200);
-		historyIndex = history.length - 1;
-	}
-
-	function scheduleHistory(): void {
-		if (historyTimer) clearTimeout(historyTimer);
-		historyTimer = setTimeout(() => {
-			historyTimer = null;
-			commitHistory();
-		}, 500);
-	}
-
-	async function applySnapshot(snapshot: Snapshot): Promise<void> {
-		text = snapshot.text;
-		closeCompletion();
-
-		await tick();
-		textarea?.focus();
-		textarea?.setSelectionRange(snapshot.caret, snapshot.caret);
-		updateCaret();
-	}
-
-	async function undo(): Promise<void> {
-		if (historyTimer) {
-			clearTimeout(historyTimer);
-			historyTimer = null;
-		}
-
-		commitHistory();
-
-		if (historyIndex > 0) {
-			historyIndex--;
-			await applySnapshot(history[historyIndex]);
-		}
-	}
-
-	async function redo(): Promise<void> {
-		if (historyTimer) {
-			clearTimeout(historyTimer);
-			historyTimer = null;
-		}
-
-		// A fresh edit after undo starts a new branch and discards the redo tail.
-		if (text !== history[historyIndex]?.text) {
-			commitHistory();
-			return;
-		}
-
-		if (historyIndex < history.length - 1) {
-			historyIndex++;
-			await applySnapshot(history[historyIndex]);
-		}
-	}
-
 	// ------------------------------------------------------------- text edits
 
-	async function setEditorText(
+	function selectionRange(): { start: number; end: number } {
+		return sourceEditor?.getSelection() ?? { start: text.length, end: text.length };
+	}
+
+	/**
+	 * Replace the document and put the selection where the caller asked.
+	 *
+	 * CodeMirror reports the change synchronously, so `text` is up to date by
+	 * the time this returns and the preview effect sees the new value.
+	 */
+	function setEditorText(
 		next: string,
 		selectionStart: number,
 		selectionEnd = selectionStart
-	): Promise<void> {
-		if (historyTimer) {
-			clearTimeout(historyTimer);
-			historyTimer = null;
+	): void {
+		if (!sourceEditor) {
+			text = next;
+			return;
 		}
 
-		text = next;
-		commitHistory(next, selectionStart);
-		closeCompletion();
-
-		// Update the textarea immediately as well as the bound value. Toolbar
-		// actions are async because of `tick`, and a second click arriving in
-		// that gap would otherwise calculate its range against stale DOM text.
-		const element = textarea;
-		if (element) {
-			element.value = next;
-			element.focus();
-			element.setSelectionRange(selectionStart, selectionEnd);
-		}
-
-		await tick();
-		element?.focus();
-		element?.setSelectionRange(selectionStart, selectionEnd);
-		updateCaret();
+		sourceEditor.setValue(next, selectionStart, selectionEnd);
 	}
 
 	async function replaceSelection(
@@ -284,18 +180,13 @@
 		selectionStart = replacement.length,
 		selectionEnd = selectionStart
 	): Promise<void> {
-		if (!textarea) {
-			// Toolbar insertion from preview-only mode: show the editor first,
-			// then use the caret position it remembered.
+		if (viewMode === 'preview') {
 			viewMode = 'write';
 			await tick();
 		}
 
-		if (!textarea) return;
-
-		const start = textarea.selectionStart;
-		const end = textarea.selectionEnd;
-		await setEditorText(
+		const { start, end } = selectionRange();
+		setEditorText(
 			text.slice(0, start) + replacement + text.slice(end),
 			start + selectionStart,
 			start + selectionEnd
@@ -303,17 +194,19 @@
 	}
 
 	function selectedText(): string {
-		if (!textarea) return '';
-		return text.slice(textarea.selectionStart, textarea.selectionEnd);
+		const { start, end } = selectionRange();
+		return text.slice(start, end);
 	}
 
 	/**
 	 * Run a toolbar insertion, ignoring the second click of a double click.
 	 *
-	 * Without this, each click runs its own async edit. The second click sees
-	 * the placeholder selected by the first and wraps it, producing nonsense
-	 * such as `@@ingredient{}{}`.
+	 * Without this, each click runs its own edit. The second click sees the
+	 * placeholder selected by the first and wraps it, producing nonsense such
+	 * as `@@ingredient{}{}`.
 	 */
+	let lastToolbarActionAt = 0;
+
 	function toolbarAction(action: () => void | Promise<void>): void {
 		const now = performance.now();
 		if (now - lastToolbarActionAt < 300) return;
@@ -322,7 +215,8 @@
 	}
 
 	async function insertEntity(trigger: '@' | '#', placeholder: string): Promise<void> {
-		if (textarea && isInsideEntity(text, textarea.selectionStart, textarea.selectionEnd)) {
+		const { start, end } = selectionRange();
+		if (isInsideEntity(text, start, end)) {
 			return;
 		}
 
@@ -338,7 +232,8 @@
 	}
 
 	async function insertTimer(): Promise<void> {
-		if (textarea && isInsideEntity(text, textarea.selectionStart, textarea.selectionEnd)) {
+		const { start, end } = selectionRange();
+		if (isInsideEntity(text, start, end)) {
 			return;
 		}
 
@@ -366,15 +261,12 @@
 	}
 
 	async function toggleComment(): Promise<void> {
-		if (!textarea) {
+		if (viewMode === 'preview') {
 			viewMode = 'write';
 			await tick();
 		}
 
-		if (!textarea) return;
-
-		const start = textarea.selectionStart;
-		const end = textarea.selectionEnd;
+		const { start, end } = selectionRange();
 		const lineStart = start === 0 ? 0 : text.lastIndexOf('\n', start - 1) + 1;
 		const nextBreak = text.indexOf('\n', end);
 		const lineEnd = nextBreak === -1 ? text.length : nextBreak;
@@ -391,271 +283,23 @@
 			})
 			.join('\n');
 
-		await setEditorText(
+		setEditorText(
 			text.slice(0, lineStart) + nextBlock + text.slice(lineEnd),
 			lineStart,
 			lineStart + nextBlock.length
 		);
 	}
 
-	// -------------------------------------------------------------- autocomplete
-
-	function closeCompletion(): void {
-		completion = null;
-		completionItems = [];
-		menuPosition = null;
+	function undo(): void {
+		sourceEditor?.undo();
 	}
 
-	/** Viewport coordinates of a caret offset, using a hidden mirror element. */
-	function caretCoordinates(element: HTMLTextAreaElement, position: number) {
-		const mirror = document.createElement('div');
-		const computed = window.getComputedStyle(element);
-
-		const copied = [
-			'boxSizing',
-			'width',
-			'height',
-			'overflowX',
-			'overflowY',
-			'borderTopWidth',
-			'borderRightWidth',
-			'borderBottomWidth',
-			'borderLeftWidth',
-			'borderStyle',
-			'paddingTop',
-			'paddingRight',
-			'paddingBottom',
-			'paddingLeft',
-			'fontStyle',
-			'fontVariant',
-			'fontWeight',
-			'fontStretch',
-			'fontSize',
-			'fontFamily',
-			'lineHeight',
-			'letterSpacing',
-			'textAlign',
-			'textTransform',
-			'textIndent',
-			'textDecoration',
-			'wordSpacing',
-			'tabSize'
-		] as const;
-
-		mirror.style.position = 'absolute';
-		mirror.style.visibility = 'hidden';
-		mirror.style.top = '0';
-		mirror.style.left = '-9999px';
-		mirror.style.whiteSpace = 'pre';
-		mirror.style.overflow = 'hidden';
-
-		for (const property of copied) {
-			mirror.style[property] = computed[property];
-		}
-
-		mirror.textContent = element.value.slice(0, position);
-
-		const marker = document.createElement('span');
-		marker.textContent = element.value.slice(position) || '.';
-		mirror.appendChild(marker);
-		document.body.appendChild(mirror);
-
-		const rect = element.getBoundingClientRect();
-		const coordinates = {
-			left: rect.left + marker.offsetLeft - element.scrollLeft,
-			top: rect.top + marker.offsetTop - element.scrollTop
-		};
-
-		document.body.removeChild(mirror);
-		return coordinates;
+	function redo(): void {
+		sourceEditor?.redo();
 	}
 
-	function updateMenuPosition(): void {
-		if (!completion || !textarea) {
-			menuPosition = null;
-			return;
-		}
-
-		const coordinates = caretCoordinates(textarea, completion.end);
-		const lineHeight = Number.parseFloat(window.getComputedStyle(textarea).lineHeight) || 24;
-		const width = 288;
-		const estimatedHeight = Math.min(280, 38 + completionItems.length * 34);
-
-		let top = coordinates.top + lineHeight + 4;
-		if (top + estimatedHeight > window.innerHeight - 8) {
-			top = Math.max(8, coordinates.top - estimatedHeight - 4);
-		}
-
-		menuPosition = {
-			left: Math.max(8, Math.min(coordinates.left, window.innerWidth - width - 8)),
-			top,
-			width
-		};
-	}
-
-	function refreshCompletion(): void {
-		if (!textarea) {
-			closeCompletion();
-			return;
-		}
-
-		const context = detectCompletionContext(text, textarea.selectionStart);
-		if (!context) {
-			closeCompletion();
-			return;
-		}
-
-		const localNames =
-			context.kind === 'ingredient'
-				? currentPreview.display.ingredients.map((ingredient) => ingredient.name)
-				: currentPreview.display.cookware.map((item) => item.name);
-
-		const base = context.kind === 'ingredient' ? vocabulary.ingredients : vocabulary.cookware;
-		const terms = mergeCompletionTerms(base, localNames);
-
-		completion = context;
-		completionItems = rankCompletions(terms, context.query, 9);
-		activeCompletion = 0;
-		updateMenuPosition();
-	}
-
-	async function applySelectedCompletion(term: CompletionTerm): Promise<void> {
-		if (!completion) return;
-
-		const result = applyCompletion(text, completion, term.name);
-		await setEditorText(result.source, result.caret);
-	}
-
-	function moveCompletion(delta: number): void {
-		if (completionItems.length === 0) return;
-		activeCompletion = (activeCompletion + delta + completionItems.length) % completionItems.length;
-	}
-
-	// --------------------------------------------------------------- textarea
-
-	function updateCaret(): void {
-		if (!textarea) return;
-
-		const before = text.slice(0, textarea.selectionStart);
-		const lines = before.split('\n');
-		caretLine = lines.length;
-		caretColumn = (lines[lines.length - 1]?.length ?? 0) + 1;
-	}
-
-	function handleInput(): void {
-		updateCaret();
-		refreshCompletion();
-		scheduleHistory();
-	}
-
-	function handleScroll(event: Event): void {
-		const element = event.currentTarget as HTMLTextAreaElement;
-		scrollTop = element.scrollTop;
-		scrollLeft = element.scrollLeft;
-
-		if (menuOpen) updateMenuPosition();
-	}
-
-	function handleKeydown(event: KeyboardEvent): void {
-		const modifier = event.metaKey || event.ctrlKey;
-
-		if (modifier && event.key.toLowerCase() === 's') {
-			event.preventDefault();
-			void save();
-			return;
-		}
-
-		if (modifier && event.key === ' ') {
-			event.preventDefault();
-			refreshCompletion();
-			return;
-		}
-
-		if (modifier && event.key.toLowerCase() === 'b') {
-			event.preventDefault();
-			void insertBold();
-			return;
-		}
-
-		if (modifier && event.key === '/') {
-			event.preventDefault();
-			void toggleComment();
-			return;
-		}
-
-		if (modifier && event.shiftKey && event.key.toLowerCase() === 'm') {
-			event.preventDefault();
-			consoleOpen = !consoleOpen;
-			return;
-		}
-
-		if (modifier && event.key.toLowerCase() === 'z') {
-			event.preventDefault();
-			if (event.shiftKey) void redo();
-			else void undo();
-			return;
-		}
-
-		if (modifier && event.key.toLowerCase() === 'y') {
-			event.preventDefault();
-			void redo();
-			return;
-		}
-
-		if (menuOpen && completion) {
-			if (event.key === 'ArrowDown') {
-				event.preventDefault();
-				moveCompletion(1);
-				return;
-			}
-
-			if (event.key === 'ArrowUp') {
-				event.preventDefault();
-				moveCompletion(-1);
-				return;
-			}
-
-			if (event.key === 'Enter' || event.key === 'Tab') {
-				event.preventDefault();
-				const term = completionItems[activeCompletion];
-				if (term) void applySelectedCompletion(term);
-				return;
-			}
-		}
-
-		if (event.key === 'Escape' && completion) {
-			event.preventDefault();
-			closeCompletion();
-			return;
-		}
-
-		if (event.key === 'Tab' && !event.shiftKey) {
-			event.preventDefault();
-			void replaceSelection('  ');
-			return;
-		}
-
-		// `{` after an entity name closes itself, with the caret ready for a
-		// quantity. The parser needs braces for multi-word names, and almost
-		// every ingredient ends up with them anyway.
-		if (event.key === '{' && !modifier && !event.altKey && textarea) {
-			const before = text.slice(0, textarea.selectionStart);
-			if (/[@#~][^\s{}]*$/u.test(before) && text[textarea.selectionStart] !== '}') {
-				event.preventDefault();
-				void replaceSelection('{}', 1);
-				return;
-			}
-		}
-
-		// Skip over the closing brace the editor inserted rather than adding a
-		// second one.
-		if (event.key === '}' && !modifier && !event.altKey && textarea) {
-			if (text[textarea.selectionStart] === '}') {
-				event.preventDefault();
-				textarea.setSelectionRange(textarea.selectionStart + 1, textarea.selectionStart + 1);
-				updateCaret();
-			}
-		}
+	function toggleWrap(): void {
+		wrap = !wrap;
 	}
 
 	// ------------------------------------------------------------------ saving
@@ -684,9 +328,6 @@
 				savedAt = Date.now();
 				conflict = false;
 				previewError = null;
-
-				await tick();
-				refreshCompletion();
 				return;
 			}
 
@@ -778,14 +419,6 @@
 		if (previewError) consoleOpen = true;
 	});
 
-	// Keep the active option visible when arrowing through the menu.
-	$effect(() => {
-		if (!menuOpen) return;
-		document
-			.getElementById(`completion-option-${activeCompletion}`)
-			?.scrollIntoView({ block: 'nearest' });
-	});
-
 	// ----------------------------------------------------------------- leaving
 
 	beforeNavigate(({ cancel, to }) => {
@@ -816,12 +449,10 @@
 			viewMode = stored;
 		}
 
-		const resize = () => {
-			if (menuOpen) updateMenuPosition();
-		};
-
-		window.addEventListener('resize', resize);
-		return () => window.removeEventListener('resize', resize);
+		const storedWrap = localStorage.getItem('cooklang-editor-wrap');
+		if (storedWrap === 'on' || storedWrap === 'off') {
+			wrap = storedWrap === 'on';
+		}
 	});
 
 	$effect(() => {
@@ -830,6 +461,15 @@
 			localStorage.setItem('cooklang-editor-view', mode);
 		} catch {
 			// Private browsing or a full quota; the editor still works.
+		}
+	});
+
+	$effect(() => {
+		const wrapping = wrap;
+		try {
+			localStorage.setItem('cooklang-editor-wrap', wrapping ? 'on' : 'off');
+		} catch {
+			// Same as above: persistence is a convenience, not a requirement.
 		}
 	});
 </script>
@@ -867,11 +507,6 @@
 
 		<div class="ml-auto flex flex-wrap items-center gap-2">
 			<span class="text-fg-muted hidden text-sm sm:inline" aria-live="polite">{statusLabel}</span>
-
-			<Button href="/recipe/{slug}" variant="outline" size="sm">
-				<EyeIcon class="size-4" />
-				View
-			</Button>
 
 			<Button
 				type="submit"
@@ -917,93 +552,159 @@
 		class="border-border bg-surface flex min-h-0 flex-1 flex-col overflow-hidden border md:border-l-0"
 	>
 		<input type="hidden" name="expectedMtime" value={expectedMtime} />
+		<input type="hidden" name="source" value={text} />
 
-		<!-- Toolbar -->
+		<!-- Toolbar: a compact editor strip rather than a row of labelled buttons. -->
 		<div
-			class="border-border no-scrollbar flex shrink-0 flex-nowrap items-center gap-1 overflow-x-auto border-b p-2 [&_button]:shrink-0"
+			class="border-border bg-surface no-scrollbar flex shrink-0 flex-nowrap items-center gap-0.5 overflow-x-auto border-b px-1 py-0.5 [&_button]:shrink-0"
 		>
-			<IconButton label="Undo" size="sm" variant="ghost" disabled={!canUndo} onclick={undo}>
-				<Undo2Icon class="size-4" />
-			</IconButton>
-			<IconButton label="Redo" size="sm" variant="ghost" disabled={!canRedo} onclick={redo}>
-				<Redo2Icon class="size-4" />
-			</IconButton>
+			<div class="flex items-center gap-0.5" role="group" aria-label="History">
+				<IconButton
+					label="Undo"
+					title="Undo (Ctrl+Z)"
+					size="sm"
+					variant="toolbar"
+					disabled={!canUndo}
+					onclick={undo}
+				>
+					<Undo2Icon class="size-4" />
+				</IconButton>
+				<IconButton
+					label="Redo"
+					title="Redo (Ctrl+Shift+Z)"
+					size="sm"
+					variant="toolbar"
+					disabled={!canRedo}
+					onclick={redo}
+				>
+					<Redo2Icon class="size-4" />
+				</IconButton>
+			</div>
 
-			<span class="bg-border mx-1 h-5 w-px" aria-hidden="true"></span>
+			<span class="bg-border mx-1 h-5 w-px shrink-0" aria-hidden="true"></span>
 
-			<Button
-				type="button"
-				variant="ghost"
-				size="sm"
-				onclick={() => toolbarAction(() => insertEntity('@', 'ingredient'))}
-			>
-				<CarrotIcon class="text-accent size-4" />
-				Ingredient
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="sm"
-				onclick={() => toolbarAction(() => insertEntity('#', 'cookware'))}
-			>
-				<CookingPotIcon class="text-accent2 size-4" />
-				Cookware
-			</Button>
-			<Button type="button" variant="ghost" size="sm" onclick={() => toolbarAction(insertTimer)}>
-				<TimerIcon class="text-warn-soft-fg size-4" />
-				Timer
-			</Button>
+			<div class="flex items-center gap-0.5" role="group" aria-label="Insert">
+				<IconButton
+					label="Insert ingredient"
+					title="Insert ingredient"
+					size="sm"
+					variant="toolbar"
+					onclick={() => toolbarAction(() => insertEntity('@', 'ingredient'))}
+				>
+					<CarrotIcon class="text-accent size-4" />
+				</IconButton>
+				<IconButton
+					label="Insert cookware"
+					title="Insert cookware"
+					size="sm"
+					variant="toolbar"
+					onclick={() => toolbarAction(() => insertEntity('#', 'cookware'))}
+				>
+					<CookingPotIcon class="text-accent2 size-4" />
+				</IconButton>
+				<IconButton
+					label="Insert timer"
+					title="Insert timer"
+					size="sm"
+					variant="toolbar"
+					onclick={() => toolbarAction(insertTimer)}
+				>
+					<TimerIcon class="text-warn-soft-fg size-4" />
+				</IconButton>
+			</div>
 
-			<span class="bg-border mx-1 h-5 w-px" aria-hidden="true"></span>
+			<span class="bg-border mx-1 h-5 w-px shrink-0" aria-hidden="true"></span>
 
-			<Button type="button" variant="ghost" size="sm" onclick={() => toolbarAction(insertSection)}>
-				<BracesIcon class="size-4" />
-				Section
-			</Button>
-			<Button type="button" variant="ghost" size="sm" onclick={() => toolbarAction(toggleComment)}>
-				<MessageSquareIcon class="size-4" />
-				Comment
-			</Button>
-			<Button type="button" variant="ghost" size="sm" onclick={() => toolbarAction(insertBold)}>
-				<BoldIcon class="size-4" />
-				Bold
-			</Button>
+			<div class="flex items-center gap-0.5" role="group" aria-label="Formatting">
+				<IconButton
+					label="Insert section"
+					title="Insert section"
+					size="sm"
+					variant="toolbar"
+					onclick={() => toolbarAction(insertSection)}
+				>
+					<Heading2Icon class="size-4" />
+				</IconButton>
+				<IconButton
+					label="Toggle comment"
+					title="Toggle comment (Ctrl+/)"
+					size="sm"
+					variant="toolbar"
+					onclick={() => toolbarAction(toggleComment)}
+				>
+					<MessageSquareIcon class="size-4" />
+				</IconButton>
+				<IconButton
+					label="Bold"
+					title="Bold (Ctrl+B)"
+					size="sm"
+					variant="toolbar"
+					onclick={() => toolbarAction(insertBold)}
+				>
+					<BoldIcon class="size-4" />
+				</IconButton>
+			</div>
 
-			<div class="ml-auto flex items-center gap-1">
+			<div class="ml-auto flex items-center gap-0.5">
 				<IconButton
 					label="Cooklang syntax reference"
+					title="Cooklang syntax reference"
 					size="sm"
+					variant="toolbar"
 					onclick={() => (cheatsheetOpen = true)}
 				>
 					<BookOpenIcon class="size-4" />
 				</IconButton>
 
-				<span class="bg-border mx-1 h-5 w-px" aria-hidden="true"></span>
+				<span class="bg-border mx-1 h-5 w-px shrink-0" aria-hidden="true"></span>
 
 				<IconButton
-					label="Write only"
+					label="Line wrapping"
+					title="Line wrapping"
 					size="sm"
-					variant={viewMode === 'write' ? 'soft' : 'ghost'}
-					onclick={() => (viewMode = 'write')}
+					variant={wrap ? 'soft' : 'toolbar'}
+					aria-pressed={wrap}
+					onclick={toggleWrap}
 				>
-					<SquarePenIcon class="size-4" />
+					<TextWrapIcon class="size-4" />
 				</IconButton>
-				<IconButton
-					label="Split editor and preview"
-					size="sm"
-					variant={viewMode === 'split' ? 'soft' : 'ghost'}
-					onclick={() => (viewMode = 'split')}
+
+				<div
+					class="bg-surface-muted ml-1 flex items-center gap-0.5 rounded-md p-0.5"
+					role="group"
+					aria-label="Editor view"
 				>
-					<Columns2Icon class="size-4" />
-				</IconButton>
-				<IconButton
-					label="Preview only"
-					size="sm"
-					variant={viewMode === 'preview' ? 'soft' : 'ghost'}
-					onclick={() => (viewMode = 'preview')}
-				>
-					<EyeIcon class="size-4" />
-				</IconButton>
+					<IconButton
+						label="Write only"
+						title="Write only"
+						size="sm"
+						variant={viewMode === 'write' ? 'outline' : 'toolbar'}
+						aria-pressed={viewMode === 'write'}
+						onclick={() => (viewMode = 'write')}
+					>
+						<SquarePenIcon class="size-4" />
+					</IconButton>
+					<IconButton
+						label="Split editor and preview"
+						title="Split editor and preview"
+						size="sm"
+						variant={viewMode === 'split' ? 'outline' : 'toolbar'}
+						aria-pressed={viewMode === 'split'}
+						onclick={() => (viewMode = 'split')}
+					>
+						<Columns2Icon class="size-4" />
+					</IconButton>
+					<IconButton
+						label="Preview only"
+						title="Preview only"
+						size="sm"
+						variant={viewMode === 'preview' ? 'outline' : 'toolbar'}
+						aria-pressed={viewMode === 'preview'}
+						onclick={() => (viewMode = 'preview')}
+					>
+						<EyeIcon class="size-4" />
+					</IconButton>
+				</div>
 			</div>
 		</div>
 
@@ -1013,61 +714,25 @@
 				? 'grid-rows-2 lg:grid-cols-2 lg:grid-rows-1'
 				: 'grid-cols-1'}"
 		>
-			{#if viewMode !== 'preview'}
-				<div class="flex min-h-0 min-w-0 flex-col">
-					<div class="flex min-h-0 flex-1">
-						<!-- Line numbers. They only align while the textarea does not
-						     wrap, which is why the editor uses horizontal scrolling. -->
-						<div
-							class="bg-surface-muted border-border hidden w-12 shrink-0 overflow-hidden border-r sm:block"
-							aria-hidden="true"
-						>
-							<div
-								class="text-fg-subtle p-4 pr-2 text-right font-mono text-sm leading-6"
-								style:transform="translateY(-{scrollTop}px)"
-							>
-								{#each lineNumbers as number (number)}
-									<div>{number}</div>
-								{/each}
-							</div>
-						</div>
-
-						<div class="relative min-w-0 flex-1 overflow-hidden">
-							<!-- The highlighted copy sits behind a transparent textarea. -->
-							<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-								<pre
-									class="absolute top-0 left-0 min-w-full p-4 font-mono text-sm leading-6 whitespace-pre"
-									style:transform="translate({-scrollLeft}px, {-scrollTop}px)"><code
-										>{#each tokens as token, index (index)}<span class={TOKEN_CLASSES[token.kind]}
-												>{token.text}</span
-											>{/each}</code
-									></pre>
-							</div>
-
-							<textarea
-								bind:this={textarea}
-								bind:value={text}
-								name="source"
-								class="caret-fg selection:bg-accent/30 placeholder:text-fg-subtle absolute inset-0 h-full w-full resize-none overflow-auto bg-transparent p-4 font-mono text-sm leading-6 whitespace-pre text-transparent outline-none"
-								spellcheck="false"
-								autocapitalize="off"
-								wrap="off"
-								placeholder="Write a Cooklang recipe…"
-								aria-label="Recipe source"
-								aria-autocomplete="list"
-								oninput={handleInput}
-								onkeydown={handleKeydown}
-								onscroll={handleScroll}
-								onclick={() => {
-									updateCaret();
-									closeCompletion();
-								}}
-								onblur={() => closeCompletion()}
-							></textarea>
-						</div>
-					</div>
-				</div>
-			{/if}
+			<div class="flex min-h-0 min-w-0 flex-col" class:hidden={viewMode === 'preview'}>
+				<CooklangCodeMirror
+					value={text}
+					terms={completionTerms}
+					{wrap}
+					diagnostics={consoleDiagnostics}
+					onvalue={(next) => (text = next)}
+					oncaret={(position) => {
+						caretLine = position.line;
+						caretColumn = position.column;
+					}}
+					onhistory={(state) => (cmHistory = state)}
+					onsave={() => void save()}
+					onbold={() => void insertBold()}
+					oncomment={() => void toggleComment()}
+					ontoggleconsole={() => (consoleOpen = !consoleOpen)}
+					onready={(handle) => (sourceEditor = handle)}
+				/>
+			</div>
 
 			{#if viewMode !== 'write'}
 				<section
@@ -1135,10 +800,17 @@
 						<ul class="divide-border divide-y">
 							{#each consoleDiagnostics as diagnostic, index (index)}
 								{@const Icon = diagnosticIcon(diagnostic.severity)}
+								{@const [summary, ...snippet] = diagnostic.message.split('\n')}
 								<li class="flex items-start gap-2 px-3 py-1.5 text-xs">
 									<Icon class="mt-0.5 size-3.5 shrink-0 {diagnosticClass(diagnostic.severity)}" />
 									<div class="min-w-0">
-										<p class="text-fg">{diagnostic.message}</p>
+										<p class="text-fg">{summary}</p>
+										{#if snippet.length > 0}
+											<pre
+												class="text-fg-muted text-2xs mt-1 overflow-x-auto font-mono leading-5">{snippet.join(
+													'\n'
+												)}</pre>
+										{/if}
 										{#if diagnostic.line}
 											<p class="text-fg-subtle">Line {diagnostic.line}</p>
 										{/if}
@@ -1171,17 +843,6 @@
 		</div>
 	</form>
 </div>
-
-{#if menuOpen && completion && menuPosition}
-	<CompletionMenu
-		items={completionItems}
-		activeIndex={activeCompletion}
-		kind={completion.kind}
-		position={menuPosition}
-		onselect={applySelectedCompletion}
-		onhover={(index) => (activeCompletion = index)}
-	/>
-{/if}
 
 <Drawer bind:open={cheatsheetOpen} title="Cooklang syntax" side="right">
 	<CooklangCheatsheet />

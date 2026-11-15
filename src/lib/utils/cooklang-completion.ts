@@ -160,11 +160,6 @@ export function mergeCompletionTerms(
 	return [...merged.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
-export interface CompletionResult {
-	source: string;
-	caret: number;
-}
-
 /**
  * Whether a selection or caret sits inside an existing `@`, `#` or `~` entity.
  *
@@ -200,29 +195,4 @@ export function isInsideEntity(source: string, start: number, end: number): bool
 	}
 
 	return false;
-}
-
-/**
- * Replace the token at the caret with a completed name.
- *
- * Braces are added when they are not already there, and the caret is placed
- * inside them: `@olive oil{}` with the cursor ready for a quantity. That is
- * the form the parser needs for a multi-word name, so this is not merely a
- * convenience.
- */
-export function applyCompletion(
-	source: string,
-	context: CompletionContext,
-	name: string
-): CompletionResult {
-	const after = source.slice(context.end);
-	const hasBraces = after.startsWith('{');
-	const token = `${context.trigger}${name}${hasBraces ? '' : '{}'}`;
-
-	return {
-		source: source.slice(0, context.start) + token + after,
-		// Always land inside the opening brace, whether it was just added or
-		// already part of the document. That is where a quantity goes next.
-		caret: context.start + context.trigger.length + name.length + 1
-	};
 }

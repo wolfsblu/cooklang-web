@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-	applyCompletion,
 	detectCompletionContext,
 	isInsideEntity,
 	mergeCompletionTerms,
@@ -106,32 +105,6 @@ describe('mergeCompletionTerms', () => {
 		const merged = mergeCompletionTerms([{ name: 'Olive Oil', count: 1 }], ['olive oil']);
 		expect(merged).toHaveLength(1);
 		expect(merged[0].name).toBe('Olive Oil');
-	});
-});
-
-describe('applyCompletion', () => {
-	it('adds braces and places the caret inside them', () => {
-		const source = 'Add @oli and stir.';
-		const context = detectCompletionContext(source, 8)!;
-		const result = applyCompletion(source, context, 'olive oil');
-
-		expect(result.source).toBe('Add @olive oil{} and stir.');
-		expect(result.caret).toBe('Add @olive oil{'.length);
-	});
-
-	it('does not duplicate braces that are already present', () => {
-		const source = 'Add @fl{}';
-		const context = detectCompletionContext(source, 7)!;
-		const result = applyCompletion(source, context, 'flour');
-
-		expect(result.source).toBe('Add @flour{}');
-		expect(result.caret).toBe('Add @flour{'.length);
-	});
-
-	it('completes cookware with the # trigger', () => {
-		const source = 'Use #pa';
-		const context = detectCompletionContext(source, source.length)!;
-		expect(applyCompletion(source, context, 'pan').source).toBe('Use #pan{}');
 	});
 });
 
