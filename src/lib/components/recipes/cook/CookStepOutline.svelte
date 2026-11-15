@@ -6,7 +6,7 @@
 	 * The step outline that shares the sidebar with the ingredients.
 	 *
 	 * Rows are buttons rather than links because navigation is URL-driven and
-	 * uses `goto` with `replaceState`; that keeps back/forward and deep links
+	 * uses `goto` with `replace`; that keeps back/forward and deep links
 	 * working exactly as arrow-key navigation does.
 	 */
 	interface Props {
