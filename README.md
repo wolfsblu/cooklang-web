@@ -20,6 +20,9 @@ whose contents are deducted from that list.
 - **Editing** — a Cooklang editor with syntax highlighting, a live preview,
   parser diagnostics, undo/redo, and ingredient and cookware autocomplete
   drawn from the whole library.
+- **AI import** — paste a recipe URL and have an LLM turn the page into
+  Cooklang. The result is shown in an editor and preview first, and ingredients
+  are matched against the library's existing vocabulary.
 - **Shopping lists** — combine recipes at any scale, with quantities merged
   across them and grouped by supermarket aisle.
 - **Aisles** — edit `aisle.conf` from the app: arrange the aisles into the
@@ -35,6 +38,7 @@ whose contents are deducted from that list.
   [Bits UI](https://bits-ui.com/) for accessible primitives
 - **Icons**: [Lucide Svelte](https://lucide.dev/)
 - **Recipe parsing**: [@cooklang/cooklang](https://github.com/cooklang/cooklang-rs) (WASM) for display, plus the [cook CLI](https://github.com/cooklang/cookcli) for shopping lists
+- **AI import**: any OpenAI-compatible `/chat/completions` endpoint, with DeepSeek as the default
 - **Images**: [imgproxy](https://imgproxy.net/) behind a caching [Caddy](https://caddyserver.com/)
 - **Deployment**: Node.js adapter, shipped as a container
 
@@ -81,9 +85,10 @@ Tests cover the logic that is easy to get quietly wrong: the pantry and aisle
 file parsers (each of which round-trips its real config byte for byte,
 comments included, and the aisle one reorders a category without disturbing a
 line around it), URL slugs, imgproxy URL signing, quantity formatting, aisle
-ordering, aisle coverage and pantry unit comparisons. Behaviour that depends
-on the `cook` binary is checked by `scripts/smoke-cook.mjs` against the real
-thing rather than mocked.
+ordering, aisle coverage and pantry unit comparisons. The AI importer's
+URL safety, JSON-LD extraction, prompt vocabulary and ingredient matching are
+covered without calling a model. Behaviour that depends on the `cook` binary is
+checked by `scripts/smoke-cook.mjs` against the real thing rather than mocked.
 
 ## Building
 
@@ -131,19 +136,24 @@ compose network, so it cannot be used as an open image resizer.
 
 ### Configuration
 
-| Variable              | Default     | Purpose                                                        |
-| --------------------- | ----------- | -------------------------------------------------------------- |
-| `RECIPE_PATH`         | `./recipes` | Directory holding `.cook` files                                |
-| `COOK_CLI_PATH`       | `cook`      | Cook CLI binary, used for shopping lists                       |
-| `COOK_CLI_TIMEOUT`    | `30000`     | Cook CLI timeout in ms                                         |
-| `RECIPE_INDEX_TTL_MS` | `30000`     | How long the index serves before re-stat'ing (`0` in dev)      |
-| `BODY_SIZE_LIMIT`     | `25M`       | Largest request body; cover image uploads need headroom        |
-| `IMGPROXY_BASE_URL`   | _unset_     | Where imgproxy is mounted. Unset serves originals from the app |
-| `IMGPROXY_KEY`        | _unset_     | Hex URL-signing key                                            |
-| `IMGPROXY_SALT`       | _unset_     | Hex URL-signing salt                                           |
-| `PROTOCOL_HEADER`     | _unset_     | Proxy header carrying the scheme; set by compose               |
-| `HOST_HEADER`         | _unset_     | Proxy header carrying the host; set by compose                 |
-| `ORIGIN`              | _unset_     | Public URL, if your proxy sends neither of the above           |
+| Variable              | Default                    | Purpose                                                        |
+| --------------------- | -------------------------- | -------------------------------------------------------------- |
+| `RECIPE_PATH`         | `./recipes`                | Directory holding `.cook` files                                |
+| `COOK_CLI_PATH`       | `cook`                     | Cook CLI binary, used for shopping lists                       |
+| `COOK_CLI_TIMEOUT`    | `30000`                    | Cook CLI timeout in ms                                         |
+| `RECIPE_INDEX_TTL_MS` | `30000`                    | How long the index serves before re-stat'ing (`0` in dev)      |
+| `BODY_SIZE_LIMIT`     | `25M`                      | Largest request body; cover image uploads need headroom        |
+| `IMGPROXY_BASE_URL`   | _unset_                    | Where imgproxy is mounted. Unset serves originals from the app |
+| `IMGPROXY_KEY`        | _unset_                    | Hex URL-signing key                                            |
+| `IMGPROXY_SALT`       | _unset_                    | Hex URL-signing salt                                           |
+| `AI_API_KEY`          | _unset_                    | Enables AI import. Key for the chat-completions provider       |
+| `AI_BASE_URL`         | `https://api.deepseek.com` | OpenAI-compatible API root                                     |
+| `AI_MODEL`            | `deepseek-chat`            | Model used for recipe imports                                  |
+| `AI_TIMEOUT_MS`       | `90000`                    | Timeout for one model request, in ms                           |
+| `AI_MAX_TOKENS`       | `4096`                     | Upper bound on the generated recipe                            |
+| `PROTOCOL_HEADER`     | _unset_                    | Proxy header carrying the scheme; set by compose               |
+| `HOST_HEADER`         | _unset_                    | Proxy header carrying the host; set by compose                 |
+| `ORIGIN`              | _unset_                    | Public URL, if your proxy sends neither of the above           |
 
 Both `IMGPROXY_KEY` and `IMGPROXY_SALT` must be set alongside
 `IMGPROXY_BASE_URL`; if they are not, the app logs a warning and falls back to
@@ -156,6 +166,47 @@ app works, and `/shopping` explains what is missing rather than failing.
 They are not optional behind a proxy: SvelteKit rejects a form POST whose
 `Origin` does not match the origin it believes it is serving, so without them
 every submission fails with "Cross-site POST form submissions are forbidden".
+
+### AI recipe import
+
+The **Import** button on the recipe list opens `/recipes/import`. Paste a recipe
+page URL and the server fetches it, extracts its schema.org Recipe data (with a
+visible-text fallback), and asks a chat model for Cooklang. The result is shown
+in the same editor and preview as the normal recipe editor; nothing is written
+until you choose **Create recipe**. The generated recipe keeps the source
+page's language, including ingredient names and units: a German recipe stays
+German rather than being translated towards the (mostly English) library.
+Existing library names are reused only when they are the same name in that
+language, allowing for case, punctuation, plural and small wording differences.
+If the page publishes a cover image, it is downloaded and stored beside the
+recipe on creation.
+
+Set `AI_API_KEY` to enable it. The defaults target DeepSeek:
+
+```sh
+AI_API_KEY=sk-...
+# AI_BASE_URL=https://api.deepseek.com
+# AI_MODEL=deepseek-chat
+```
+
+Any provider with an OpenAI-compatible `/chat/completions` endpoint and bearer
+authentication can be used instead. Without a key the page explains what is
+missing and the rest of the app works normally.
+
+Ingredient names are the part that needs care. The prompt includes the
+library's existing ingredient vocabulary and asks the model to reuse a name
+when it means the same ingredient, even across plural forms, minor wording
+differences, or a translated source. After generation, a second deterministic
+pass fixes case, punctuation and singular/plural variants against the library,
+so `@Tinned Tomatoes{}` becomes `@tinned tomatoes{}` when that is the existing
+spelling. It deliberately does not collapse broader or narrower ingredients:
+`red onion` is not rewritten to `onion`.
+
+The import is intentionally bounded: only public http(s) URLs are fetched,
+private and link-local addresses are rejected (including through redirects),
+pages over 4 MB are refused, and the model request is time-limited. The page
+content is treated as untrusted data in the prompt and the generated source is
+parsed before it can be saved.
 
 ### Health
 

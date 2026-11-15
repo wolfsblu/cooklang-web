@@ -31,6 +31,23 @@ describe('previewRecipe', () => {
 		expect(preview.display.cookware[0].note).toBe('large');
 	});
 
+	it('marks an inline quantity that already sits inside parentheses', () => {
+		const preview = previewRecipe('Add @Paprika{2} (bunte, ca. 250 g) to the pan.');
+		const step = preview.display.sections
+			.flatMap((section) => section.content)
+			.find((content) => content.type === 'step');
+
+		expect(step?.type).toBe('step');
+		const inline =
+			step?.type === 'step' ? step.items.find((item) => item.type === 'inlineQuantity') : undefined;
+
+		expect(inline).toMatchObject({
+			type: 'inlineQuantity',
+			quantity: '250 g',
+			insideParentheses: true
+		});
+	});
+
 	it('surfaces parser warnings as diagnostics', () => {
 		const preview = previewRecipe('>> servings: 2\n\nAdd @flour{}.');
 		expect(preview.diagnostics.some((diagnostic) => diagnostic.severity === 'warning')).toBe(true);

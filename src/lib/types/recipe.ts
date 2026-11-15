@@ -42,6 +42,12 @@ export interface InlineQuantityItem {
 	type: 'inlineQuantity';
 	index: number;
 	quantity: string;
+	/**
+	 * The quantity already sits inside a parenthetical phrase in the step text.
+	 * In that case the parser has consumed the closing `)`, so the renderer
+	 * supplies only the closing bracket instead of wrapping the value again.
+	 */
+	insideParentheses: boolean;
 }
 
 export type StepItem = TextItem | IngredientItem | CookwareItem | TimerDisplay | InlineQuantityItem;

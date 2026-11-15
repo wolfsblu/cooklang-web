@@ -4,26 +4,10 @@
 	import type { ActionResult } from '$app/forms';
 	import {
 		ArrowLeftIcon,
-		BoldIcon,
-		BookOpenIcon,
-		CarrotIcon,
-		ChevronDownIcon,
-		ChevronUpIcon,
-		CircleCheckIcon,
-		CircleHelpIcon,
-		Columns2Icon,
-		CookingPotIcon,
 		EyeIcon,
-		Heading2Icon,
 		LoaderCircleIcon,
-		MessageSquareIcon,
-		Redo2Icon,
 		SaveIcon,
-		SquarePenIcon,
-		TextWrapIcon,
-		TimerIcon,
-		TriangleAlertIcon,
-		Undo2Icon
+		TriangleAlertIcon
 	} from '@lucide/svelte';
 	import { onMount, tick, untrack } from 'svelte';
 	import type { EditorVocabulary, RecipeDiagnostic, RecipePreview } from '#lib/types/editor.js';
@@ -33,11 +17,12 @@
 	import Button from '#lib/components/ui/Button.svelte';
 	import ConfirmDialog from '#lib/components/ui/ConfirmDialog.svelte';
 	import Drawer from '#lib/components/ui/Drawer.svelte';
-	import IconButton from '#lib/components/ui/IconButton.svelte';
 	import CooklangCheatsheet from './CooklangCheatsheet.svelte';
 	import CooklangCodeMirror from './CooklangCodeMirror.svelte';
 	import type { SourceEditorHandle } from './CooklangCodeMirror.svelte';
 	import CooklangPreview from './CooklangPreview.svelte';
+	import CooklangToolbar from './CooklangToolbar.svelte';
+	import ProblemsPanel from './ProblemsPanel.svelte';
 
 	interface Props {
 		slug: string;
@@ -128,27 +113,12 @@
 			? [{ severity: 'error', message: previewError.message, line: previewError.line }]
 			: currentPreview.diagnostics
 	);
-	const problemCount = $derived(
-		previewError
-			? 1
-			: currentPreview.diagnostics.filter((diagnostic) => diagnostic.severity !== 'help').length
-	);
 	const canUndo = $derived(cmHistory.undo > 0);
 	const canRedo = $derived(cmHistory.redo > 0);
 
 	const statusLabel = $derived(
 		saving ? 'Saving…' : saveError ? 'Not saved' : dirty ? 'Unsaved changes' : 'Up to date'
 	);
-
-	function diagnosticClass(severity: RecipeDiagnostic['severity']): string {
-		if (severity === 'error') return 'text-danger';
-		if (severity === 'warning') return 'text-warn-soft-fg';
-		return 'text-fg-subtle';
-	}
-
-	function diagnosticIcon(severity: RecipeDiagnostic['severity']) {
-		return severity === 'help' ? CircleHelpIcon : TriangleAlertIcon;
-	}
 
 	// ------------------------------------------------------------- text edits
 
@@ -196,22 +166,6 @@
 	function selectedText(): string {
 		const { start, end } = selectionRange();
 		return text.slice(start, end);
-	}
-
-	/**
-	 * Run a toolbar insertion, ignoring the second click of a double click.
-	 *
-	 * Without this, each click runs its own edit. The second click sees the
-	 * placeholder selected by the first and wraps it, producing nonsense such
-	 * as `@@ingredient{}{}`.
-	 */
-	let lastToolbarActionAt = 0;
-
-	function toolbarAction(action: () => void | Promise<void>): void {
-		const now = performance.now();
-		if (now - lastToolbarActionAt < 300) return;
-		lastToolbarActionAt = now;
-		void action();
 	}
 
 	async function insertEntity(trigger: '@' | '#', placeholder: string): Promise<void> {
@@ -556,159 +510,23 @@
 		<input type="hidden" name="expectedMtime" value={expectedMtime} />
 		<input type="hidden" name="source" value={text} />
 
-		<!-- Toolbar: a compact editor strip rather than a row of labelled buttons. -->
-		<div
-			class="border-border bg-surface no-scrollbar flex shrink-0 flex-nowrap items-center gap-0.5 overflow-x-auto border-b px-3 py-1.5 md:px-4 [&_button]:shrink-0"
-		>
-			<div class="flex items-center gap-0.5" role="group" aria-label="History">
-				<IconButton
-					label="Undo"
-					title="Undo (Ctrl+Z)"
-					size="sm"
-					variant="toolbar"
-					disabled={!canUndo}
-					onclick={undo}
-				>
-					<Undo2Icon class="size-4" />
-				</IconButton>
-				<IconButton
-					label="Redo"
-					title="Redo (Ctrl+Shift+Z)"
-					size="sm"
-					variant="toolbar"
-					disabled={!canRedo}
-					onclick={redo}
-				>
-					<Redo2Icon class="size-4" />
-				</IconButton>
-			</div>
-
-			<span class="bg-border mx-1 h-5 w-px shrink-0" aria-hidden="true"></span>
-
-			<div class="flex items-center gap-0.5" role="group" aria-label="Insert">
-				<IconButton
-					label="Insert ingredient"
-					title="Insert ingredient"
-					size="sm"
-					variant="toolbar"
-					onclick={() => toolbarAction(() => insertEntity('@', 'ingredient'))}
-				>
-					<CarrotIcon class="text-accent size-4" />
-				</IconButton>
-				<IconButton
-					label="Insert cookware"
-					title="Insert cookware"
-					size="sm"
-					variant="toolbar"
-					onclick={() => toolbarAction(() => insertEntity('#', 'cookware'))}
-				>
-					<CookingPotIcon class="text-accent2 size-4" />
-				</IconButton>
-				<IconButton
-					label="Insert timer"
-					title="Insert timer"
-					size="sm"
-					variant="toolbar"
-					onclick={() => toolbarAction(insertTimer)}
-				>
-					<TimerIcon class="text-warn-soft-fg size-4" />
-				</IconButton>
-			</div>
-
-			<span class="bg-border mx-1 h-5 w-px shrink-0" aria-hidden="true"></span>
-
-			<div class="flex items-center gap-0.5" role="group" aria-label="Formatting">
-				<IconButton
-					label="Insert section"
-					title="Insert section"
-					size="sm"
-					variant="toolbar"
-					onclick={() => toolbarAction(insertSection)}
-				>
-					<Heading2Icon class="size-4" />
-				</IconButton>
-				<IconButton
-					label="Toggle comment"
-					title="Toggle comment (Ctrl+/)"
-					size="sm"
-					variant="toolbar"
-					onclick={() => toolbarAction(toggleComment)}
-				>
-					<MessageSquareIcon class="size-4" />
-				</IconButton>
-				<IconButton
-					label="Bold"
-					title="Bold (Ctrl+B)"
-					size="sm"
-					variant="toolbar"
-					onclick={() => toolbarAction(insertBold)}
-				>
-					<BoldIcon class="size-4" />
-				</IconButton>
-			</div>
-
-			<div class="ml-auto flex items-center gap-0.5">
-				<IconButton
-					label="Cooklang syntax reference"
-					title="Cooklang syntax reference"
-					size="sm"
-					variant="toolbar"
-					onclick={() => (cheatsheetOpen = true)}
-				>
-					<BookOpenIcon class="size-4" />
-				</IconButton>
-
-				<span class="bg-border mx-1 h-5 w-px shrink-0" aria-hidden="true"></span>
-
-				<IconButton
-					label="Line wrapping"
-					title="Line wrapping"
-					size="sm"
-					variant={wrap ? 'soft' : 'toolbar'}
-					aria-pressed={wrap}
-					onclick={toggleWrap}
-				>
-					<TextWrapIcon class="size-4" />
-				</IconButton>
-
-				<div
-					class="bg-surface-muted ml-1 flex items-center gap-0.5 rounded-md"
-					role="group"
-					aria-label="Editor view"
-				>
-					<IconButton
-						label="Write only"
-						title="Write only"
-						size="sm"
-						variant={viewMode === 'write' ? 'outline' : 'toolbar'}
-						aria-pressed={viewMode === 'write'}
-						onclick={() => (viewMode = 'write')}
-					>
-						<SquarePenIcon class="size-4" />
-					</IconButton>
-					<IconButton
-						label="Split editor and preview"
-						title="Split editor and preview"
-						size="sm"
-						variant={viewMode === 'split' ? 'outline' : 'toolbar'}
-						aria-pressed={viewMode === 'split'}
-						onclick={() => (viewMode = 'split')}
-					>
-						<Columns2Icon class="size-4" />
-					</IconButton>
-					<IconButton
-						label="Preview only"
-						title="Preview only"
-						size="sm"
-						variant={viewMode === 'preview' ? 'outline' : 'toolbar'}
-						aria-pressed={viewMode === 'preview'}
-						onclick={() => (viewMode = 'preview')}
-					>
-						<EyeIcon class="size-4" />
-					</IconButton>
-				</div>
-			</div>
-		</div>
+		<CooklangToolbar
+			{canUndo}
+			{canRedo}
+			{wrap}
+			{viewMode}
+			onundo={undo}
+			onredo={redo}
+			oninsertingredient={() => insertEntity('@', 'ingredient')}
+			oninsertcookware={() => insertEntity('#', 'cookware')}
+			oninserttimer={insertTimer}
+			oninsertsection={insertSection}
+			ontogglecomment={toggleComment}
+			onbold={insertBold}
+			onopencheatsheet={() => (cheatsheetOpen = true)}
+			ontogglewrap={toggleWrap}
+			onviewmode={(mode) => (viewMode = mode)}
+		/>
 
 		<!-- Editor and preview -->
 		<div
@@ -759,74 +577,13 @@
 			{/if}
 		</div>
 
-		<!-- Problems console. The panel lives inside the workspace so it shrinks
-		     the editor instead of pushing the page taller. -->
-		<div class="border-border shrink-0 border-t">
-			<button
-				type="button"
-				class="hover:bg-surface-muted flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors duration-100"
-				onclick={() => (consoleOpen = !consoleOpen)}
-				aria-expanded={consoleOpen}
-				aria-controls="problems-console"
-			>
-				{#if problemCount > 0}
-					<TriangleAlertIcon class="text-warn-soft-fg size-3.5 shrink-0" />
-					<span class="text-fg text-xs font-medium">
-						{countLabel(problemCount, 'problem')}
-					</span>
-				{:else}
-					<CircleCheckIcon class="text-ok size-3.5 shrink-0" />
-					<span class="text-fg text-xs font-medium">No syntax problems</span>
-				{/if}
-
-				{#if previewLoading}
-					<span class="text-fg-subtle inline-flex items-center gap-1 text-xs">
-						<LoaderCircleIcon class="size-3 animate-spin" />
-						Checking…
-					</span>
-				{/if}
-
-				<span class="text-fg-subtle ml-auto inline-flex items-center gap-1 text-xs">
-					Problems
-					{#if consoleOpen}
-						<ChevronDownIcon class="size-3.5" />
-					{:else}
-						<ChevronUpIcon class="size-3.5" />
-					{/if}
-				</span>
-			</button>
-
-			{#if consoleOpen}
-				<div id="problems-console" class="border-border max-h-48 overflow-y-auto border-t">
-					{#if consoleDiagnostics.length > 0}
-						<ul class="divide-border divide-y">
-							{#each consoleDiagnostics as diagnostic, index (index)}
-								{@const Icon = diagnosticIcon(diagnostic.severity)}
-								{@const [summary, ...snippet] = diagnostic.message.split('\n')}
-								<li class="flex items-start gap-2 px-3 py-1.5 text-xs">
-									<Icon class="mt-0.5 size-3.5 shrink-0 {diagnosticClass(diagnostic.severity)}" />
-									<div class="min-w-0">
-										<p class="text-fg">{summary}</p>
-										{#if snippet.length > 0}
-											<pre
-												class="text-fg-muted text-2xs mt-1 overflow-x-auto font-mono leading-5">{snippet.join(
-													'\n'
-												)}</pre>
-										{/if}
-										{#if diagnostic.line}
-											<p class="text-fg-subtle">Line {diagnostic.line}</p>
-										{/if}
-									</div>
-									<span class="text-fg-subtle ml-auto capitalize">{diagnostic.severity}</span>
-								</li>
-							{/each}
-						</ul>
-					{:else}
-						<p class="text-fg-subtle px-3 py-2 text-xs">No parser warnings for this recipe.</p>
-					{/if}
-				</div>
-			{/if}
-		</div>
+		<!-- The panel lives inside the workspace so it shrinks the editor
+		     instead of pushing the page taller. -->
+		<ProblemsPanel
+			bind:open={consoleOpen}
+			diagnostics={consoleDiagnostics}
+			loading={previewLoading}
+		/>
 
 		<!-- Status bar -->
 		<div

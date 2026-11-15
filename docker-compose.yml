@@ -18,6 +18,13 @@ services:
       IMGPROXY_BASE_URL: /img
       IMGPROXY_KEY: ${IMGPROXY_KEY:?set IMGPROXY_KEY in .env}
       IMGPROXY_SALT: ${IMGPROXY_SALT:?set IMGPROXY_SALT in .env}
+      # Optional AI recipe import. Empty means the feature is disabled. The
+      # defaults target DeepSeek's OpenAI-compatible endpoint.
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.deepseek.com}
+      AI_MODEL: ${AI_MODEL:-deepseek-chat}
+      AI_TIMEOUT_MS: ${AI_TIMEOUT_MS:-90000}
+      AI_MAX_TOKENS: ${AI_MAX_TOKENS:-4096}
       # Required behind a proxy. SvelteKit rejects a form POST whose Origin
       # header does not match the origin it thinks it is serving, and on its
       # own the app cannot tell that Caddy terminated the connection. Without

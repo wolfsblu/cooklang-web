@@ -298,7 +298,9 @@
 											{item.quantity}
 										</span>
 									{:else if item.type === 'inlineQuantity'}
-										<span class="text-fg-subtle italic">({item.quantity})</span>
+										<span class="text-fg-subtle italic">
+											{item.insideParentheses ? `${item.quantity})` : `(${item.quantity})`}
+										</span>
 									{/if}
 								{/each}
 							</p>

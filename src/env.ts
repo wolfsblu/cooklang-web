@@ -28,5 +28,23 @@ export const variables = defineEnvVars({
 	IMGPROXY_KEY: { schema: (value) => value },
 
 	/** imgproxy signing salt. */
-	IMGPROXY_SALT: { schema: (value) => value }
+	IMGPROXY_SALT: { schema: (value) => value },
+
+	/**
+	 * API key for the AI recipe importer. Any OpenAI-compatible chat
+	 * completions provider works; DeepSeek is the default.
+	 */
+	AI_API_KEY: { schema: (value) => value },
+
+	/** Base URL of the OpenAI-compatible API, e.g. https://api.deepseek.com. */
+	AI_BASE_URL: { schema: (value) => value },
+
+	/** Chat model used for recipe imports. */
+	AI_MODEL: { schema: (value) => value },
+
+	/** Timeout for one model request, in milliseconds. */
+	AI_TIMEOUT_MS: { schema: (value) => value },
+
+	/** Upper bound on the generated recipe, in tokens. */
+	AI_MAX_TOKENS: { schema: (value) => value }
 });

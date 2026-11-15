@@ -88,7 +88,7 @@ function buildDisplay(recipe: CooklangRecipe, fallbackTitle: string): RecipeDisp
 			return {
 				type: 'step' as const,
 				number: content.value.number,
-				items: content.value.items.map((item) => {
+				items: content.value.items.map((item, itemIndex, items) => {
 					if (item.type === 'text') {
 						return { type: 'text' as const, value: item.value };
 					}
@@ -123,10 +123,23 @@ function buildDisplay(recipe: CooklangRecipe, fallbackTitle: string): RecipeDisp
 						};
 					}
 
+					// The parser treats a number inside prose parentheses, such
+					// as "(bunte, ca. 250 g)", as an inline quantity and consumes
+					// the closing bracket with it. Remember the open context so
+					// the renderer can close the original parenthesis rather
+					// than wrapping the quantity in a second pair.
+					const precedingText = items
+						.slice(0, itemIndex)
+						.map((candidate) => (candidate.type === 'text' ? candidate.value : ''))
+						.join('');
+					const opens = (precedingText.match(/\(/gu) ?? []).length;
+					const closes = (precedingText.match(/\)/gu) ?? []).length;
+
 					return {
 						type: 'inlineQuantity' as const,
 						index: item.index,
-						quantity: quantity_display(recipe.inlineQuantities[item.index])
+						quantity: quantity_display(recipe.inlineQuantities[item.index]),
+						insideParentheses: opens > closes
 					};
 				})
 			};
