@@ -98,7 +98,9 @@ describe('MultiSelect', () => {
 		await fireEvent.keyDown(input, { key: 'Backspace' });
 
 		expect(onchange).toHaveBeenLastCalledWith([]);
-		expect(screen.queryByRole('option')).toBeNull();
+		// The combobox marks the content closed right away but unmounts it a
+		// tick later, so wait for the removal instead of asserting synchronously.
+		await waitFor(() => expect(screen.queryByRole('option')).toBeNull());
 	});
 
 	it('highlights the first filtered match and moves with arrow keys', async () => {
