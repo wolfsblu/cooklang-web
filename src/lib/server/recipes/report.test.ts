@@ -36,6 +36,21 @@ describe('diagnosticsFromReport', () => {
 		expect(diagnosticsFromReport(report)).toHaveLength(1);
 	});
 
+	it('keeps the snippet a help sentence introduces', () => {
+		const report = [
+			'Help: Replace the entries with this at the top of the document:',
+			'---',
+			"servings: '2'",
+			'---'
+		].join('\n');
+
+		const help = diagnosticsFromReport(report).find((diagnostic) => diagnostic.severity === 'help');
+
+		expect(help?.message).toBe(
+			"Replace the entries with this at the top of the document:\n---\nservings: '2'\n---"
+		);
+	});
+
 	it('decodes numeric entities and strips ANSI colour', () => {
 		const report = '\u001b[33mWarning:\u001b[0m can&#x27;t parse \u0026 continue';
 		expect(diagnosticsFromReport(report)).toEqual([

@@ -84,20 +84,49 @@ const SEVERITY = new Set<DiagnosticSeverity>(['warning', 'error', 'help']);
  *
  * Duplicates are dropped by severity and message: a single deprecated `>>`
  * metadata block is reported once at the top and again in the suggestion.
+ * Help lines that introduce a fenced snippet keep that snippet, because a
+ * message ending in a colon is useless on its own.
  */
 export function diagnosticsFromReport(report: string): RecipeDiagnostic[] {
 	if (!report.trim()) return [];
 
 	const diagnostics: RecipeDiagnostic[] = [];
 	const seen = new Set<string>();
+	const lines = toPlainText(report).split('\n');
 	let current: RecipeDiagnostic | null = null;
 
-	for (const line of toPlainText(report).split('\n')) {
+	for (let index = 0; index < lines.length; index++) {
+		const line = lines[index];
 		const message = line.match(/^\s*(Warning|Error|Help):\s*(.*)$/u);
 
 		if (message) {
 			const severity = message[1].toLowerCase() as DiagnosticSeverity;
-			const text = message[2].trim();
+			let text = message[2].trim();
+
+			// The parser follows this kind of help with the YAML it wants the
+			// cook to paste in, fenced by `---`. Keep it together with the
+			// question it answers.
+			if (severity === 'help' && text.endsWith(':')) {
+				let cursor = index + 1;
+				while (cursor < lines.length && lines[cursor].trim() === '') cursor++;
+
+				if (cursor < lines.length && lines[cursor].trim() === '---') {
+					const snippet = ['---'];
+					cursor++;
+
+					while (cursor < lines.length && lines[cursor].trim() !== '---') {
+						snippet.push(lines[cursor].trim());
+						cursor++;
+					}
+
+					if (cursor < lines.length) {
+						snippet.push('---');
+						index = cursor;
+					}
+
+					text = `${text}\n${snippet.join('\n')}`;
+				}
+			}
 
 			if (SEVERITY.has(severity) && text) {
 				const key = `${severity}:${text}`;
