@@ -301,6 +301,8 @@
 
 		<div
 			bind:this={scrollContainer}
+			role="group"
+			aria-label={step ? `Step ${step.ordinal} of ${totalSteps}` : 'Recipe'}
 			class="relative z-10 h-full min-h-0 overflow-x-hidden overflow-y-auto overscroll-y-contain"
 			style:touch-action="pan-y pinch-zoom"
 			ontouchstart={handleTouchStart}
