@@ -198,7 +198,7 @@
 					{ingredients(name)}
 				</span>
 
-				<ButtonGroup class="mt-0.5 sm:mt-0">
+				<ButtonGroup class="mt-0.5 ml-2 sm:mt-0">
 					<IconButton size="sm" label="Rename {name}" onclick={() => onrename(name)}>
 						<PencilIcon class="size-4" />
 					</IconButton>
