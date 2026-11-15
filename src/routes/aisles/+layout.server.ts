@@ -1,7 +1,7 @@
 import type { LayoutServerLoad } from './$types';
-import { coverageFor } from '$lib/server/aisle/coverage.js';
-import { readAisle } from '$lib/server/aisle/store.js';
-import { getIndex } from '$lib/server/recipes/index.js';
+import { coverageFor } from '#lib/server/aisle/coverage.js';
+import { readAisle } from '#lib/server/aisle/store.js';
+import { getIndex } from '#lib/server/recipes/index.js';
 
 /**
  * Data shared by every aisles tab: the aisle list, per-aisle counts, and the

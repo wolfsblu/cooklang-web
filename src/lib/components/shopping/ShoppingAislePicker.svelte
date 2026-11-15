@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import AisleCategoryField from '$lib/components/aisles/AisleCategoryField.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
+	import AisleCategoryField from '#lib/components/aisles/AisleCategoryField.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
 
 	interface Props {
 		/** The ingredient name as the CLI emitted it. */

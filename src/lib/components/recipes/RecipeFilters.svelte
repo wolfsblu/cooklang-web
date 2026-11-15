@@ -8,9 +8,9 @@
 		FunnelIcon,
 		PanelLeftIcon
 	} from '@lucide/svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
-	import Select from '$lib/components/ui/Select.svelte';
-	import { buildFilterUrl, buildSortUrl, EMPTY_FILTER_STATE } from '$lib/utils/url-params';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
+	import Select from '#lib/components/ui/Select.svelte';
+	import { buildFilterUrl, buildSortUrl, EMPTY_FILTER_STATE } from '#lib/utils/url-params.js';
 
 	/**
 	 * The flat toolbar in the recipe list's title bar: filter toggles, sort
@@ -56,10 +56,7 @@
 	});
 
 	function updateUrl() {
-		goto(buildSortUrl(page.url.searchParams, sortField, sortOrder), {
-			keepFocus: true,
-			noScroll: true
-		});
+		goto(buildSortUrl(page.url.searchParams, sortField, sortOrder), { reset: false });
 	}
 
 	function toggleSortOrder() {
@@ -75,7 +72,7 @@
 			sortOrder
 		);
 
-		goto(url, { keepFocus: true, noScroll: true });
+		goto(url, { reset: false });
 	}
 </script>
 

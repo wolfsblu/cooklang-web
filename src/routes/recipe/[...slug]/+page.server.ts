@@ -1,16 +1,16 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { getEntry, invalidateRecipe } from '$lib/server/recipes/index.js';
-import { clampScale, getRecipeDisplay } from '$lib/server/recipes/parse.js';
-import { imageRef } from '$lib/server/images.js';
+import { getEntry, invalidateRecipe } from '#lib/server/recipes/index.js';
+import { clampScale, getRecipeDisplay } from '#lib/server/recipes/parse.js';
+import { imageRef } from '#lib/server/images.js';
 import {
 	detectImageType,
 	isHeif,
 	MAX_IMAGE_BYTES,
 	removeRecipeImage,
 	writeRecipeImage
-} from '$lib/server/recipes/image.js';
-import { readSelections } from '$lib/server/shopping/store.js';
+} from '#lib/server/recipes/image.js';
+import { readSelections } from '#lib/server/shopping/store.js';
 
 export const load: PageServerLoad = async ({ params, url }) => {
 	// The slug is looked up in the index rather than joined onto a path. Nothing

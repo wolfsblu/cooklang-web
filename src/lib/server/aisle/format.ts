@@ -24,7 +24,7 @@
  * it.
  */
 
-import type { AisleDuplicate, AisleEntry } from '$lib/types/aisle.js';
+import type { AisleDuplicate, AisleEntry } from '#lib/types/aisle.js';
 
 /**
  * A parsed line. `raw` holds the bytes it was read from; null means it was

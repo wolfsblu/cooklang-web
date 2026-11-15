@@ -11,10 +11,10 @@
 	} from '@lucide/svelte';
 	import type { Component } from 'svelte';
 	import type { PageProps } from './$types';
-	import SearchResults from '$lib/components/search/SearchResults.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import Page from '$lib/components/ui/Page.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
+	import SearchResults from '#lib/components/search/SearchResults.svelte';
+	import EmptyState from '#lib/components/ui/EmptyState.svelte';
+	import Page from '#lib/components/ui/Page.svelte';
+	import { countLabel } from '#lib/utils/pluralize.js';
 
 	const { data }: PageProps = $props();
 
@@ -39,9 +39,8 @@
 	function go(value: string) {
 		const query = value.trim();
 		void goto(query ? `/search?q=${encodeURIComponent(query)}` : '/search', {
-			keepFocus: true,
-			noScroll: true,
-			replaceState: true
+			reset: false,
+			replace: true
 		});
 	}
 

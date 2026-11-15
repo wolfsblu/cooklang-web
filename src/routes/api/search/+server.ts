@@ -6,9 +6,8 @@
  * because the overlay searches on every keystroke, which is not a navigation.
  */
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types.js';
-import { searchEverything, DEFAULT_GROUP_LIMIT } from '$lib/server/search.js';
+import { searchEverything, DEFAULT_GROUP_LIMIT } from '#lib/server/search.js';
 
 /** Long enough for a sentence, short enough not to rank against a novel. */
 const MAX_QUERY_LENGTH = 200;
@@ -26,7 +25,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	const response = await searchEverything(query, { perGroup });
 
-	return json(response, {
+	return Response.json(response, {
 		// Results depend on files that can change between keystrokes.
 		headers: { 'cache-control': 'no-store' }
 	});

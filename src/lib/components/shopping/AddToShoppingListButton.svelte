@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { CheckIcon, ShoppingCartIcon, XIcon } from '@lucide/svelte';
-	import { formatScale } from '$lib/utils/scale';
-	import Button, { type ButtonVariant } from '$lib/components/ui/Button.svelte';
+	import { formatScale } from '#lib/utils/scale.js';
+	import Button, { type ButtonVariant } from '#lib/components/ui/Button.svelte';
 
 	/**
 	 * Add, update or remove the current recipe.

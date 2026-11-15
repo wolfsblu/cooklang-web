@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { beforeNavigate, goto } from '$app/navigation';
-	import type { ActionResult } from '@sveltejs/kit';
+	import type { ActionResult } from '$app/forms';
 	import {
 		ArrowLeftIcon,
 		BoldIcon,
@@ -26,14 +26,14 @@
 		Undo2Icon
 	} from '@lucide/svelte';
 	import { onMount, tick, untrack } from 'svelte';
-	import type { EditorVocabulary, RecipeDiagnostic, RecipePreview } from '$lib/types/editor';
-	import { isInsideEntity, mergeCompletionTerms } from '$lib/utils/cooklang-completion';
-	import { countLabel } from '$lib/utils/pluralize';
-	import Badge from '$lib/components/ui/Badge.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
-	import Drawer from '$lib/components/ui/Drawer.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import type { EditorVocabulary, RecipeDiagnostic, RecipePreview } from '#lib/types/editor.js';
+	import { isInsideEntity, mergeCompletionTerms } from '#lib/utils/cooklang-completion.js';
+	import { countLabel } from '#lib/utils/pluralize.js';
+	import Badge from '#lib/components/ui/Badge.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
+	import ConfirmDialog from '#lib/components/ui/ConfirmDialog.svelte';
+	import Drawer from '#lib/components/ui/Drawer.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
 	import CooklangCheatsheet from './CooklangCheatsheet.svelte';
 	import CooklangCodeMirror from './CooklangCodeMirror.svelte';
 	import type { SourceEditorHandle } from './CooklangCodeMirror.svelte';

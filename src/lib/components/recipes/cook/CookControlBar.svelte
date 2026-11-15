@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte';
-	import Button from '$lib/components/ui/Button.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
 
 	/**
 	 * The workbench control row, inside the frame above the status bar.

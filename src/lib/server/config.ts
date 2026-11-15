@@ -1,12 +1,17 @@
 /**
  * Server-side configuration, read from the environment at runtime.
  *
- * Uses $env/dynamic/private so values come from the process environment when
- * the container starts rather than being baked in at build time.
+ * The values come from $app/env/private, which reads the process environment
+ * when the container starts rather than baking it in at build time.
  */
 
-import { dev } from '$app/environment';
-import { env } from '$env/dynamic/private';
+import {
+	COOK_CLI_PATH,
+	COOK_CLI_TIMEOUT,
+	RECIPE_INDEX_TTL_MS,
+	RECIPE_PATH
+} from '$app/env/private';
+import { dev } from '$app/env';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,13 +28,13 @@ function intFromEnv(value: string | undefined, fallback: number): number {
 
 export const config = {
 	/** Directory holding .cook files. Mounted from the NAS in production. */
-	RECIPE_PATH: resolveFromRoot(env.RECIPE_PATH || './recipes'),
+	RECIPE_PATH: resolveFromRoot(RECIPE_PATH || './recipes'),
 
 	/** Cook CLI binary. Expected on PATH unless overridden. */
-	COOK_CLI_PATH: env.COOK_CLI_PATH || 'cook',
+	COOK_CLI_PATH: COOK_CLI_PATH || 'cook',
 
 	/** Timeout for Cook CLI subprocesses, in milliseconds. */
-	COOK_CLI_TIMEOUT: intFromEnv(env.COOK_CLI_TIMEOUT, 30_000),
+	COOK_CLI_TIMEOUT: intFromEnv(COOK_CLI_TIMEOUT, 30_000),
 
 	/**
 	 * How long the recipe index may serve results before re-stat'ing the
@@ -39,7 +44,7 @@ export const config = {
 	 * recipe directory is a spinning-disk NAS mount, where a rescan costs one
 	 * stat per file, so we trade a little staleness for far less disk chatter.
 	 */
-	RECIPE_INDEX_TTL_MS: intFromEnv(env.RECIPE_INDEX_TTL_MS, dev ? 0 : 30_000)
+	RECIPE_INDEX_TTL_MS: intFromEnv(RECIPE_INDEX_TTL_MS, dev ? 0 : 30_000)
 };
 
 /**

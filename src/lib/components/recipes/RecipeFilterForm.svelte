@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import Button from '$lib/components/ui/Button.svelte';
-	import MultiSelect from '$lib/components/ui/MultiSelect.svelte';
-	import RangeSlider from '$lib/components/ui/RangeSlider.svelte';
-	import Select from '$lib/components/ui/Select.svelte';
-	import type { FilterState } from '$lib/utils/recipe-filters';
+	import Button from '#lib/components/ui/Button.svelte';
+	import MultiSelect from '#lib/components/ui/MultiSelect.svelte';
+	import RangeSlider from '#lib/components/ui/RangeSlider.svelte';
+	import Select from '#lib/components/ui/Select.svelte';
+	import type { FilterState } from '#lib/utils/recipe-filters.js';
 	import {
 		buildFilterUrl,
 		filterStateFromDraft,
@@ -13,7 +13,7 @@
 		MAX_FILTER_SERVINGS,
 		MAX_FILTER_TIME,
 		type FilterDraft
-	} from '$lib/utils/url-params';
+	} from '#lib/utils/url-params.js';
 
 	/**
 	 * The filter controls, shared by the desktop sidebar and the mobile drawer.
@@ -51,7 +51,7 @@
 			(page.url.searchParams.get('order') || 'asc') as 'asc' | 'desc'
 		);
 
-		goto(url, { keepFocus: true, noScroll: true });
+		goto(url, { reset: false });
 	}
 
 	/**

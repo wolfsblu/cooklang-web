@@ -4,7 +4,7 @@
 
 import { spawn } from 'node:child_process';
 import path from 'node:path';
-import { config } from '$lib/server/config.js';
+import { config } from '#lib/server/config.js';
 import type { CookCLIShoppingList } from './types.js';
 
 /**

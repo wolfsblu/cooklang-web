@@ -9,7 +9,7 @@
  */
 
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
-import { countLabel } from '$lib/utils/pluralize.js';
+import { countLabel } from '#lib/utils/pluralize.js';
 import {
 	addAlias,
 	addCategory as addCategoryLine,
@@ -23,7 +23,7 @@ import {
 	upsertEntry
 } from './format.js';
 import { readAisle, updateAisle } from './store.js';
-import { UNCATEGORIZED } from '$lib/types/shopping-list.js';
+import { UNCATEGORIZED } from '#lib/types/shopping-list.js';
 
 function str(data: FormData, key: string): string | null {
 	const value = data.get(key);

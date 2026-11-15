@@ -7,8 +7,8 @@
 		InfoIcon,
 		SoupIcon
 	} from '@lucide/svelte';
-	import type { RecipePreview } from '$lib/types/editor';
-	import Badge from '$lib/components/ui/Badge.svelte';
+	import type { RecipePreview } from '#lib/types/editor.js';
+	import Badge from '#lib/components/ui/Badge.svelte';
 
 	interface Props {
 		preview: RecipePreview;

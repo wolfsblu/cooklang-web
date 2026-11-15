@@ -7,10 +7,10 @@
 		Volume2Icon,
 		VolumeXIcon
 	} from '@lucide/svelte';
-	import type { ActiveTimer } from '$lib/types/recipe';
-	import { countLabel } from '$lib/utils/pluralize';
-	import Button from '$lib/components/ui/Button.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import type { ActiveTimer } from '#lib/types/recipe.js';
+	import { countLabel } from '#lib/utils/pluralize.js';
+	import Button from '#lib/components/ui/Button.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
 	import TimerCard from './TimerCard.svelte';
 
 	/**

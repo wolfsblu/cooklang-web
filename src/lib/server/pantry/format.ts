@@ -15,7 +15,7 @@
  * library to preserve everything.
  */
 
-import type { PantryItem } from '$lib/types/pantry.js';
+import type { PantryItem } from '#lib/types/pantry.js';
 
 type Line =
 	| { kind: 'section'; name: string; raw: string }

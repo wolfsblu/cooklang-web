@@ -19,8 +19,8 @@ import {
 	type CooklangRecipe
 } from '@cooklang/cooklang';
 import fs from 'node:fs/promises';
-import type { RecipePreview } from '$lib/types/editor.js';
-import type { RecipeDisplay } from '$lib/types/recipe.js';
+import type { RecipePreview } from '#lib/types/editor.js';
+import type { RecipeDisplay } from '#lib/types/recipe.js';
 import type { RecipeEntry } from './index.js';
 import { diagnosticsFromReport, findEmptyEntity } from './report.js';
 

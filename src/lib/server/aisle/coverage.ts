@@ -15,7 +15,7 @@
  */
 
 import { lookupEntry, type AisleDoc } from './format.js';
-import type { AisleCoverageItem } from '$lib/types/aisle.js';
+import type { AisleCoverageItem } from '#lib/types/aisle.js';
 import type { RecipeEntry } from '../recipes/index.js';
 
 /** How many using recipes to name per unassigned ingredient. */

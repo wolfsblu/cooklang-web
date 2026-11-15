@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import AisleCategoryDialog from '$lib/components/aisles/AisleCategoryDialog.svelte';
-	import AisleOrderCard from '$lib/components/aisles/AisleOrderCard.svelte';
+	import AisleCategoryDialog from '#lib/components/aisles/AisleCategoryDialog.svelte';
+	import AisleOrderCard from '#lib/components/aisles/AisleOrderCard.svelte';
 
 	const { data }: PageProps = $props();
 

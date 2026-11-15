@@ -1,21 +1,21 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import type { PantryItemView } from '$lib/types/pantry.js';
+import type { PantryItemView } from '#lib/types/pantry.js';
 import {
 	findItem,
 	removeItem,
 	removeSection as removeSectionFromDoc,
 	renameSection as renameSectionInDoc,
 	upsertItem
-} from '$lib/server/pantry/format.js';
+} from '#lib/server/pantry/format.js';
 import {
 	daysUntilExpiry,
 	formatQuantity,
 	isExpiringSoon,
 	isLow,
 	parseQuantity
-} from '$lib/server/pantry/quantity.js';
-import { readPantry, updatePantry } from '$lib/server/pantry/store.js';
+} from '#lib/server/pantry/quantity.js';
+import { readPantry, updatePantry } from '#lib/server/pantry/store.js';
 
 export const load: PageServerLoad = async () => {
 	const doc = await readPantry();

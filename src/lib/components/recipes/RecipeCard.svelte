@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { ClockIcon, ImageIcon, UsersIcon } from '@lucide/svelte';
-	import type { RecipeCardModel } from '$lib/types/recipe';
-	import Badge from '$lib/components/ui/Badge.svelte';
-	import { card } from '$lib/components/ui/Card.svelte';
+	import type { RecipeCardModel } from '#lib/types/recipe.js';
+	import Badge from '#lib/components/ui/Badge.svelte';
+	import { card } from '#lib/components/ui/Card.svelte';
 
 	interface Props {
 		recipe: RecipeCardModel;

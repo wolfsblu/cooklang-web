@@ -8,7 +8,7 @@
  * snippet identifies one, the source line it points at.
  */
 
-import type { DiagnosticSeverity, RecipeDiagnostic } from '$lib/types/editor';
+import type { DiagnosticSeverity, RecipeDiagnostic } from '#lib/types/editor.js';
 
 export interface EmptyEntityProblem {
 	message: string;

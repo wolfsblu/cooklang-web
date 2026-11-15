@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { ChefHatIcon } from '@lucide/svelte';
-	import Badge from '$lib/components/ui/Badge.svelte';
+	import Badge from '#lib/components/ui/Badge.svelte';
 	import { NAV_LINKS } from './links';
 
 	/**

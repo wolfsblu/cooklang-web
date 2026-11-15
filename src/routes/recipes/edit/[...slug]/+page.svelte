@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import CooklangEditor from '$lib/components/editor/CooklangEditor.svelte';
+	import CooklangEditor from '#lib/components/editor/CooklangEditor.svelte';
 
 	const { data }: PageProps = $props();
 </script>

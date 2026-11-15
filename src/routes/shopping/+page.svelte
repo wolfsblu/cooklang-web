@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { ShoppingCartIcon, TerminalIcon, TriangleAlertIcon } from '@lucide/svelte';
 	import type { PageProps } from './$types';
-	import SelectedRecipesList from '$lib/components/shopping/SelectedRecipesList.svelte';
-	import ShoppingListDisplay from '$lib/components/shopping/ShoppingListDisplay.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import Page from '$lib/components/ui/Page.svelte';
+	import SelectedRecipesList from '#lib/components/shopping/SelectedRecipesList.svelte';
+	import ShoppingListDisplay from '#lib/components/shopping/ShoppingListDisplay.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
+	import EmptyState from '#lib/components/ui/EmptyState.svelte';
+	import Page from '#lib/components/ui/Page.svelte';
 
 	const { data }: PageProps = $props();
 

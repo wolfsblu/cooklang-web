@@ -2,10 +2,10 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { PencilIcon, PlusIcon, Trash2Icon } from '@lucide/svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
+	import Button from '#lib/components/ui/Button.svelte';
+	import ConfirmDialog from '#lib/components/ui/ConfirmDialog.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
+	import { countLabel } from '#lib/utils/pluralize.js';
 
 	/**
 	 * The current folder's actions, as a flat icon toolbar like the recipe

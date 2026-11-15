@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { SectionDisplay } from '$lib/types/recipe';
+import type { SectionDisplay } from '#lib/types/recipe.js';
 import { cookStepSummary, flattenCookSteps } from './cook-steps';
 
 function section(name: string | null, stepTexts: string[]): SectionDisplay {

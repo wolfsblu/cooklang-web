@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import type { SubmitFunction } from '$app/forms';
 	import {
 		ArrowRightIcon,
 		CheckIcon,
@@ -12,13 +12,13 @@
 	} from '@lucide/svelte';
 	import { onDestroy } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import type { AisleCoverageItem } from '$lib/types/aisle';
-	import { CELEBRATION_CONFETTI, COMPACT_CONFETTI } from '$lib/components/ui/confetti';
-	import Button from '$lib/components/ui/Button.svelte';
-	import ConfettiBurst from '$lib/components/ui/ConfettiBurst.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import ProgressRing from '$lib/components/ui/ProgressRing.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
+	import type { AisleCoverageItem } from '#lib/types/aisle.js';
+	import { CELEBRATION_CONFETTI, COMPACT_CONFETTI } from '#lib/components/ui/confetti.js';
+	import Button from '#lib/components/ui/Button.svelte';
+	import ConfettiBurst from '#lib/components/ui/ConfettiBurst.svelte';
+	import EmptyState from '#lib/components/ui/EmptyState.svelte';
+	import ProgressRing from '#lib/components/ui/ProgressRing.svelte';
+	import { countLabel } from '#lib/utils/pluralize.js';
 	import AisleBulkBar from './AisleBulkBar.svelte';
 	import AisleCategoryField from './AisleCategoryField.svelte';
 

@@ -7,8 +7,8 @@
 		TimerIcon,
 		UserIcon
 	} from '@lucide/svelte';
-	import type { RecipeDisplay } from '$lib/types/recipe';
-	import Badge from '$lib/components/ui/Badge.svelte';
+	import type { RecipeDisplay } from '#lib/types/recipe.js';
+	import Badge from '#lib/components/ui/Badge.svelte';
 	import ServingsControl from './ServingsControl.svelte';
 
 	/**

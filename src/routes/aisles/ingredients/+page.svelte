@@ -3,18 +3,18 @@
 	import { ArrowRightIcon, PlusIcon, SignpostIcon, Trash2Icon } from '@lucide/svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { PageProps } from './$types';
-	import type { AisleEntryView } from '$lib/types/aisle';
-	import AisleBulkBar from '$lib/components/aisles/AisleBulkBar.svelte';
-	import AisleCategoryField from '$lib/components/aisles/AisleCategoryField.svelte';
-	import AisleCategoryList from '$lib/components/aisles/AisleCategoryList.svelte';
-	import AisleDuplicateWarning from '$lib/components/aisles/AisleDuplicateWarning.svelte';
-	import AisleEntryDialog from '$lib/components/aisles/AisleEntryDialog.svelte';
-	import AisleEntryTable from '$lib/components/aisles/AisleEntryTable.svelte';
-	import AisleGroupedList from '$lib/components/aisles/AisleGroupedList.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
+	import type { AisleEntryView } from '#lib/types/aisle.js';
+	import AisleBulkBar from '#lib/components/aisles/AisleBulkBar.svelte';
+	import AisleCategoryField from '#lib/components/aisles/AisleCategoryField.svelte';
+	import AisleCategoryList from '#lib/components/aisles/AisleCategoryList.svelte';
+	import AisleDuplicateWarning from '#lib/components/aisles/AisleDuplicateWarning.svelte';
+	import AisleEntryDialog from '#lib/components/aisles/AisleEntryDialog.svelte';
+	import AisleEntryTable from '#lib/components/aisles/AisleEntryTable.svelte';
+	import AisleGroupedList from '#lib/components/aisles/AisleGroupedList.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
+	import EmptyState from '#lib/components/ui/EmptyState.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
+	import { countLabel } from '#lib/utils/pluralize.js';
 
 	const { data }: PageProps = $props();
 

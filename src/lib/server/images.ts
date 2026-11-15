@@ -12,7 +12,7 @@
  */
 
 import type { RecipeImage } from './recipes/index.js';
-import type { ImageRef } from '$lib/types/recipe.js';
+import type { ImageRef } from '#lib/types/recipe.js';
 import { IMGPROXY_ENABLED, imgproxyUrl } from './imgproxy.js';
 
 export type ImagePreset = 'thumb' | 'card' | 'hero' | 'step';

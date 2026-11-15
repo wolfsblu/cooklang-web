@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AisleEntryView } from '$lib/types/aisle';
+	import type { AisleEntryView } from '#lib/types/aisle.js';
 	import AisleEntryTable from './AisleEntryTable.svelte';
 
 	interface Props {

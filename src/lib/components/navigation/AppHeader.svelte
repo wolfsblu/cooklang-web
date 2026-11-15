@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { ChefHatIcon, MoonIcon, SearchIcon, SunIcon } from '@lucide/svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
-	import SearchDialog from '$lib/components/search/SearchDialog.svelte';
-	import { themeStore } from '$lib/stores/theme.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
+	import SearchDialog from '#lib/components/search/SearchDialog.svelte';
+	import { themeStore } from '#lib/stores/theme.svelte.js';
 
 	/**
 	 * Sticky header with the brand, the global search trigger and the theme

@@ -15,8 +15,8 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import path from 'node:path';
 import type { RequestHandler } from './$types';
-import { config } from '$lib/server/config.js';
-import { getIndex } from '$lib/server/recipes/index.js';
+import { config } from '#lib/server/config.js';
+import { getIndex } from '#lib/server/recipes/index.js';
 
 const MIME_TYPES: Record<string, string> = {
 	'.jpg': 'image/jpeg',

@@ -12,16 +12,16 @@
  */
 
 import { createHmac } from 'node:crypto';
-import { env } from '$env/dynamic/private';
+import { IMGPROXY_BASE_URL, IMGPROXY_KEY, IMGPROXY_SALT } from '$app/env/private';
 
 /** Base64url, which is what imgproxy expects for encoded source URLs and signatures. */
 function base64url(input: Buffer | string): string {
 	return Buffer.from(input).toString('base64url');
 }
 
-const KEY = env.IMGPROXY_KEY ?? '';
-const SALT = env.IMGPROXY_SALT ?? '';
-const BASE_URL = (env.IMGPROXY_BASE_URL ?? '').replace(/\/+$/, '');
+const KEY = IMGPROXY_KEY ?? '';
+const SALT = IMGPROXY_SALT ?? '';
+const BASE_URL = (IMGPROXY_BASE_URL ?? '').replace(/\/+$/, '');
 
 /**
  * Whether imgproxy is configured. When false the caller falls back to the

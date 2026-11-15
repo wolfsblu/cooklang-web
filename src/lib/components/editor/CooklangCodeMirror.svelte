@@ -29,9 +29,9 @@
 		cooklangDiagnostics,
 		cooklangHighlighting,
 		cooklangLanguage
-	} from '$lib/utils/cooklang-codemirror';
-	import type { CompletionVocabulary } from '$lib/utils/cooklang-codemirror';
-	import type { RecipeDiagnostic } from '$lib/types/editor';
+	} from '#lib/utils/cooklang-codemirror.js';
+	import type { CompletionVocabulary } from '#lib/utils/cooklang-codemirror.js';
+	import type { RecipeDiagnostic } from '#lib/types/editor.js';
 	import { searchKeymap } from '@codemirror/search';
 	import { Compartment, EditorState } from '@codemirror/state';
 	import {

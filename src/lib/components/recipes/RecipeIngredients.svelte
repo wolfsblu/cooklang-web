@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { CarrotIcon } from '@lucide/svelte';
-	import type { IngredientDisplay } from '$lib/types/recipe';
+	import type { IngredientDisplay } from '#lib/types/recipe.js';
 	import { highlightClass, resolveHighlight } from './highlight';
 
 	interface Props {

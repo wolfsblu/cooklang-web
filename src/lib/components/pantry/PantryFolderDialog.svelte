@@ -3,8 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { Dialog } from 'bits-ui';
 	import { XIcon } from '@lucide/svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
 
 	interface Props {
 		open: boolean;

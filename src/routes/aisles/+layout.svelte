@@ -2,9 +2,9 @@
 	import { page } from '$app/state';
 	import { CircleHelpIcon, FolderIcon, SlidersHorizontalIcon } from '@lucide/svelte';
 	import type { LayoutProps } from './$types';
-	import Badge from '$lib/components/ui/Badge.svelte';
-	import Page from '$lib/components/ui/Page.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
+	import Badge from '#lib/components/ui/Badge.svelte';
+	import Page from '#lib/components/ui/Page.svelte';
+	import { countLabel } from '#lib/utils/pluralize.js';
 
 	const { data, children }: LayoutProps = $props();
 

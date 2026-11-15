@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import Badge from '$lib/components/ui/Badge.svelte';
+	import Badge from '#lib/components/ui/Badge.svelte';
 	import { NAV_LINKS } from './links';
 
 	/**

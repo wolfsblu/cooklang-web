@@ -7,7 +7,7 @@ import type {
 	ShoppingListDisplay,
 	ShoppingListCategory,
 	ShoppingListItem
-} from '$lib/types/shopping-list.js';
+} from '#lib/types/shopping-list.js';
 
 /**
  * Format a single quantity value to a display string

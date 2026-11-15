@@ -10,12 +10,12 @@
 		InfoIcon,
 		ListOrderedIcon
 	} from '@lucide/svelte';
-	import type { ImageRef, RecipeDisplay, StepDisplay, ActiveTimer } from '$lib/types/recipe';
-	import { formatTimeRemaining, parseTimerQuantity } from '$lib/utils/timer';
-	import { formatScale } from '$lib/utils/scale';
-	import { countLabel, pluralize } from '$lib/utils/pluralize';
-	import { playAlertSound } from '$lib/utils/audio';
-	import Page from '$lib/components/ui/Page.svelte';
+	import type { ImageRef, RecipeDisplay, StepDisplay, ActiveTimer } from '#lib/types/recipe.js';
+	import { formatTimeRemaining, parseTimerQuantity } from '#lib/utils/timer.js';
+	import { formatScale } from '#lib/utils/scale.js';
+	import { countLabel, pluralize } from '#lib/utils/pluralize.js';
+	import { playAlertSound } from '#lib/utils/audio.js';
+	import Page from '#lib/components/ui/Page.svelte';
 	import RecipeMeta from './RecipeMeta.svelte';
 	import RecipeIngredients from './RecipeIngredients.svelte';
 	import RecipeCookware from './RecipeCookware.svelte';
@@ -241,17 +241,17 @@
 	});
 
 	// The parser rescales the recipe, so this is a navigation rather than local
-	// state. `keepFocus` matters: the servings field applies as you type, and
+	// state. `reset: false` matters: the servings field applies as you type, and
 	// without it every rescale would pull the caret out of the field you are
 	// still typing in.
 	function handleScale(newScale: number) {
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('scale', String(newScale));
-		goto(url.toString(), { replaceState: true, keepFocus: true, noScroll: true });
+		goto(url.toString(), { replace: true, reset: false });
 	}
 
 	function toggleCookMode() {
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		if (cookMode) {
 			url.searchParams.delete('cook');
 			url.searchParams.delete('step');
@@ -263,14 +263,14 @@
 			url.searchParams.set('cook', '');
 			url.searchParams.set('step', '1');
 		}
-		goto(url.toString(), { replaceState: true });
+		goto(url.toString(), { replace: true });
 	}
 
 	function goToStep(step: number) {
 		stepDirection = step >= currentStep ? 'next' : 'previous';
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('step', String(step));
-		goto(url.toString(), { replaceState: true, noScroll: true });
+		goto(url.toString(), { replace: true, reset: false });
 	}
 
 	function goToPreviousStep() {

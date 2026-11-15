@@ -18,9 +18,15 @@ export interface FilterDraft {
 }
 
 /**
+ * The read-only slice of `URLSearchParams` that a page URL exposes. SvelteKit 3
+ * hands components a `ReadonlyURLSearchParams`, which readers should accept.
+ */
+type ReadonlySearchParams = Pick<URLSearchParams, 'get' | 'toString'>;
+
+/**
  * Parse filter parameters from URL search params
  */
-export function parseFilterParams(searchParams: URLSearchParams): FilterState {
+export function parseFilterParams(searchParams: Pick<URLSearchParams, 'get'>): FilterState {
 	return {
 		tags: searchParams.get('tags')?.split(',').filter(Boolean) || [],
 		ingredients: searchParams.get('ingredients')?.split(',').filter(Boolean) || [],
@@ -42,7 +48,7 @@ export function parseFilterParams(searchParams: URLSearchParams): FilterState {
  * The sliders need concrete numbers, so an unbounded maximum becomes the
  * slider's ceiling; `filterStateFromDraft` converts it back.
  */
-export function parseFilterDraft(searchParams: URLSearchParams): FilterDraft {
+export function parseFilterDraft(searchParams: Pick<URLSearchParams, 'get'>): FilterDraft {
 	const filters = parseFilterParams(searchParams);
 
 	return {
@@ -123,11 +129,11 @@ export function buildFilterUrl(
  * Re-sorting reshuffles the whole list, so page 3 of the old order is dropped.
  */
 export function buildSortUrl(
-	searchParams: URLSearchParams,
+	searchParams: ReadonlySearchParams,
 	sortField: string,
 	sortOrder: 'asc' | 'desc'
 ): string {
-	const params = new URLSearchParams(searchParams);
+	const params = new URLSearchParams(searchParams.toString());
 	params.delete('page');
 
 	if (sortField !== 'name') params.set('sort', sortField);

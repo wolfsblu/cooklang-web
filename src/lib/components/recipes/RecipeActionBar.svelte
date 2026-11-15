@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { CookingPotIcon, PencilIcon } from '@lucide/svelte';
-	import AddToShoppingListButton from '$lib/components/shopping/AddToShoppingListButton.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import AddToShoppingListButton from '#lib/components/shopping/AddToShoppingListButton.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
 
 	/**
 	 * What you can do with the recipe, as a flat icon toolbar in the title bar.

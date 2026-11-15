@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ImagePlusIcon, PencilIcon } from '@lucide/svelte';
-	import type { ImageRef } from '$lib/types/recipe';
+	import type { ImageRef } from '#lib/types/recipe.js';
 
 	/**
 	 * The recipe's cover image as an edit target.

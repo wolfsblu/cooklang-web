@@ -21,8 +21,8 @@ import { Tag, tags } from '@lezer/highlight';
 import type { Diagnostic } from '@codemirror/lint';
 import type { EditorState } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import type { CompletionTerm, RecipeDiagnostic } from '$lib/types/editor';
-import { detectCompletionContext, rankCompletions } from '$lib/utils/cooklang-completion';
+import type { CompletionTerm, RecipeDiagnostic } from '#lib/types/editor.js';
+import { detectCompletionContext, rankCompletions } from '#lib/utils/cooklang-completion.js';
 
 interface StreamState {
 	/** Inside a YAML frontmatter block. */

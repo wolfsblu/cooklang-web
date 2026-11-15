@@ -12,10 +12,10 @@
 		XIcon
 	} from '@lucide/svelte';
 	import type { Component } from 'svelte';
-	import type { SearchResponse } from '$lib/types/search';
-	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import type { SearchResponse } from '#lib/types/search.js';
+	import Spinner from '#lib/components/ui/Spinner.svelte';
 	import SearchResults from './SearchResults.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
+	import { countLabel } from '#lib/utils/pluralize.js';
 
 	/**
 	 * Algolia-style command palette.

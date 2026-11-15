@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { TriangleAlertIcon } from '@lucide/svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
+	import Button from '#lib/components/ui/Button.svelte';
+	import { countLabel } from '#lib/utils/pluralize.js';
 
 	interface Props {
 		duplicates: { term: string; categories: string[] }[];

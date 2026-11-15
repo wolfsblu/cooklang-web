@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
 	import { XIcon } from '@lucide/svelte';
-	import type { ImageRef } from '$lib/types/recipe';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import type { ImageRef } from '#lib/types/recipe.js';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
 
 	/**
 	 * A step photograph, shown small enough not to break the flow of the

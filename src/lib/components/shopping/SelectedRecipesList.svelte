@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { ChevronDownIcon, ChevronUpIcon, MinusIcon, PlusIcon, Trash2Icon } from '@lucide/svelte';
-	import type { RecipeSelection } from '$lib/types/shopping-list';
-	import { formatScale, stepScaleDown, stepScaleUp } from '$lib/utils/scale';
-	import { countLabel } from '$lib/utils/pluralize';
-	import Button from '$lib/components/ui/Button.svelte';
-	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import type { RecipeSelection } from '#lib/types/shopping-list.js';
+	import { formatScale, stepScaleDown, stepScaleUp } from '#lib/utils/scale.js';
+	import { countLabel } from '#lib/utils/pluralize.js';
+	import Button from '#lib/components/ui/Button.svelte';
+	import ConfirmDialog from '#lib/components/ui/ConfirmDialog.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
 
 	interface Props {
 		selections: RecipeSelection[];

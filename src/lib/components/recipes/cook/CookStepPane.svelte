@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { CheckCircle2Icon, ListOrderedIcon } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';
-	import type { ImageRef } from '$lib/types/recipe';
-	import Button from '$lib/components/ui/Button.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import type { ImageRef } from '#lib/types/recipe.js';
+	import Button from '#lib/components/ui/Button.svelte';
+	import EmptyState from '#lib/components/ui/EmptyState.svelte';
 	import CookStepBody from './CookStepBody.svelte';
 	import type { CookStep } from './cook-steps';
 

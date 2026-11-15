@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types.js';
-import { searchEverything } from '$lib/server/search.js';
+import { searchEverything } from '#lib/server/search.js';
 
 /** Long enough for a sentence, matching the API route's limit. */
 const MAX_QUERY_LENGTH = 200;

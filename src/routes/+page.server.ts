@@ -1,12 +1,12 @@
 import type { PageServerLoad } from './$types';
-import { getIndex } from '$lib/server/recipes/index.js';
-import { searchIndex } from '$lib/server/recipes/search.js';
-import { imageRef } from '$lib/server/images.js';
-import type { RecipeCardModel } from '$lib/types/recipe.js';
-import type { RecipeEntry } from '$lib/server/recipes/index.js';
-import { applyFilters, sortRecipes, type SortOrder } from '$lib/utils/recipe-filters.js';
-import { paginate, parsePageParam } from '$lib/utils/pagination.js';
-import { parseFilterParams } from '$lib/utils/url-params.js';
+import { getIndex } from '#lib/server/recipes/index.js';
+import { searchIndex } from '#lib/server/recipes/search.js';
+import { imageRef } from '#lib/server/images.js';
+import type { RecipeCardModel } from '#lib/types/recipe.js';
+import type { RecipeEntry } from '#lib/server/recipes/index.js';
+import { applyFilters, sortRecipes, type SortOrder } from '#lib/utils/recipe-filters.js';
+import { paginate, parsePageParam } from '#lib/utils/pagination.js';
+import { parseFilterParams } from '#lib/utils/url-params.js';
 
 function toCardModel(entry: RecipeEntry): RecipeCardModel {
 	return {

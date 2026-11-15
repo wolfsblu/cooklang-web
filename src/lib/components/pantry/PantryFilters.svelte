@@ -3,8 +3,8 @@
 </script>
 
 <script lang="ts">
-	import Badge from '$lib/components/ui/Badge.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
+	import Badge from '#lib/components/ui/Badge.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
 
 	/**
 	 * The low-stock / expiring quick filters. Rendered twice: in the desktop

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { PauseIcon, PlayIcon, XIcon } from '@lucide/svelte';
-	import type { ActiveTimer } from '$lib/types/recipe';
-	import { formatTimeRemaining } from '$lib/utils/timer';
-	import Card from '$lib/components/ui/Card.svelte';
+	import type { ActiveTimer } from '#lib/types/recipe.js';
+	import { formatTimeRemaining } from '#lib/utils/timer.js';
+	import Card from '#lib/components/ui/Card.svelte';
 	import TimerCircleProgress from './TimerCircleProgress.svelte';
 
 	interface Props {

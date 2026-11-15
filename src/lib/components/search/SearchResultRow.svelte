@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { CookingPotIcon, CarrotIcon, RefrigeratorIcon, SignpostIcon } from '@lucide/svelte';
 	import type { Component } from 'svelte';
-	import type { SearchGroupKey, SearchHit } from '$lib/types/search';
+	import type { SearchGroupKey, SearchHit } from '#lib/types/search.js';
 	import Highlight from './Highlight.svelte';
 
 	/**

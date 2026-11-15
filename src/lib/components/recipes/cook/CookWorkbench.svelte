@@ -11,11 +11,11 @@
 		VolumeXIcon,
 		XIcon
 	} from '@lucide/svelte';
-	import type { ActiveTimer, ImageRef, RecipeDisplay } from '$lib/types/recipe';
-	import { countLabel } from '$lib/utils/pluralize';
-	import { formatScale } from '$lib/utils/scale';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
-	import Page from '$lib/components/ui/Page.svelte';
+	import type { ActiveTimer, ImageRef, RecipeDisplay } from '#lib/types/recipe.js';
+	import { countLabel } from '#lib/utils/pluralize.js';
+	import { formatScale } from '#lib/utils/scale.js';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
+	import Page from '#lib/components/ui/Page.svelte';
 	import RecipeIngredients from '../RecipeIngredients.svelte';
 	import RecipeCookware from '../RecipeCookware.svelte';
 	import ServingsControl from '../ServingsControl.svelte';
@@ -184,7 +184,7 @@
 		if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
 		event.preventDefault();
 
-		let next = index;
+		let next: number;
 		if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
 		else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
 		else if (event.key === 'Home') next = 0;

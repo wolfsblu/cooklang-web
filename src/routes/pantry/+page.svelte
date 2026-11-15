@@ -2,20 +2,20 @@
 	import { page } from '$app/state';
 	import { PlusIcon, RefrigeratorIcon } from '@lucide/svelte';
 	import type { PageProps } from './$types';
-	import type { PantryItemView } from '$lib/types/pantry';
-	import PantryActionBar from '$lib/components/pantry/PantryActionBar.svelte';
-	import PantryFolderDialog from '$lib/components/pantry/PantryFolderDialog.svelte';
-	import PantryFolderList from '$lib/components/pantry/PantryFolderList.svelte';
-	import PantryFilters, { type PantryFilter } from '$lib/components/pantry/PantryFilters.svelte';
-	import PantryItemDialog from '$lib/components/pantry/PantryItemDialog.svelte';
+	import type { PantryItemView } from '#lib/types/pantry.js';
+	import PantryActionBar from '#lib/components/pantry/PantryActionBar.svelte';
+	import PantryFolderDialog from '#lib/components/pantry/PantryFolderDialog.svelte';
+	import PantryFolderList from '#lib/components/pantry/PantryFolderList.svelte';
+	import PantryFilters, { type PantryFilter } from '#lib/components/pantry/PantryFilters.svelte';
+	import PantryItemDialog from '#lib/components/pantry/PantryItemDialog.svelte';
 	import PantryItemTable, {
 		type SortDirection,
 		type SortKey
-	} from '$lib/components/pantry/PantryItemTable.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import Page from '$lib/components/ui/Page.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
+	} from '#lib/components/pantry/PantryItemTable.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
+	import EmptyState from '#lib/components/ui/EmptyState.svelte';
+	import Page from '#lib/components/ui/Page.svelte';
+	import { countLabel } from '#lib/utils/pluralize.js';
 
 	const { data }: PageProps = $props();
 

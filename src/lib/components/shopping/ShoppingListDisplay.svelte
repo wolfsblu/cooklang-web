@@ -11,14 +11,14 @@
 		UNCATEGORIZED,
 		type ShoppingListCategory,
 		type ShoppingListDisplay
-	} from '$lib/types/shopping-list';
-	import { CELEBRATION_CONFETTI, COMPACT_CONFETTI } from '$lib/components/ui/confetti';
-	import ConfettiBurst from '$lib/components/ui/ConfettiBurst.svelte';
-	import ProgressRing from '$lib/components/ui/ProgressRing.svelte';
+	} from '#lib/types/shopping-list.js';
+	import { CELEBRATION_CONFETTI, COMPACT_CONFETTI } from '#lib/components/ui/confetti.js';
+	import ConfettiBurst from '#lib/components/ui/ConfettiBurst.svelte';
+	import ProgressRing from '#lib/components/ui/ProgressRing.svelte';
 	import ShoppingAislePicker from './ShoppingAislePicker.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import Spinner from '$lib/components/ui/Spinner.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
+	import EmptyState from '#lib/components/ui/EmptyState.svelte';
+	import Spinner from '#lib/components/ui/Spinner.svelte';
+	import { countLabel } from '#lib/utils/pluralize.js';
 
 	interface Props {
 		shoppingList: ShoppingListDisplay | null;

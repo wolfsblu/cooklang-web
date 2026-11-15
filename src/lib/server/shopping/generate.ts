@@ -9,9 +9,9 @@
  */
 
 import { createHash } from 'node:crypto';
-import { CookCLIError, generateShoppingList } from '$lib/cooklang/cli.js';
-import { transformShoppingList } from '$lib/cooklang/transform.js';
-import type { RecipeSelection, ShoppingListDisplay } from '$lib/types/shopping-list.js';
+import { CookCLIError, generateShoppingList } from '#lib/cooklang/cli.js';
+import { transformShoppingList } from '#lib/cooklang/transform.js';
+import type { RecipeSelection, ShoppingListDisplay } from '#lib/types/shopping-list.js';
 import { getIndex } from '../recipes/index.js';
 import { getAisleOrder, sortByAisle } from './aisle.js';
 import { aisleStamp } from '../aisle/store.js';

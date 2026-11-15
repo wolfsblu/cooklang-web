@@ -19,10 +19,10 @@ import { readAisle } from './aisle/store.js';
 import { getIndex, type RecipeEntry } from './recipes/index.js';
 import type { AisleDoc } from './aisle/format.js';
 import type { PantryDoc } from './pantry/format.js';
-import type { SearchGroup, SearchGroupKey, SearchHit, SearchResponse } from '$lib/types/search.js';
+import type { SearchGroup, SearchGroupKey, SearchHit, SearchResponse } from '#lib/types/search.js';
 import { imageRef } from './images.js';
-import { rankFields, type SearchField } from '$lib/utils/search-match.js';
-import { countLabel } from '$lib/utils/pluralize.js';
+import { rankFields, type SearchField } from '#lib/utils/search-match.js';
+import { countLabel } from '#lib/utils/pluralize.js';
 
 /** How many hits the inline overlay shows per group. The page asks for more. */
 export const DEFAULT_GROUP_LIMIT = 5;

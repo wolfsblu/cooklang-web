@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import { pageHref, pageWindow } from '$lib/utils/pagination';
+	import Button from '#lib/components/ui/Button.svelte';
+	import { pageHref, pageWindow } from '#lib/utils/pagination.js';
 
 	/**
 	 * Page links for the recipe list.

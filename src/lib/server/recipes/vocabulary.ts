@@ -8,7 +8,7 @@
  * worse. Whichever spelling the index saw first is the one suggested.
  */
 
-import type { CompletionTerm, EditorVocabulary } from '$lib/types/editor';
+import type { CompletionTerm, EditorVocabulary } from '#lib/types/editor.js';
 
 interface NameSource {
 	ingredientNames: readonly string[];

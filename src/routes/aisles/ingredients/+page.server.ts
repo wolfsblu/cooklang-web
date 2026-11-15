@@ -1,14 +1,14 @@
 import type { Actions, PageServerLoad } from './$types';
-import type { AisleEntryView } from '$lib/types/aisle.js';
+import type { AisleEntryView } from '#lib/types/aisle.js';
 import {
 	bulkMove,
 	bulkRemove,
 	remove,
 	resolveDuplicate,
 	upsert
-} from '$lib/server/aisle/actions.js';
-import { findDuplicates } from '$lib/server/aisle/format.js';
-import { readAisle } from '$lib/server/aisle/store.js';
+} from '#lib/server/aisle/actions.js';
+import { findDuplicates } from '#lib/server/aisle/format.js';
+import { readAisle } from '#lib/server/aisle/store.js';
 
 export const load: PageServerLoad = async () => {
 	const doc = await readAisle();

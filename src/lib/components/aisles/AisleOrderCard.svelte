@@ -2,10 +2,10 @@
 	import { enhance } from '$app/forms';
 	import { GripVerticalIcon, PencilIcon, PlusIcon, Trash2Icon } from '@lucide/svelte';
 	import { flip } from 'svelte/animate';
-	import Button from '$lib/components/ui/Button.svelte';
-	import ButtonGroup from '$lib/components/ui/ButtonGroup.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
-	import { countLabel } from '$lib/utils/pluralize';
+	import Button from '#lib/components/ui/Button.svelte';
+	import ButtonGroup from '#lib/components/ui/ButtonGroup.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
+	import { countLabel } from '#lib/utils/pluralize.js';
 
 	interface Props {
 		categories: string[];

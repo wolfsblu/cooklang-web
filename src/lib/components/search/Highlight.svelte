@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { highlightSegments } from '$lib/utils/search-match';
+	import { highlightSegments } from '#lib/utils/search-match.js';
 
 	/**
 	 * Renders text with the matched query fragments marked.

@@ -18,7 +18,7 @@
 
 import { categoryOrder } from '../aisle/format.js';
 import { readAisle } from '../aisle/store.js';
-import { UNCATEGORIZED } from '$lib/types/shopping-list.js';
+import { UNCATEGORIZED } from '#lib/types/shopping-list.js';
 
 /** Section order from the aisle config. Empty when the file is absent. */
 export async function getAisleOrder(): Promise<ReadonlyMap<string, number>> {

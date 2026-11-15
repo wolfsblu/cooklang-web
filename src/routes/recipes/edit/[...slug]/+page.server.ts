@@ -1,18 +1,18 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types.js';
-import { getEntry, getIndex, invalidateRecipe } from '$lib/server/recipes/index.js';
+import { getEntry, getIndex, invalidateRecipe } from '#lib/server/recipes/index.js';
 import {
 	failedPreview,
 	invalidateRecipeDisplay,
 	previewRecipe,
 	RecipeSourceError
-} from '$lib/server/recipes/parse.js';
-import { buildVocabulary } from '$lib/server/recipes/vocabulary.js';
+} from '#lib/server/recipes/parse.js';
+import { buildVocabulary } from '#lib/server/recipes/vocabulary.js';
 import {
 	readRecipeSource,
 	RecipeConflictError,
 	saveRecipeSource
-} from '$lib/server/recipes/write.js';
+} from '#lib/server/recipes/write.js';
 
 /** Generous for a recipe, small enough that a paste cannot tie up the parser. */
 const MAX_SOURCE_LENGTH = 512 * 1024;

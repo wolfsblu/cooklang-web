@@ -8,7 +8,7 @@
  * undo stack in a strange state.
  */
 
-import type { CompletionKind, CompletionTerm } from '$lib/types/editor';
+import type { CompletionKind, CompletionTerm } from '#lib/types/editor.js';
 
 export interface CompletionContext {
 	kind: CompletionKind;

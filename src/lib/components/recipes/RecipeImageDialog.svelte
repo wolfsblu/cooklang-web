@@ -2,10 +2,10 @@
 	import { enhance } from '$app/forms';
 	import { Dialog } from 'bits-ui';
 	import { ImagePlusIcon, Trash2Icon, UploadIcon, XIcon } from '@lucide/svelte';
-	import type { ImageRef } from '$lib/types/recipe';
-	import Button from '$lib/components/ui/Button.svelte';
-	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import type { ImageRef } from '#lib/types/recipe.js';
+	import Button from '#lib/components/ui/Button.svelte';
+	import ConfirmDialog from '#lib/components/ui/ConfirmDialog.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
 
 	/**
 	 * Add, replace or remove a recipe's cover image.

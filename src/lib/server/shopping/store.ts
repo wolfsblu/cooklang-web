@@ -8,7 +8,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { RecipeSelection } from '$lib/types/shopping-list.js';
+import type { RecipeSelection } from '#lib/types/shopping-list.js';
 import { config } from '../config.js';
 import { getIndex } from '../recipes/index.js';
 import { createLock, writeFileAtomic } from '../storage.js';

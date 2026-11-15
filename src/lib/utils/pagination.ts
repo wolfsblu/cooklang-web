@@ -21,7 +21,7 @@ export interface Paged<T> {
 }
 
 /** Read `?page=`, defaulting to 1 for anything absent, fractional or nonsensical. */
-export function parsePageParam(searchParams: URLSearchParams): number {
+export function parsePageParam(searchParams: Pick<URLSearchParams, 'get'>): number {
 	const raw = Number(searchParams.get('page'));
 	if (!Number.isFinite(raw)) return 1;
 	return Math.max(1, Math.floor(raw));
@@ -69,8 +69,8 @@ export function pageWindow(current: number, totalPages: number, size = WINDOW_SI
  * Link to a page, preserving search, filters and sort. Page 1 leaves the param
  * off entirely, the way `sort` and `order` omit their defaults.
  */
-export function pageHref(searchParams: URLSearchParams, page: number): string {
-	const params = new URLSearchParams(searchParams);
+export function pageHref(searchParams: Pick<URLSearchParams, 'toString'>, page: number): string {
+	const params = new URLSearchParams(searchParams.toString());
 
 	if (page > 1) params.set('page', String(page));
 	else params.delete('page');

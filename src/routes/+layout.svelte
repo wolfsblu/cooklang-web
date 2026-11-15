@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
-	import AppHeader from '$lib/components/navigation/AppHeader.svelte';
-	import NavigationBar from '$lib/components/navigation/NavigationBar.svelte';
-	import SideRail from '$lib/components/navigation/SideRail.svelte';
+	import favicon from '#lib/assets/favicon.svg';
+	import AppHeader from '#lib/components/navigation/AppHeader.svelte';
+	import NavigationBar from '#lib/components/navigation/NavigationBar.svelte';
+	import SideRail from '#lib/components/navigation/SideRail.svelte';
 	import type { LayoutProps } from './$types';
 
 	const { children, data }: LayoutProps = $props();

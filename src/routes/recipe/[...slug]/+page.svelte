@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import RecipeView from '$lib/components/recipes/RecipeView.svelte';
+	import RecipeView from '#lib/components/recipes/RecipeView.svelte';
 
 	const { data }: PageProps = $props();
 </script>

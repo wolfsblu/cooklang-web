@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ImageRef } from '$lib/types/recipe';
+	import type { ImageRef } from '#lib/types/recipe.js';
 	import RecipeCoverImage from './RecipeCoverImage.svelte';
 
 	/**

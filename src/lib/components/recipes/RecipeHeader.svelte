@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { ImageRef, RecipeDisplay } from '$lib/types/recipe';
-	import Badge from '$lib/components/ui/Badge.svelte';
+	import type { ImageRef, RecipeDisplay } from '#lib/types/recipe.js';
+	import Badge from '#lib/components/ui/Badge.svelte';
 
 	interface Props {
 		recipe: RecipeDisplay;

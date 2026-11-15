@@ -1,13 +1,13 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { readAisle } from '$lib/server/aisle/store.js';
-import { getShoppingList } from '$lib/server/shopping/generate.js';
+import { readAisle } from '#lib/server/aisle/store.js';
+import { getShoppingList } from '#lib/server/shopping/generate.js';
 import {
 	clearSelections,
 	removeSelection,
 	resolveSelections,
 	upsertSelection
-} from '$lib/server/shopping/store.js';
+} from '#lib/server/shopping/store.js';
 
 export const load: PageServerLoad = async () => {
 	const selections = await resolveSelections();

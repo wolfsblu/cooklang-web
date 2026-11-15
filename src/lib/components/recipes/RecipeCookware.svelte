@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { CookingPotIcon } from '@lucide/svelte';
-	import type { CookwareDisplay } from '$lib/types/recipe';
+	import type { CookwareDisplay } from '#lib/types/recipe.js';
 	import { highlightClass, resolveHighlight } from './highlight';
 
 	interface Props {

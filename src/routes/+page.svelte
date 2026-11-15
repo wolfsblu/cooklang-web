@@ -2,16 +2,16 @@
 	import { page } from '$app/state';
 	import { SearchXIcon } from '@lucide/svelte';
 	import type { PageProps } from './$types';
-	import FilterDrawer from '$lib/components/recipes/FilterDrawer.svelte';
-	import RecipeCard from '$lib/components/recipes/RecipeCard.svelte';
-	import RecipeFilterForm from '$lib/components/recipes/RecipeFilterForm.svelte';
-	import RecipeFilters from '$lib/components/recipes/RecipeFilters.svelte';
-	import RecipePagination from '$lib/components/recipes/RecipePagination.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import Page from '$lib/components/ui/Page.svelte';
-	import { parseFilterParams } from '$lib/utils/url-params';
-	import { countLabel } from '$lib/utils/pluralize';
+	import FilterDrawer from '#lib/components/recipes/FilterDrawer.svelte';
+	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
+	import RecipeFilterForm from '#lib/components/recipes/RecipeFilterForm.svelte';
+	import RecipeFilters from '#lib/components/recipes/RecipeFilters.svelte';
+	import RecipePagination from '#lib/components/recipes/RecipePagination.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
+	import EmptyState from '#lib/components/ui/EmptyState.svelte';
+	import Page from '#lib/components/ui/Page.svelte';
+	import { parseFilterParams } from '#lib/utils/url-params.js';
+	import { countLabel } from '#lib/utils/pluralize.js';
 
 	const { data }: PageProps = $props();
 

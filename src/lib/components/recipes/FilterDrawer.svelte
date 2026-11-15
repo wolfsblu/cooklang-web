@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Drawer from '$lib/components/ui/Drawer.svelte';
+	import Drawer from '#lib/components/ui/Drawer.svelte';
 	import RecipeFilterForm from './RecipeFilterForm.svelte';
 
 	/**

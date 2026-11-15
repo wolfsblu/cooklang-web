@@ -2,9 +2,9 @@
 	import { enhance } from '$app/forms';
 	import { Dialog } from 'bits-ui';
 	import { XIcon } from '@lucide/svelte';
-	import type { AisleEntry } from '$lib/types/aisle';
-	import Button from '$lib/components/ui/Button.svelte';
-	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import type { AisleEntry } from '#lib/types/aisle.js';
+	import Button from '#lib/components/ui/Button.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
 
 	interface Props {
 		open: boolean;
@@ -84,8 +84,7 @@
 						class="field"
 						rows="3"
 						value={entry?.aliases.join('\n') ?? ''}
-						placeholder="onions&#10;brown onion"
-					></textarea>
+						placeholder="onions&#10;brown onion"></textarea>
 					<p class="text-fg-subtle mt-1 text-xs">
 						One per line. Ingredients are matched by exact name, so a recipe calling for
 						<code>onions</code> only reaches this aisle if <code>onions</code> is listed here — put plurals

@@ -6,11 +6,10 @@
  * failure mode that otherwise looks like an empty library.
  */
 
-import { json } from '@sveltejs/kit';
 import { spawn } from 'node:child_process';
 import type { RequestHandler } from './$types';
-import { config } from '$lib/server/config.js';
-import { getIndex } from '$lib/server/recipes/index.js';
+import { config } from '#lib/server/config.js';
+import { getIndex } from '#lib/server/recipes/index.js';
 
 /** Whether the Cook CLI can be executed. Cached: this spawns a process. */
 let cookCliStatus: 'ok' | 'missing' | null = null;
@@ -35,7 +34,7 @@ export const GET: RequestHandler = async () => {
 	// it is reported without failing the check.
 	const ok = index.readable;
 
-	return json(
+	return Response.json(
 		{
 			ok,
 			recipePath: config.RECIPE_PATH,

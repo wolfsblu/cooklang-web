@@ -1,5 +1,5 @@
 import type { LayoutServerLoad } from './$types';
-import { resolveSelections } from '$lib/server/shopping/store.js';
+import { resolveSelections } from '#lib/server/shopping/store.js';
 
 /**
  * Feeds the shopping count badge in the navigation.

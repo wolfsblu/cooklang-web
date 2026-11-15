@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ImageRef } from '$lib/types/recipe';
+	import type { ImageRef } from '#lib/types/recipe.js';
 	import InlineIngredient from '../inline/InlineIngredient.svelte';
 	import InlineCookware from '../inline/InlineCookware.svelte';
 	import InlineTimer from '../inline/InlineTimer.svelte';

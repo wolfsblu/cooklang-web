@@ -1,4 +1,4 @@
-import type { SectionDisplay, StepDisplay } from '$lib/types/recipe';
+import type { SectionDisplay, StepDisplay } from '#lib/types/recipe.js';
 
 /** One step, flattened out of its section for cook mode navigation. */
 export interface CookStep {
