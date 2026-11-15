@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '$app/forms';
 	import { CheckIcon, ShoppingCartIcon, XIcon } from '@lucide/svelte';
 	import { formatScale } from '#lib/utils/scale.js';
 	import Button, { type ButtonVariant } from '#lib/components/ui/Button.svelte';
@@ -77,13 +78,16 @@
 		[toolbar ? 'size-8 shrink-0 p-0' : '', tone, className ?? ''].filter(Boolean).join(' ')
 	);
 
-	const submit =
+	/**
+	 * This form posts to `/shopping` from the recipe page, so SvelteKit 3 would
+	 * otherwise follow the action's location and leave the recipe. `navigate:
+	 * false` keeps the user here while `update` still re-runs every load
+	 * function, including the root layout's shopping-count badge.
+	 */
+	const submit: SubmitFunction =
 		() =>
-		async ({ update }: { update: () => Promise<void> }) => {
-			// update() re-runs every load function, including the root layout's
-			// shopping-count badge. Calling invalidateAll() on top of it would
-			// just fetch the same data twice.
-			await update();
+		async ({ update }) => {
+			await update({ navigate: false });
 		};
 </script>
 

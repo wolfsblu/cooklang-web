@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '$app/forms';
 	import AisleCategoryField from '#lib/components/aisles/AisleCategoryField.svelte';
 	import Button from '#lib/components/ui/Button.svelte';
 
@@ -12,6 +13,18 @@
 	}
 
 	const { itemName, categories, returnTo }: Props = $props();
+
+	/**
+	 * The action redirects back to `returnTo` on success, and redirects are
+	 * always followed. A failure, though, carries this form's location
+	 * (`/aisles/unassigned`), which SvelteKit 3 would navigate to; `navigate:
+	 * false` applies failures to the current page instead.
+	 */
+	const submit: SubmitFunction =
+		() =>
+		async ({ update }) => {
+			await update({ navigate: false });
+		};
 </script>
 
 <!--
@@ -25,7 +38,7 @@
 <form
 	method="POST"
 	action="/aisles/unassigned?/assign"
-	use:enhance
+	use:enhance={submit}
 	class="flex shrink-0 items-center gap-1.5"
 >
 	<input type="hidden" name="name" value={itemName} />
