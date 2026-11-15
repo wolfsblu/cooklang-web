@@ -495,7 +495,7 @@
 
 		<div class="min-w-0">
 			<div class="flex min-w-0 items-center gap-2">
-				<h1 class="text-fg truncate text-lg font-semibold">
+				<h1 class="text-fg truncate text-base font-semibold">
 					{currentPreview.display.title ?? title}
 				</h1>
 				{#if dirty}
