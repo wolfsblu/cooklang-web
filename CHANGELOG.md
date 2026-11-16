@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/wolfsblu/cooklang-web/compare/v1.0.0...v1.0.1) (2026-11-16)
+
+
+### Build System
+
+* **deps:** bump node from 24-alpine to 26-alpine ([#4](https://github.com/wolfsblu/cooklang-web/issues/4)) ([b734653](https://github.com/wolfsblu/cooklang-web/commit/b7346538caba1ecd045a37422dbf8666a49be9ba))
+
 ## [1.0.0](https://github.com/wolfsblu/cooklang-web/releases/tag/v1.0.0) (2026-11-16)
 
 First tagged release. cooklang-web is now versioned with SemVer and published
