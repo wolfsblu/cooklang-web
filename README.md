@@ -45,7 +45,7 @@ are deducted from that list.
 
 ### Prerequisites
 
-- Node.js 24
+- Node.js 26
 - npm
 - Optionally the [cook CLI](https://github.com/cooklang/cookcli), which is only
   needed for shopping lists
