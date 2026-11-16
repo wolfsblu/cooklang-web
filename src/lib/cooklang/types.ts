@@ -9,7 +9,7 @@
  *
  *   {"unit":"ml","value":{"type":"number","value":{"type":"regular","value":500.0}}}
  *
- * Shape verified against cookcli 0.19.3 output for the bundled recipes.
+ * Shape verified against cookcli 0.41.1 output for the bundled recipes.
  */
 export interface CookCLINumber {
 	type: 'regular' | 'fraction';

@@ -66,16 +66,18 @@
 				>
 					<TriangleAlertIcon class="mt-0.5 size-5 shrink-0" />
 					<div class="max-w-4xl min-w-0 text-sm">
-						<p class="font-semibold">Some pantry items could not be applied</p>
+						<p class="font-semibold">The cook CLI reported warnings</p>
 						<ul class="mt-1 list-disc space-y-0.5 pl-4">
 							{#each data.warnings as warning (warning)}
 								<li>{warning}</li>
 							{/each}
 						</ul>
 						<p class="mt-2">
-							Stock is only subtracted when its unit matches the one the recipe uses; kilograms do
-							not cover a recipe measured in grams. Edit the entry in your
-							<a href="/pantry" class="link">pantry</a> to match, and it will be deducted.
+							These can come from a recipe or from the pantry. A pantry warning usually means stock
+							was not subtracted because its unit does not match the recipe; edit the entry in your <a
+								href="/pantry"
+								class="link">pantry</a
+							> to fix it.
 						</p>
 					</div>
 				</div>

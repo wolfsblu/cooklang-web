@@ -67,7 +67,8 @@ function buildCLIArgs(recipes: RecipeInput[]): string[] {
  * Warnings matter here: when a pantry entry cannot be matched to a recipe's
  * ingredient the CLI declines to subtract it and says so on stderr. Discarding
  * that leaves the user staring at an item they know they have in stock with no
- * explanation.
+ * explanation. Recipe parser warnings take the same route, so they surface on
+ * this page too rather than only in the editor.
  */
 export interface CookCLIResult {
 	list: CookCLIShoppingList;
@@ -80,6 +81,34 @@ export interface CookCLIResult {
  */
 // eslint-disable-next-line no-control-regex
 const ANSI = /\u001b\[[0-9;]*m/g;
+
+/**
+ * Warnings that name their source file, as cookcli 0.41.1 does:
+ *   /srv/recipes/Breakfast/Pancakes.cook: Unsupported value for key: 'servings'
+ *
+ * The path is absolute and therefore both noisy and server-specific, so it is
+ * rewritten into the shape older CLI versions used for recipes:
+ *   Recipe 'Pancakes': Unsupported value for key: 'servings'
+ *
+ * Config-file warnings keep their file name but lose the directory.
+ */
+const FILE_PREFIXED = /^((?:[A-Za-z]:)?[\\/].+?\.(?:cook|conf)):\s+(.+)$/iu;
+
+function normalizeWarning(text: string): string {
+	// The older CLI already uses the friendly shape; leave it alone even when
+	// the recipe name happens to contain `.cook`.
+	if (text.startsWith("Recipe '")) return text;
+
+	const match = FILE_PREFIXED.exec(text);
+	if (!match) return text;
+
+	const [, file, message] = match;
+	const base = path.basename(file.replaceAll('\\', '/'));
+
+	return base.toLowerCase().endsWith('.cook')
+		? `Recipe '${base.slice(0, -'.cook'.length)}': ${message}`
+		: `${base}: ${message}`;
+}
 
 /**
  * Pull the human-readable part out of the CLI's `WARN ...` lines.
@@ -96,7 +125,8 @@ export function parseWarnings(stderr: string): string[] {
 
 	const flush = () => {
 		const text = current?.trim();
-		if (text && !warnings.includes(text)) warnings.push(text);
+		const normalized = text ? normalizeWarning(text) : null;
+		if (normalized && !warnings.includes(normalized)) warnings.push(normalized);
 		current = null;
 	};
 

@@ -16,8 +16,8 @@ FROM node:24-alpine
 # The checksum is pinned rather than taken from the .sha256 published beside
 # the archive: fetching both from the same place means a re-tagged release
 # would verify against its own new checksum and pass silently.
-ARG COOK_CLI_VERSION=0.32.1
-ARG COOK_CLI_SHA256=c8f43e475a585c96e78f32560d28368bc90a9dff5d8325c5ef5ddacd5b9f1106
+ARG COOK_CLI_VERSION=0.41.1
+ARG COOK_CLI_SHA256=342378f8121ba8b12cb13654119348860001bb3ab07ca00ba65f59ad00b51354
 
 WORKDIR /app
 
@@ -42,7 +42,7 @@ COPY scripts ./scripts
 RUN set -eux; \
     apk add --no-cache --virtual .fetch-deps curl; \
     \
-    COOK_URL="https://github.com/cooklang/cookcli/releases/download/v${COOK_CLI_VERSION}/cook-x86_64-unknown-linux-musl.tar.gz"; \
+    COOK_URL="https://github.com/cooklang/cookcli/releases/download/v${COOK_CLI_VERSION}/cook-${COOK_CLI_VERSION}-linux-x86_64-musl.tar.gz"; \
     curl -fsSL "${COOK_URL}" -o cook.tar.gz; \
     echo "${COOK_CLI_SHA256}  cook.tar.gz" | sha256sum -c -; \
     \

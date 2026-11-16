@@ -3,7 +3,7 @@
  *
  * Aggregation is delegated to the Cook CLI, which merges quantities across
  * recipes, applies the aisle categories, and subtracts anything already
- * stocked in the pantry. Verified against cookcli 0.19.3: both config files
+ * stocked in the pantry. Verified against cookcli 0.41.1: both config files
  * are auto-discovered from the base path, and pantry subtraction is
  * unconditional.
  */
@@ -27,9 +27,10 @@ export interface GenerateResult {
 	 * Non-fatal complaints from the CLI, shown to the user.
 	 *
 	 * Most often a pantry entry whose unit does not match the recipe's, e.g.
-	 * 2kg of flour against a recipe calling for grams. cookcli 0.19.3 does not
+	 * 2kg of flour against a recipe calling for grams. cookcli 0.41.1 does not
 	 * convert between them and quietly leaves the ingredient on the list, so
-	 * without this the pantry looks broken.
+	 * without this the pantry looks broken. Recipe parser warnings (such as
+	 * deprecated metadata) arrive through the same channel.
 	 */
 	warnings: string[];
 }

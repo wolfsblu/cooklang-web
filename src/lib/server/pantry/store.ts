@@ -4,7 +4,7 @@
  * The pantry lives at <recipes>/config/pantry.conf, which is exactly where the
  * Cook CLI looks for it. Writing there means the CLI subtracts stocked
  * ingredients from generated shopping lists with no further wiring -- verified
- * against cookcli 0.19.3, where `shopping-list` discovers the file and applies
+ * against cookcli 0.41.1, where `shopping-list` discovers the file and applies
  * it unconditionally.
  */
 
