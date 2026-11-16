@@ -1,5 +1,5 @@
 # Build stage
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 # Baked into the server bundle by vite.config.ts so /health can report exactly
@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:24-alpine
+FROM node:26-alpine
 
 # Same build metadata as the builder, kept as environment variables so it is
 # visible with `docker inspect` as well as over /health. Also written as OCI
