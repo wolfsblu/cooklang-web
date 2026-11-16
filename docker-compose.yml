@@ -9,7 +9,9 @@
 
 services:
   app:
-    image: ghcr.io/${GITHUB_REPOSITORY:-lukaswolfsberger/cooklang-web}:latest
+    # Pin COOKLANG_WEB_VERSION to a release (for example 1.2.3) in production.
+    # `latest` follows the newest tagged release; `main` is the unstable tip.
+    image: ghcr.io/wolfsblu/cooklang-web:${COOKLANG_WEB_VERSION:-latest}
     restart: unless-stopped
     environment:
       RECIPE_PATH: /recipes

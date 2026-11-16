@@ -9,6 +9,27 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish, without the leading v. Must match package.json at the ref.'
+        required: true
+        type: string
+      ref:
+        description: 'Git ref to build. Leave empty for the ref selected in the UI.'
+        required: false
+        default: ''
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to publish, without the leading v.'
+        required: true
+        type: string
+      ref:
+        description: 'Git tag to build.'
+        required: true
+        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -20,6 +41,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -45,6 +68,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -57,19 +82,98 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve version and commit
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          PACKAGE_VERSION="$(node -p 'require("./package.json").version')"
+
+          case "${GITHUB_EVENT_NAME}" in
+            workflow_call)
+              if [[ -z "${INPUT_VERSION}" || -z "${INPUT_REF}" ]]; then
+                echo "::error::workflow_call requires both version and ref."
+                exit 1
+              fi
+              ;;
+            workflow_dispatch)
+              if [[ -z "${INPUT_VERSION}" ]]; then
+                echo "::error::A version is required for a manual publish."
+                exit 1
+              fi
+              ;;
+          esac
+
+          if [[ -n "${INPUT_VERSION}" ]]; then
+            VERSION="${INPUT_VERSION#v}"
+          elif [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${PACKAGE_VERSION}"
+          fi
+
+          if [[ "${VERSION}" != "${PACKAGE_VERSION}" ]]; then
+            echo "::error::Version ${VERSION} does not match package.json (${PACKAGE_VERSION}) at the checked-out ref."
+            exit 1
+          fi
+
+          MAJOR="${VERSION%%.*}"
+          MINOR="${VERSION#*.}"
+          MINOR="${MINOR%%.*}"
+
+          RELEASE=false
+          if [[ -n "${INPUT_VERSION}" || "${GITHUB_REF}" == refs/tags/v* ]]; then
+            RELEASE=true
+          fi
+
+          if [[ "${RELEASE}" == true ]]; then
+            CHECKED_OUT_TAG="$(git describe --tags --exact-match HEAD 2>/dev/null || true)"
+            if [[ "${CHECKED_OUT_TAG}" != "v${VERSION}" ]]; then
+              echo "::error::A release must be built from tag v${VERSION}; the checked-out commit is ${CHECKED_OUT_TAG:-untagged}."
+              exit 1
+            fi
+          fi
+
+          {
+            echo "version=${VERSION}"
+            echo "major=${MAJOR}"
+            echo "minor=${MINOR}"
+            echo "sha=$(git rev-parse HEAD)"
+            echo "release=${RELEASE}"
+          } >> "$GITHUB_OUTPUT"
+
+      # Published X.Y.Z tags are immutable. Never retag a release to fix a bad
+      # build: publish the next patch instead. This check runs before anything
+      # is built, so an accidental re-run cannot overwrite an existing image.
+      - name: Refuse to overwrite a published version
+        if: ${{ steps.version.outputs.release == 'true' }}
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_NAME}:${{ steps.version.outputs.version }}"
+          if docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
+            echo "::error::${IMAGE} already exists. Published version tags are immutable; publish a new patch release instead."
+            exit 1
+          fi
+
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # Override the action's defaults, which use github.sha. On a manual
+          # publish that is the dispatch ref, not necessarily the tag commit.
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.revision=${{ steps.version.outputs.sha }}
           tags: |
-            type=ref,event=branch
+            type=ref,event=branch,enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
             type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short,prefix=main-,enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.version.outputs.version }},enable=${{ steps.version.outputs.release == 'true' }}
+            type=raw,value=${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }},enable=${{ steps.version.outputs.release == 'true' }}
+            type=raw,value=${{ steps.version.outputs.major }},enable=${{ steps.version.outputs.release == 'true' }}
+            type=raw,value=latest,enable=${{ steps.version.outputs.release == 'true' }}
 
       - name: Build and push Docker image
         id: push
@@ -77,10 +181,29 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ steps.version.outputs.version }}
+            GIT_SHA=${{ steps.version.outputs.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          sbom: ${{ github.event_name != 'pull_request' }}
+
+      - name: Smoke-test the image
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            IMAGE="${REGISTRY}/${IMAGE_NAME}:pr-${{ github.event.pull_request.number }}"
+          else
+            IMAGE="${REGISTRY}/${IMAGE_NAME}@${{ steps.push.outputs.digest }}"
+            docker pull "$IMAGE"
+          fi
+          docker run --rm \
+            -e RECIPE_PATH=/recipes \
+            -v "${GITHUB_WORKSPACE}/recipes:/recipes:ro" \
+            "$IMAGE" node scripts/smoke-cook.mjs
 
       - name: Generate artifact attestation
         if: github.event_name != 'pull_request'

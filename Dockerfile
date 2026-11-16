@@ -2,6 +2,13 @@
 FROM node:24-alpine AS builder
 WORKDIR /app
 
+# Baked into the server bundle by vite.config.ts so /health can report exactly
+# what is running. The workflow passes the release version and checked-out SHA.
+ARG APP_VERSION=dev
+ARG GIT_SHA=unknown
+ENV APP_VERSION=$APP_VERSION
+ENV GIT_SHA=$GIT_SHA
+
 COPY package*.json ./
 RUN npm ci
 
@@ -10,6 +17,21 @@ RUN npm run build
 
 # Production stage
 FROM node:24-alpine
+
+# Same build metadata as the builder, kept as environment variables so it is
+# visible with `docker inspect` as well as over /health. Also written as OCI
+# labels for registry tooling.
+ARG APP_VERSION=dev
+ARG GIT_SHA=unknown
+
+LABEL org.opencontainers.image.title="cooklang-web" \
+    org.opencontainers.image.description="Self-hosted web app for a Cooklang recipe library" \
+    org.opencontainers.image.version="${APP_VERSION}" \
+    org.opencontainers.image.revision="${GIT_SHA}" \
+    org.opencontainers.image.source="https://github.com/wolfsblu/cooklang-web"
+
+ENV APP_VERSION=$APP_VERSION
+ENV GIT_SHA=$GIT_SHA
 
 # Cook CLI version and the checksum of its musl release archive.
 #

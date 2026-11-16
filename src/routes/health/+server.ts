@@ -10,20 +10,35 @@ import { spawn } from 'node:child_process';
 import type { RequestHandler } from './$types';
 import { config } from '#lib/server/config.js';
 import { getIndex } from '#lib/server/recipes/index.js';
+import { APP_COMMIT, APP_VERSION } from '#lib/server/version.js';
+
+type CookCliInfo = {
+	status: 'ok' | 'missing';
+	version: string | null;
+};
 
 /** Whether the Cook CLI can be executed. Cached: this spawns a process. */
-let cookCliStatus: 'ok' | 'missing' | null = null;
+let cookCliInfo: CookCliInfo | null = null;
 
-async function checkCookCli(): Promise<'ok' | 'missing'> {
-	if (cookCliStatus) return cookCliStatus;
+async function checkCookCli(): Promise<CookCliInfo> {
+	if (cookCliInfo) return cookCliInfo;
 
-	cookCliStatus = await new Promise<'ok' | 'missing'>((resolve) => {
+	cookCliInfo = await new Promise<CookCliInfo>((resolve) => {
 		const proc = spawn(config.COOK_CLI_PATH, ['--version']);
-		proc.on('error', () => resolve('missing'));
-		proc.on('close', (code) => resolve(code === 0 ? 'ok' : 'missing'));
+		let output = '';
+		proc.stdout.setEncoding('utf8');
+		proc.stdout.on('data', (chunk: string) => (output += chunk));
+		proc.on('error', () => resolve({ status: 'missing', version: null }));
+		proc.on('close', (code) =>
+			resolve(
+				code === 0
+					? { status: 'ok', version: output.trim() || null }
+					: { status: 'missing', version: null }
+			)
+		);
 	});
 
-	return cookCliStatus;
+	return cookCliInfo;
 }
 
 export const GET: RequestHandler = async () => {
@@ -37,9 +52,12 @@ export const GET: RequestHandler = async () => {
 	return Response.json(
 		{
 			ok,
+			version: APP_VERSION,
+			commit: APP_COMMIT,
 			recipePath: config.RECIPE_PATH,
 			recipeCount: index.entries.length,
-			cookCli
+			cookCli: cookCli.status,
+			cookCliVersion: cookCli.version
 		},
 		{ status: ok ? 200 : 503 }
 	);
