@@ -56,8 +56,14 @@
 		inner pane past its end hands the gesture to the page, which then shows
 		blank canvas below the workbench. A fixed shell has no document height
 		to scroll, so only the inner panes move.
+
+		`overflow-clip`, not `overflow-hidden`: hidden still makes the shell a
+		scroll container, and Firefox scrolls it to reveal a focused descendant
+		that sits outside it -- a visually-hidden checkbox in a form control,
+		for example. The whole workbench then slides up behind the fixed header
+		and tab bar, leaving a blank page. Clip forbids that scroll outright.
 	-->
-	<div class="flex {isWorkspace ? 'fixed inset-0 overflow-hidden' : 'min-h-dvh'}">
+	<div class="flex {isWorkspace ? 'fixed inset-0 overflow-clip' : 'min-h-dvh'}">
 		<SideRail shoppingCount={data.shoppingCount} />
 
 		<div class="grid min-w-0 flex-1 grid-rows-[auto_1fr_auto] {isWorkspace ? 'min-h-0' : ''}">
