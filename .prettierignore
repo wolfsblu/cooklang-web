@@ -6,3 +6,6 @@
 /package-lock.json
 /recipes
 /screenshots
+
+# release-please generates this file; its formatting is not Prettier's.
+/CHANGELOG.md
