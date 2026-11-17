@@ -1,5 +1,5 @@
 /**
- * Aisle form-action handlers, shared across the three /aisles tab routes.
+ * Aisle form-action handlers, shared across the three ingredients routes.
  *
  * SvelteKit actions are per-route, but the aisle tabs are three routes over one
  * data model, so the handlers live here and each route re-exports the subset it
@@ -107,7 +107,9 @@ function nameError(name: string): string | null {
  * redirect off the site.
  */
 function safeReturnTo(value: string | null): string {
-	return value && value.startsWith('/') && !value.startsWith('//') ? value : '/aisles/unassigned';
+	return value && value.startsWith('/') && !value.startsWith('//')
+		? value
+		: '/ingredients/unassigned';
 }
 
 export const upsert = async ({ request }: RequestEvent) => {

@@ -73,14 +73,14 @@
 				id: 'go:ingredients',
 				title: 'Browse ingredients',
 				subtitle: countLabel(counts.ingredients, 'ingredient'),
-				href: '/aisles/ingredients',
+				href: '/ingredients',
 				icon: CarrotIcon
 			},
 			{
 				id: 'go:aisles',
 				title: 'Manage aisles',
 				subtitle: countLabel(counts.aisles, 'aisle'),
-				href: '/aisles',
+				href: '/ingredients/aisles',
 				icon: SignpostIcon
 			},
 			{

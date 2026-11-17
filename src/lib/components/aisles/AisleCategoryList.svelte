@@ -15,9 +15,7 @@
 	// Plain links rather than goto(), as the pantry folders do: back/forward
 	// works and the URL is shareable.
 	function href(category: string | null): string {
-		return category
-			? `/aisles/ingredients?category=${encodeURIComponent(category)}`
-			: '/aisles/ingredients';
+		return category ? `/ingredients?category=${encodeURIComponent(category)}` : '/ingredients';
 	}
 
 	const entry =

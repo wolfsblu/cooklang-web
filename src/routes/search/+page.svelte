@@ -72,14 +72,14 @@
 			},
 			{
 				label: 'Ingredients',
-				href: '/aisles/ingredients',
+				href: '/ingredients',
 				icon: CarrotIcon,
 				count: data.counts.ingredients,
 				noun: 'ingredient'
 			},
 			{
 				label: 'Aisles',
-				href: '/aisles',
+				href: '/ingredients/aisles',
 				icon: SignpostIcon,
 				count: data.counts.aisles,
 				noun: 'aisle'
@@ -110,14 +110,6 @@
 		<header class="border-border flex shrink-0 flex-col gap-2 border-b px-3 py-3 sm:px-4">
 			<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
 				<h1 class="text-fg text-base font-semibold">Search</h1>
-				<p class="text-fg-subtle text-xs">
-					{#if hasQuery}
-						<span class="tabular-nums">{countLabel(data.total, 'result')}</span>
-						for “<span class="text-fg-muted">{data.query}</span>”
-					{:else}
-						Recipes, ingredients, aisles and pantry, in one place.
-					{/if}
-				</p>
 			</div>
 
 			<form method="GET" action="/search" onsubmit={onSubmit} class="relative max-w-xl">

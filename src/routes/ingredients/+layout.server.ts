@@ -4,9 +4,9 @@ import { readAisle } from '#lib/server/aisle/store.js';
 import { getIndex } from '#lib/server/recipes/index.js';
 
 /**
- * Data shared by every aisles tab: the aisle list, per-aisle counts, and the
- * unassigned count for the tab badge. Computing it here means the badge is
- * correct on whichever tab you land on, and the child pages inherit it.
+ * Data shared by every ingredients page: the aisle list, per-aisle counts, and
+ * the unassigned count for the header. Computing it here means the counts are
+ * correct on whichever page you land on, and the child pages inherit them.
  */
 export const load: LayoutServerLoad = async () => {
 	const [doc, index] = await Promise.all([readAisle(), getIndex()]);

@@ -131,7 +131,7 @@ function searchIngredients(aisle: AisleDoc, query: string): SearchHit[] {
 				group: 'ingredients',
 				title: entry.name,
 				subtitle: subtitle || null,
-				href: `/aisles/ingredients?category=${encodeURIComponent(entry.category)}`,
+				href: `/ingredients?category=${encodeURIComponent(entry.category)}`,
 				image: null,
 				meta: []
 			}
@@ -173,7 +173,7 @@ function searchAisles(aisle: AisleDoc, query: string): SearchHit[] {
 				group: 'aisles',
 				title: category,
 				subtitle,
-				href: `/aisles/ingredients?category=${encodeURIComponent(category)}`,
+				href: `/ingredients?category=${encodeURIComponent(category)}`,
 				image: null,
 				meta: []
 			}
