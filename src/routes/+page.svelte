@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { SearchXIcon, SparklesIcon } from '@lucide/svelte';
+	import { SearchXIcon } from '@lucide/svelte';
 	import type { PageProps } from './$types';
 	import FilterDrawer from '#lib/components/recipes/FilterDrawer.svelte';
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
@@ -104,11 +104,6 @@
 
 				<!-- The flat toolbar sits inline with the title from `md` up. -->
 				<div class="hidden items-center gap-2 md:flex">
-					<Button href="/recipes/import" variant="outline" size="sm">
-						<SparklesIcon class="size-4" />
-						Import
-					</Button>
-
 					<RecipeFilters
 						{activeFilterCount}
 						{sidebarOpen}
@@ -122,17 +117,6 @@
 				<div
 					class="bg-surface-muted/30 flex w-full items-center justify-end gap-1 px-3 py-1.5 md:hidden"
 				>
-					<Button
-						href="/recipes/import"
-						variant="toolbar"
-						size="sm"
-						class="size-8 shrink-0 p-0"
-						aria-label="Import recipe from a URL"
-						title="Import recipe from a URL"
-					>
-						<SparklesIcon class="size-4" />
-					</Button>
-
 					<RecipeFilters
 						{activeFilterCount}
 						{sidebarOpen}

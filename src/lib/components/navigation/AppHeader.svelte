@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { ChefHatIcon, MoonIcon, SearchIcon, SunIcon } from '@lucide/svelte';
-	import IconButton from '#lib/components/ui/IconButton.svelte';
+	import { ChefHatIcon, SearchIcon } from '@lucide/svelte';
 	import SearchDialog from '#lib/components/search/SearchDialog.svelte';
-	import { themeStore } from '#lib/stores/theme.svelte.js';
+	import NewRecipeMenu from './NewRecipeMenu.svelte';
 
 	/**
-	 * Sticky header with the brand, the global search trigger and the theme
-	 * toggle.
+	 * Sticky header with the brand, the global search trigger and the control
+	 * for adding a recipe.
 	 *
 	 * The trigger is a real link to `/search` so the feature works without
 	 * JavaScript; the overlay is an enhancement layered on top of it. On
@@ -79,16 +78,7 @@
 		</a>
 
 		<div class="ml-auto">
-			<IconButton
-				label={themeStore.isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-				onclick={() => themeStore.toggle()}
-			>
-				{#if themeStore.isDark}
-					<SunIcon class="size-4" />
-				{:else}
-					<MoonIcon class="size-4" />
-				{/if}
-			</IconButton>
+			<NewRecipeMenu />
 		</div>
 	</div>
 </header>
