@@ -374,13 +374,6 @@
 								></div>
 							</div>
 
-							{#if placeable}
-								<p class="text-fg-muted px-4 pt-3 text-xs">
-									Not in your <a href="/aisles/unassigned" class="link">aisles</a> yet. Give each one
-									an aisle and it will be grouped with the rest next time.
-								</p>
-							{/if}
-
 							<ul class="space-y-0.5 p-2">
 								{#each category.items as item (item.name)}
 									{@const key = `${category.name}/${item.name}`}
