@@ -42,6 +42,19 @@ export const variables = defineEnvVars({
 	/** Chat model used for recipe imports. */
 	AI_MODEL: { schema: (value) => value },
 
+	/**
+	 * Vision-capable model used for photo imports. Photo import stays
+	 * disabled until this is set, because the default text model cannot read
+	 * images.
+	 */
+	AI_VISION_MODEL: { schema: (value) => value },
+
+	/** Optional API root for the vision model, when it is not the text one. */
+	AI_VISION_BASE_URL: { schema: (value) => value },
+
+	/** Optional API key for the vision model, when it is not the text one. */
+	AI_VISION_API_KEY: { schema: (value) => value },
+
 	/** Timeout for one model request, in milliseconds. */
 	AI_TIMEOUT_MS: { schema: (value) => value },
 

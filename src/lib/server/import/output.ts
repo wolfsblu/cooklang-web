@@ -51,15 +51,17 @@ export function stripRedundantAmounts(source: string): string {
 }
 
 /**
- * Ensure the source has frontmatter with at least a title and source URL.
+ * Ensure the source has frontmatter with at least a title, and a source URL
+ * when there is one.
  *
  * Existing values are kept: the model may have found a more specific canonical
- * URL in the page's structured data than the one the user pasted.
+ * URL in the page's structured data than the one the user pasted. Photo
+ * imports pass `null`, because an upload has no page to cite.
  */
 export function ensureFrontmatter(
 	source: string,
 	fallbackTitle: string,
-	sourceUrl: string
+	sourceUrl: string | null
 ): string {
 	const body = source.trim();
 	const frontmatter = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/u.exec(body);
@@ -68,7 +70,7 @@ export function ensureFrontmatter(
 		return [
 			'---',
 			`title: ${yamlString(fallbackTitle)}`,
-			`source: ${yamlString(sourceUrl)}`,
+			...(sourceUrl ? [`source: ${yamlString(sourceUrl)}`] : []),
 			'---',
 			'',
 			body,
@@ -80,7 +82,8 @@ export function ensureFrontmatter(
 	const additions: string[] = [];
 
 	if (!/^title[ \t]*:/imu.test(header)) additions.push(`title: ${yamlString(fallbackTitle)}`);
-	if (!/^source[ \t]*:/imu.test(header)) additions.push(`source: ${yamlString(sourceUrl)}`);
+	if (sourceUrl && !/^source[ \t]*:/imu.test(header))
+		additions.push(`source: ${yamlString(sourceUrl)}`);
 
 	const nextHeader =
 		additions.length > 0 ? `${header.replace(/\s+$/u, '')}\n${additions.join('\n')}` : header;

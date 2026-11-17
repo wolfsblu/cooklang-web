@@ -15,9 +15,10 @@ are deducted from that list.
 - **Editing**: a Cooklang editor with syntax highlighting, a live preview,
   parser diagnostics, undo/redo, and ingredient and cookware autocomplete
   drawn from the whole library.
-- **AI import**: paste a recipe URL and have an LLM turn the page into
-  Cooklang. The result is shown in an editor and preview first, and ingredients
-  are matched against the library's existing vocabulary.
+- **AI import**: paste a recipe URL or upload a photo of a recipe and have an
+  LLM turn it into Cooklang. The result is shown in an editor and preview
+  first, and ingredients are matched against the library's existing
+  vocabulary.
 - **Shopping lists**: combine recipes at any scale, with quantities merged
   across them and grouped by supermarket aisle.
 - **Aisles**: edit `aisle.conf` from the app. Arrange the aisles in the order
@@ -37,7 +38,7 @@ are deducted from that list.
   [Bits UI](https://bits-ui.com/) for accessible primitives
 - **Icons**: [Lucide Svelte](https://lucide.dev/)
 - **Recipe parsing**: [@cooklang/cooklang](https://github.com/cooklang/cooklang-rs) (WASM) for display, plus the [cook CLI](https://github.com/cooklang/cookcli) for shopping lists
-- **AI import**: any OpenAI-compatible `/chat/completions` endpoint, with DeepSeek as the default
+- **AI import**: any OpenAI-compatible `/chat/completions` endpoint, with DeepSeek as the default; photo import needs a vision-capable model
 - **Images**: [imgproxy](https://imgproxy.net/) behind a caching [Caddy](https://caddyserver.com/)
 - **Deployment**: Node.js adapter, shipped as a container
 
@@ -175,7 +176,10 @@ rules, data compatibility policy, and rollback steps.
 | `IMGPROXY_SALT`       | _unset_                    | Hex URL-signing salt                                           |
 | `AI_API_KEY`          | _unset_                    | Enables AI import. Key for the chat-completions provider       |
 | `AI_BASE_URL`         | `https://api.deepseek.com` | OpenAI-compatible API root                                     |
-| `AI_MODEL`            | `deepseek-chat`            | Model used for recipe imports                                  |
+| `AI_MODEL`            | `deepseek-chat`            | Model used for URL imports                                     |
+| `AI_VISION_MODEL`     | _unset_                    | Vision model for photo imports; unset disables them            |
+| `AI_VISION_BASE_URL`  | `AI_BASE_URL`              | Optional API root for the vision model                         |
+| `AI_VISION_API_KEY`   | `AI_API_KEY`               | Optional key for the vision model                              |
 | `AI_TIMEOUT_MS`       | `90000`                    | Timeout for one model request, in ms                           |
 | `AI_MAX_TOKENS`       | `4096`                     | Upper bound on the generated recipe                            |
 | `PROTOCOL_HEADER`     | _unset_                    | Proxy header carrying the scheme; set by compose               |
@@ -196,24 +200,43 @@ every submission fails with "Cross-site POST form submissions are forbidden".
 
 ### AI recipe import
 
-The **Import** button on the recipe list opens `/recipes/import`. Paste a recipe
-page URL and the server fetches it, extracts its schema.org Recipe data (with a
-visible-text fallback), and asks a chat model for Cooklang. The result is shown
-in the same editor and preview as the normal recipe editor. Nothing is written
-until you choose **Create recipe**. The generated recipe keeps the source page's
-language, including ingredient names and units, so a German recipe stays German
-instead of being translated towards the mostly English library. Existing
-library names are reused only when they are the same name in that language,
-allowing for case, punctuation, plural and small wording differences. If the
-page publishes a cover image, it is downloaded and stored beside the recipe
-when the recipe is created.
+The **Import** button on the recipe list opens `/recipes/import`. There are two
+ways to start:
 
-Set `AI_API_KEY` to enable it. The defaults target DeepSeek:
+- **From URL**: paste a recipe page. The server fetches it, extracts its
+  schema.org Recipe data (with a visible-text fallback), and asks a chat model
+  for Cooklang.
+- **From photo**: choose, drop or paste a picture of a cookbook page, a
+  handwritten recipe card, a screenshot, or a dish with the recipe in its
+  caption. The photo is downscaled in the browser and sent to a vision model.
+
+Either way the result is shown in the same editor and preview as the normal
+recipe editor. Nothing is written until you choose **Create recipe**. The
+generated recipe keeps the source's language, including ingredient names and
+units, so a German recipe stays German instead of being translated towards the
+mostly English library. Existing library names are reused only when they are
+the same name in that language, allowing for case, punctuation, plural and
+small wording differences. If the page publishes a cover image, it is
+downloaded and stored beside the recipe when the recipe is created. A photo
+used for import can also be kept as the recipe's cover with one toggle.
+
+Set `AI_API_KEY` to enable URL import. The defaults target DeepSeek:
 
 ```sh
 AI_API_KEY=sk-...
 # AI_BASE_URL=https://api.deepseek.com
 # AI_MODEL=deepseek-chat
+```
+
+Photo import needs a vision-capable model and is disabled until one is named.
+The base URL and key default to the text ones, so a single provider can serve
+both; set the `AI_VISION_*` overrides when it does not:
+
+```sh
+# Any OpenAI-compatible vision model works.
+AI_VISION_MODEL=gpt-4o-mini
+# AI_VISION_BASE_URL=https://api.openai.com/v1
+# AI_VISION_API_KEY=sk-...
 ```
 
 Any provider with an OpenAI-compatible `/chat/completions` endpoint and bearer
@@ -230,8 +253,10 @@ broader or narrower ingredients: `red onion` is not rewritten to `onion`.
 
 The import has limits. It only fetches public http(s) URLs, rejects private and
 link-local addresses (including through redirects), refuses pages over 4 MB,
-and times out model requests. Page content is treated as untrusted data in the
-prompt, and the generated source is parsed before it can be saved.
+and times out model requests. Photos are limited to 20 MB after the browser has
+downscaled them, and the server sniffs the bytes rather than trusting the file
+name. Page and photo content are treated as untrusted data in the prompt, and
+the generated source is parsed before it can be saved.
 
 ### Health
 

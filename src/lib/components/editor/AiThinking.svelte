@@ -1,9 +1,18 @@
 <script lang="ts">
 	interface Props {
 		model: string;
+		/** Changes the wording and the explanation under it. */
+		kind?: 'url' | 'photo';
 	}
 
-	const { model }: Props = $props();
+	const { model, kind = 'url' }: Props = $props();
+
+	const heading = $derived(kind === 'photo' ? 'Reading the photo' : 'Reading the recipe');
+	const detail = $derived(
+		kind === 'photo'
+			? 'Transcribing the visible ingredients and method, matching your library vocabulary and writing Cooklang.'
+			: 'Extracting ingredients, matching your library vocabulary and writing Cooklang.'
+	);
 </script>
 
 <div
@@ -19,10 +28,10 @@
 
 	<div>
 		<p class="text-fg text-sm font-medium">
-			Reading the recipe and asking <span class="text-accent">{model}</span>…
+			{heading} and asking <span class="text-accent">{model}</span>…
 		</p>
 		<p class="text-fg-subtle mt-1 text-xs">
-			Extracting ingredients, matching your library vocabulary and writing Cooklang.
+			{detail}
 		</p>
 	</div>
 </div>

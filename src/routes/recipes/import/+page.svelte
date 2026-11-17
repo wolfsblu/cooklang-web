@@ -4,13 +4,16 @@
 	import { goto } from '$app/navigation';
 	import {
 		ArrowLeftIcon,
+		CameraIcon,
 		CircleCheckIcon,
 		GlobeIcon,
+		ImagePlusIcon,
 		InfoIcon,
 		LoaderCircleIcon,
 		PencilIcon,
 		SaveIcon,
 		SparklesIcon,
+		Trash2Icon,
 		TriangleAlertIcon
 	} from '@lucide/svelte';
 	import { tick } from 'svelte';
@@ -19,10 +22,12 @@
 	import type { ImportFailure, ImportedRecipeDraft } from '#lib/types/import.js';
 	import { isInsideEntity, mergeCompletionTerms } from '#lib/utils/cooklang-completion.js';
 	import { setFrontmatterTitle } from '#lib/utils/cooklang-title.js';
+	import { formatBytes, IMAGE_ACCEPT, prepareImportImage } from '#lib/utils/image.js';
 	import Badge from '#lib/components/ui/Badge.svelte';
 	import Button from '#lib/components/ui/Button.svelte';
 	import Drawer from '#lib/components/ui/Drawer.svelte';
 	import Page from '#lib/components/ui/Page.svelte';
+	import Toggle from '#lib/components/ui/Toggle.svelte';
 	import AiThinking from '#lib/components/editor/AiThinking.svelte';
 	import CooklangCheatsheet from '#lib/components/editor/CooklangCheatsheet.svelte';
 	import CooklangCodeMirror from '#lib/components/editor/CooklangCodeMirror.svelte';
@@ -64,6 +69,34 @@
 	let viewMode = $state<'write' | 'split' | 'preview'>('split');
 	let cheatsheetOpen = $state(false);
 
+	type ImportSource = 'url' | 'photo';
+
+	function preferredSource(): ImportSource {
+		return data.visionConfigured && !data.aiConfigured ? 'photo' : 'url';
+	}
+
+	// Start on the source the deployment can actually handle. When both work,
+	// URL is still the more precise input, so it stays first.
+	let sourceMode = $state<ImportSource>(preferredSource());
+	let importKind = $state<ImportSource>('url');
+
+	let photoFile = $state<File | null>(null);
+	let photoPreview = $state<string | null>(null);
+	let photoDimensions = $state<{ width: number; height: number } | null>(null);
+	let photoPreparing = $state(false);
+	let photoError = $state<string | null>(null);
+	let photoDragging = $state(false);
+	let usePhotoAsCover = $state(false);
+	let photoInput = $state<HTMLInputElement | null>(null);
+	let coverInput = $state<HTMLInputElement | null>(null);
+	let photoLoadId = 0;
+
+	const anyConfigured = $derived(data.aiConfigured || data.visionConfigured);
+	const sources = [
+		{ id: 'url' as const, label: 'From URL', icon: GlobeIcon },
+		{ id: 'photo' as const, label: 'From photo', icon: CameraIcon }
+	];
+
 	const ingredientCount = $derived(preview?.display.ingredients.length ?? 0);
 	const stepCount = $derived(
 		preview?.display.sections.reduce(
@@ -84,17 +117,36 @@
 		const current = draft;
 		if (!current) return [];
 
-		const entries: ImportLogEntry[] = [
-			{ tone: 'info', message: 'Source page', detail: current.sourceUrl },
-			current.structured
-				? { tone: 'success', message: 'Found structured recipe data on the page.' }
-				: {
-						tone: 'info',
-						message: 'Used the visible page text; no structured recipe data was found.'
-					}
-		];
+		const entries: ImportLogEntry[] = [];
 
-		if (current.imageUrl) {
+		if (current.sourceKind === 'photo') {
+			entries.push({
+				tone: 'info',
+				message: 'Source photo',
+				detail: current.photoName ?? 'Uploaded photo'
+			});
+		} else {
+			entries.push({ tone: 'info', message: 'Source page', detail: current.sourceUrl ?? '' });
+			entries.push(
+				current.structured
+					? { tone: 'success', message: 'Found structured recipe data on the page.' }
+					: {
+							tone: 'info',
+							message: 'Used the visible page text; no structured recipe data was found.'
+						}
+			);
+		}
+
+		if (current.sourceKind === 'photo') {
+			entries.push(
+				usePhotoAsCover && photoFile
+					? { tone: 'success', message: 'The photo will be saved as the recipe cover.' }
+					: {
+							tone: 'info',
+							message: 'The photo is only used for reading; add a cover later if you want one.'
+						}
+			);
+		} else if (current.imageUrl) {
 			entries.push({
 				tone: 'success',
 				message: 'Found a cover image.',
@@ -157,40 +209,145 @@
 		return (data as ImportFailure | undefined)?.message ?? 'Something went wrong.';
 	}
 
-	function handleImport() {
-		importing = true;
-		importError = null;
+	function handleImport(kind: ImportSource) {
+		return () => {
+			importing = true;
+			importKind = kind;
+			importError = null;
 
-		return async ({ result }: { result: ActionResult }) => {
-			importing = false;
+			return async ({ result }: { result: ActionResult }) => {
+				importing = false;
 
-			if (result.type === 'success') {
-				const payload = result.data as ImportedRecipeDraft | undefined;
-				if (!payload?.ok) return;
+				if (result.type === 'success') {
+					const payload = result.data as ImportedRecipeDraft | undefined;
+					if (!payload?.ok) return;
 
-				draft = payload;
-				source = payload.source;
-				preview = payload.preview;
-				lastPreviewed = payload.source;
-				previewError = null;
-				editedTitle = payload.title;
-				lastAppliedTitle = payload.title;
-				filename = payload.suggestedName;
-				filenameDirty = false;
-				folder = '';
-				createError = null;
-				return;
-			}
+					draft = payload;
+					source = payload.source;
+					preview = payload.preview;
+					lastPreviewed = payload.source;
+					previewError = null;
+					editedTitle = payload.title;
+					lastAppliedTitle = payload.title;
+					filename = payload.suggestedName;
+					filenameDirty = false;
+					folder = '';
+					createError = null;
+					return;
+				}
 
-			if (result.type === 'failure') {
-				importError = failureMessage(result.data);
-				return;
-			}
+				if (result.type === 'failure') {
+					importError = failureMessage(result.data);
+					return;
+				}
 
-			if (result.type === 'error') {
-				importError = result.error?.message ?? 'The recipe could not be imported.';
-			}
+				if (result.type === 'error') {
+					importError = result.error?.message ?? 'The recipe could not be imported.';
+				}
+			};
 		};
+	}
+
+	function assignFile(input: HTMLInputElement | null, file: File): void {
+		if (!input) return;
+		const transfer = new DataTransfer();
+		transfer.items.add(file);
+		input.files = transfer.files;
+	}
+
+	/**
+	 * Decode, downscale and normalise the chosen photo before anything is sent.
+	 * The prepared file is also what the cover-image step will reuse, so the
+	 * user is not asked to pick it twice.
+	 */
+	async function loadPhoto(raw: File): Promise<void> {
+		photoError = null;
+
+		if (!/^image\//u.test(raw.type) && !/\.(jpe?g|png|webp|heic|heif)$/iu.test(raw.name)) {
+			photoError = 'Choose a JPEG, PNG, WebP or HEIC photo.';
+			return;
+		}
+
+		// A second pick supersedes the first, even when the first decode is slow.
+		const loadId = ++photoLoadId;
+		photoPreparing = true;
+		try {
+			const prepared = await prepareImportImage(raw);
+			if (loadId !== photoLoadId) return;
+
+			photoFile = prepared.file;
+			photoDimensions = { width: prepared.width, height: prepared.height };
+			photoPreview = URL.createObjectURL(prepared.file);
+			assignFile(photoInput, prepared.file);
+		} catch (error) {
+			if (loadId !== photoLoadId) return;
+			photoFile = null;
+			photoDimensions = null;
+			photoPreview = null;
+			photoError = error instanceof Error ? error.message : 'The photo could not be prepared.';
+		} finally {
+			if (loadId === photoLoadId) photoPreparing = false;
+		}
+	}
+
+	function clearPhoto(): void {
+		photoLoadId += 1;
+		photoFile = null;
+		photoDimensions = null;
+		photoPreview = null;
+		photoError = null;
+		photoPreparing = false;
+		usePhotoAsCover = false;
+		if (photoInput) photoInput.value = '';
+	}
+
+	function onPhotoPicked(event: Event): void {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (file) void loadPhoto(file);
+		// Clear now so picking the same file again still fires `change`;
+		// `loadPhoto` assigns the prepared JPEG back to the input.
+		input.value = '';
+	}
+
+	function onPhotoDrop(event: DragEvent): void {
+		event.preventDefault();
+		photoDragging = false;
+		if (importing) return;
+		const file = event.dataTransfer?.files?.[0];
+		if (file) void loadPhoto(file);
+	}
+
+	function onPhotoDragOver(event: DragEvent): void {
+		event.preventDefault();
+		if (!importing) photoDragging = true;
+	}
+
+	function handlePaste(event: ClipboardEvent): void {
+		if (draft || sourceMode !== 'photo' || importing) return;
+
+		const item = Array.from(event.clipboardData?.items ?? []).find((entry) =>
+			entry.type.startsWith('image/')
+		);
+		const file = item?.getAsFile();
+		if (!file) return;
+
+		event.preventDefault();
+		void loadPhoto(file);
+	}
+
+	function onSourceKeydown(event: KeyboardEvent, index: number): void {
+		if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+		event.preventDefault();
+
+		const step = event.key === 'ArrowRight' ? 1 : -1;
+		const next = (index + step + sources.length) % sources.length;
+		sourceMode = sources[next].id;
+
+		const tabs = (
+			event.currentTarget as HTMLElement
+		).parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+		tabs?.[next]?.focus();
 	}
 
 	function handleCreate() {
@@ -447,7 +604,41 @@
 			}
 		};
 	});
+
+	// Object URLs are only needed for the life of each prepared photo.
+	$effect(() => {
+		const url = photoPreview;
+		return () => {
+			if (url) URL.revokeObjectURL(url);
+		};
+	});
+
+	// A failed import re-renders the photo form, which discards its file input.
+	// Put the already prepared file back so the user can simply try again.
+	$effect(() => {
+		const input = photoInput;
+		const file = photoFile;
+		if (!input || !file) return;
+		if (!input.files || input.files.length === 0) assignFile(input, file);
+	});
+
+	// Keep the review form's hidden file input in sync with the photo the user
+	// chose, so Save sends the cover without asking for the file twice.
+	$effect(() => {
+		const input = coverInput;
+		const file = photoFile;
+		const shouldUse = usePhotoAsCover && draft?.sourceKind === 'photo';
+		if (!input) return;
+
+		if (file && shouldUse) {
+			assignFile(input, file);
+		} else {
+			input.value = '';
+		}
+	});
 </script>
+
+<svelte:window onpaste={handlePaste} />
 
 {#snippet importLog()}
 	{#if draft}
@@ -499,12 +690,19 @@
 					<h1 class="text-fg truncate text-base font-semibold">Import recipe</h1>
 					{#if data.aiConfigured}
 						<Badge tone="accent">{data.aiModel}</Badge>
-					{:else}
+					{/if}
+					{#if data.visionConfigured && data.visionModel}
+						<Badge tone="accent2">
+							<CameraIcon class="size-3" />
+							{data.visionModel}
+						</Badge>
+					{/if}
+					{#if !anyConfigured}
 						<Badge tone="warn">Not configured</Badge>
 					{/if}
 				</div>
 				<p class="text-fg-subtle truncate text-xs">
-					Turn a recipe page into Cooklang, then review it before saving.
+					Turn a recipe page or a photo into Cooklang, then review it before saving.
 				</p>
 			</div>
 		</header>
@@ -512,93 +710,284 @@
 		{#if !draft}
 			<div class="min-h-0 flex-1 overflow-y-auto">
 				<div class="flex min-h-full items-center justify-center px-4 py-8 sm:px-6">
-					<div class="border-border bg-surface w-full max-w-2xl rounded-lg border p-5 sm:p-6">
+					<div class="w-full max-w-2xl">
 						<div class="mb-3 flex items-center gap-2.5">
 							<div
 								class="bg-accent-soft text-accent-soft-fg inline-flex size-9 shrink-0 items-center justify-center rounded-full"
 							>
 								<SparklesIcon class="size-4" />
 							</div>
-							<h2 class="text-fg text-lg font-semibold">Import from a URL</h2>
+							<div>
+								<h2 class="text-fg text-lg font-semibold">Import a recipe</h2>
+								<p class="text-fg-muted text-sm">Start from a recipe page or a picture of one.</p>
+							</div>
 						</div>
-						<p class="text-fg-muted mt-1 text-sm">
-							Paste a recipe page. The server fetches it, extracts the recipe data, and asks
-							{data.aiModel} to turn it into Cooklang. Ingredient names from your library are offered
-							to the model so it can reuse them instead of adding near-duplicates.
-						</p>
 
-						{#if !data.aiConfigured}
+						<div class="border-border bg-surface overflow-hidden rounded-lg border">
 							<div
-								class="border-warn-soft bg-warn-soft/40 text-warn-soft-fg mt-4 flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm"
-								role="alert"
+								role="tablist"
+								aria-label="Import source"
+								class="border-border bg-surface-muted/40 flex items-center gap-1 border-b px-1"
 							>
-								<TriangleAlertIcon class="mt-0.5 size-4 shrink-0" />
-								<div>
-									<p class="font-medium">AI import is not configured.</p>
-									<p class="mt-0.5">
-										Set <code class="font-mono text-xs">AI_API_KEY</code> in the environment (and
-										optionally <code class="font-mono text-xs">AI_BASE_URL</code> and
-										<code class="font-mono text-xs">AI_MODEL</code>), then restart the app.
-									</p>
-								</div>
-							</div>
-						{/if}
-
-						{#if importing}
-							<div class="mt-4">
-								<AiThinking model={data.aiModel} />
-							</div>
-						{:else}
-							<form
-								method="POST"
-								action="?/import"
-								use:enhance={handleImport}
-								class="mt-5 space-y-2"
-							>
-								<label for="import-url" class="text-fg block text-sm font-medium">Recipe URL</label>
-								<div class="flex flex-col gap-2 sm:flex-row">
-									<div class="relative min-w-0 flex-1">
-										<GlobeIcon
-											class="text-fg-subtle pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
-										/>
-										<input
-											id="import-url"
-											name="url"
-											type="url"
-											class="field pl-9"
-											placeholder="https://www.chefkoch.de/rezepte/…"
-											bind:value={url}
-											required
-											disabled={importing || !data.aiConfigured}
-										/>
-									</div>
-									<Button
-										type="submit"
-										loading={importing}
-										disabled={importing || !data.aiConfigured || !url.trim()}
+								{#each sources as source, index (source.id)}
+									<button
+										type="button"
+										role="tab"
+										id="import-source-{source.id}"
+										aria-selected={sourceMode === source.id}
+										aria-controls="import-panel"
+										tabindex={sourceMode === source.id ? 0 : -1}
+										disabled={importing}
+										class="flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors duration-100 disabled:opacity-60 {sourceMode ===
+										source.id
+											? 'text-fg border-accent'
+											: 'text-fg-muted hover:text-fg border-transparent'}"
+										onclick={() => (sourceMode = source.id)}
+										onkeydown={(event) => onSourceKeydown(event, index)}
 									>
-										{#if !importing}
-											<SparklesIcon class="size-4" />
+										<source.icon class="size-4" />
+										{source.label}
+										{#if source.id === 'photo' && !data.visionConfigured}
+											<span
+												class="bg-warn-soft text-warn-soft-fg rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+											>
+												setup
+											</span>
 										{/if}
-										Import
-									</Button>
-								</div>
-								<p class="text-fg-subtle text-xs">
-									The page is fetched once, on this server. Large pages are rejected, and private or
-									local addresses are blocked.
-								</p>
-							</form>
-						{/if}
-
-						{#if importError}
-							<div
-								class="border-danger/30 bg-danger-soft text-danger-soft-fg mt-4 flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm"
-								role="alert"
-							>
-								<TriangleAlertIcon class="mt-0.5 size-4 shrink-0" />
-								<p class="min-w-0 flex-1">{importError}</p>
+									</button>
+								{/each}
 							</div>
-						{/if}
+
+							<div
+								id="import-panel"
+								role="tabpanel"
+								aria-labelledby="import-source-{sourceMode}"
+								class="p-5 sm:p-6"
+							>
+								{#if importing}
+									<AiThinking
+										model={importKind === 'photo'
+											? (data.visionModel ?? data.aiModel)
+											: data.aiModel}
+										kind={importKind}
+									/>
+								{:else if sourceMode === 'url'}
+									<p class="text-fg-muted text-sm">
+										Paste a recipe page. The server fetches it, extracts the recipe data, and asks
+										{data.aiModel} to turn it into Cooklang. Ingredient names from your library are offered
+										to the model so it can reuse them instead of adding near-duplicates.
+									</p>
+
+									{#if !data.aiConfigured}
+										<div
+											class="border-warn-soft bg-warn-soft/40 text-warn-soft-fg mt-4 flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm"
+											role="alert"
+										>
+											<TriangleAlertIcon class="mt-0.5 size-4 shrink-0" />
+											<div>
+												<p class="font-medium">AI import is not configured.</p>
+												<p class="mt-0.5">
+													Set <code class="font-mono text-xs">AI_API_KEY</code> in the environment
+													(and optionally <code class="font-mono text-xs">AI_BASE_URL</code> and
+													<code class="font-mono text-xs">AI_MODEL</code>), then restart the app.
+												</p>
+											</div>
+										</div>
+									{/if}
+
+									<form
+										method="POST"
+										action="?/import"
+										use:enhance={handleImport('url')}
+										class="mt-5 space-y-2"
+									>
+										<label for="import-url" class="text-fg block text-sm font-medium"
+											>Recipe URL</label
+										>
+										<div class="flex flex-col gap-2 sm:flex-row">
+											<div class="relative min-w-0 flex-1">
+												<GlobeIcon
+													class="text-fg-subtle pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+												/>
+												<input
+													id="import-url"
+													name="url"
+													type="url"
+													class="field pl-9"
+													placeholder="https://www.chefkoch.de/rezepte/…"
+													bind:value={url}
+													required
+													disabled={!data.aiConfigured}
+												/>
+											</div>
+											<Button type="submit" disabled={!data.aiConfigured || !url.trim()}>
+												<SparklesIcon class="size-4" />
+												Import
+											</Button>
+										</div>
+										<p class="text-fg-subtle text-xs">
+											The page is fetched once, on this server. Large pages are rejected, and
+											private or local addresses are blocked.
+										</p>
+									</form>
+								{:else}
+									<p class="text-fg-muted text-sm">
+										Take or choose a picture of a cookbook page, handwritten card, screenshot, or a
+										dish with the recipe in its caption. {data.visionModel ?? 'A vision model'} reads
+										the visible text and turns it into Cooklang, reusing ingredient names from your library.
+									</p>
+
+									{#if !data.visionConfigured}
+										<div
+											class="border-warn-soft bg-warn-soft/40 text-warn-soft-fg mt-4 flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm"
+											role="alert"
+										>
+											<TriangleAlertIcon class="mt-0.5 size-4 shrink-0" />
+											<div>
+												<p class="font-medium">Photo import is not configured.</p>
+												<p class="mt-0.5">
+													Set <code class="font-mono text-xs">AI_VISION_MODEL</code> to a
+													vision-capable model (and
+													<code class="font-mono text-xs">AI_VISION_BASE_URL</code>
+													/
+													<code class="font-mono text-xs">AI_VISION_API_KEY</code> if it is not the text
+													provider), then restart the app.
+												</p>
+											</div>
+										</div>
+									{/if}
+
+									<form
+										method="POST"
+										action="?/importPhoto"
+										enctype="multipart/form-data"
+										use:enhance={handleImport('photo')}
+										class="mt-5 space-y-3"
+									>
+										<input
+											bind:this={photoInput}
+											type="file"
+											name="image"
+											accept={IMAGE_ACCEPT}
+											class="sr-only"
+											aria-label="Choose a recipe photo"
+											onchange={onPhotoPicked}
+											disabled={!data.visionConfigured}
+										/>
+
+										{#if photoPreparing}
+											<div
+												class="border-border bg-surface-muted/30 flex min-h-44 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center"
+												role="status"
+												aria-live="polite"
+											>
+												<LoaderCircleIcon class="text-accent size-7 animate-spin" />
+												<p class="text-fg-muted text-sm">Preparing the photo…</p>
+											</div>
+										{:else if photoFile && photoPreview}
+											<div
+												class="border-border flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center"
+											>
+												<img
+													src={photoPreview}
+													alt="Selected recipe"
+													class="border-border h-28 w-full rounded-md border object-cover sm:w-36"
+												/>
+												<div class="min-w-0 flex-1">
+													<p class="text-fg truncate text-sm font-medium">{photoFile.name}</p>
+													<p class="text-fg-subtle mt-0.5 text-xs">
+														{#if photoDimensions}
+															{photoDimensions.width} × {photoDimensions.height} px ·
+														{/if}
+														{formatBytes(photoFile.size)}
+													</p>
+													<div class="mt-2 flex flex-wrap gap-2">
+														<Button
+															type="button"
+															variant="outline"
+															size="sm"
+															onclick={() => photoInput?.click()}
+														>
+															Choose another
+														</Button>
+														<Button type="button" variant="ghost" size="sm" onclick={clearPhoto}>
+															<Trash2Icon class="size-4" />
+															Remove
+														</Button>
+													</div>
+												</div>
+											</div>
+
+											<div class="flex items-start gap-2.5">
+												<Toggle
+													bind:checked={usePhotoAsCover}
+													label="Use this photo as the recipe cover"
+												/>
+												<div class="min-w-0">
+													<p class="text-fg text-sm">Use this photo as the recipe cover</p>
+													<p class="text-fg-subtle text-xs">
+														Best when the picture shows the dish. Leave it off for a cookbook page.
+													</p>
+												</div>
+											</div>
+
+											<Button
+												type="submit"
+												disabled={!data.visionConfigured || !photoFile || photoPreparing}
+											>
+												<SparklesIcon class="size-4" />
+												Read recipe
+											</Button>
+										{:else}
+											<button
+												type="button"
+												class="flex min-h-44 w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors duration-150 disabled:opacity-60 {photoDragging
+													? 'border-accent bg-accent-soft/30'
+													: 'border-border bg-surface-muted/30 hover:border-accent hover:bg-accent-soft/20'}"
+												onclick={() => photoInput?.click()}
+												ondragover={onPhotoDragOver}
+												ondragleave={() => (photoDragging = false)}
+												ondrop={onPhotoDrop}
+												disabled={!data.visionConfigured}
+											>
+												<ImagePlusIcon class="text-fg-subtle mb-2 size-8" aria-hidden="true" />
+												<span class="text-fg block text-sm font-medium">
+													Choose a photo or drop it here
+												</span>
+												<span class="text-fg-subtle mt-1 block text-xs">
+													or paste one from the clipboard · JPEG, PNG, WebP or HEIC
+												</span>
+											</button>
+										{/if}
+
+										<p class="text-fg-subtle text-xs">
+											The photo is downscaled in your browser and read once by the model. Nothing is
+											saved until you choose Create recipe.
+										</p>
+
+										{#if photoError}
+											<div
+												class="border-danger/30 bg-danger-soft text-danger-soft-fg flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm"
+												role="alert"
+											>
+												<TriangleAlertIcon class="mt-0.5 size-4 shrink-0" />
+												<p class="min-w-0 flex-1">{photoError}</p>
+											</div>
+										{/if}
+									</form>
+								{/if}
+
+								{#if importError}
+									<div
+										class="border-danger/30 bg-danger-soft text-danger-soft-fg mt-4 flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm"
+										role="alert"
+									>
+										<TriangleAlertIcon class="mt-0.5 size-4 shrink-0" />
+										<p class="min-w-0 flex-1">{importError}</p>
+									</div>
+								{/if}
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -608,11 +997,21 @@
 					bind:this={formEl}
 					method="POST"
 					action="?/create"
+					enctype="multipart/form-data"
 					use:enhance={handleCreate}
 					class="flex min-w-0 flex-1 flex-wrap items-end gap-2"
 				>
 					<input type="hidden" name="source" value={source} />
 					<input type="hidden" name="imageUrl" value={draft.imageUrl ?? ''} />
+					<input
+						bind:this={coverInput}
+						type="file"
+						name="coverImage"
+						accept={IMAGE_ACCEPT}
+						class="sr-only"
+						tabindex="-1"
+						aria-hidden="true"
+					/>
 
 					<label class="text-fg-muted flex flex-col gap-1 text-xs">
 						Title
@@ -645,6 +1044,13 @@
 					</label>
 
 					<div class="ml-auto flex flex-wrap items-end gap-2">
+						{#if draft.sourceKind === 'photo' && photoFile}
+							<div class="text-fg-muted flex items-center gap-2 pb-1 text-xs">
+								<Toggle bind:checked={usePhotoAsCover} label="Use the photo as the recipe cover" />
+								Photo as cover
+							</div>
+						{/if}
+
 						<label class="text-fg-muted flex flex-col gap-1 text-xs">
 							Folder
 							<input
