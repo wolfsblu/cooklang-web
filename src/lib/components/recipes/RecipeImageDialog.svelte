@@ -6,6 +6,7 @@
 	import Button from '#lib/components/ui/Button.svelte';
 	import ConfirmDialog from '#lib/components/ui/ConfirmDialog.svelte';
 	import IconButton from '#lib/components/ui/IconButton.svelte';
+	import { convertHeicToJpeg, IMAGE_ACCEPT, isHeic } from '#lib/utils/image.js';
 
 	/**
 	 * Add, replace or remove a recipe's cover image.
@@ -45,58 +46,11 @@
 		confirmingRemove = false;
 	});
 
-	const HEIC_TYPE = /^image\/hei[cf]/i;
-	const HEIC_NAME = /\.(heic|heif)$/i;
 	/** Long edge for converted photos: plenty for a cover, quick to upload. */
 	const HEIC_MAX_EDGE = 2560;
 
 	function chooseFile(): void {
 		fileInput?.click();
-	}
-
-	function isHeic(file: File): boolean {
-		return HEIC_TYPE.test(file.type) || HEIC_NAME.test(file.name);
-	}
-
-	/**
-	 * Convert an Apple photo to JPEG in the browser.
-	 *
-	 * Safari can decode HEIC, so an iPhone or Mac user never has to think about
-	 * formats. Browsers that cannot decode it reject below, and the server also
-	 * refuses the raw file rather than storing something half the web cannot
-	 * display.
-	 */
-	async function convertHeic(file: File): Promise<File> {
-		const url = URL.createObjectURL(file);
-
-		try {
-			const picture = new Image();
-			picture.src = url;
-			await picture.decode();
-
-			const scale = Math.min(
-				1,
-				HEIC_MAX_EDGE / Math.max(picture.naturalWidth, picture.naturalHeight)
-			);
-			const canvas = document.createElement('canvas');
-			canvas.width = Math.max(1, Math.round(picture.naturalWidth * scale));
-			canvas.height = Math.max(1, Math.round(picture.naturalHeight * scale));
-
-			const context = canvas.getContext('2d');
-			if (!context) throw new Error('Canvas is unavailable');
-			context.drawImage(picture, 0, 0, canvas.width, canvas.height);
-
-			const blob = await new Promise<Blob | null>((resolve) =>
-				canvas.toBlob(resolve, 'image/jpeg', 0.9)
-			);
-			if (!blob) throw new Error('The photo could not be encoded');
-
-			return new File([blob], file.name.replace(HEIC_NAME, '') + '.jpg', {
-				type: 'image/jpeg'
-			});
-		} finally {
-			URL.revokeObjectURL(url);
-		}
 	}
 
 	async function submitUpload(event: Event): Promise<void> {
@@ -113,7 +67,7 @@
 
 		converting = true;
 		try {
-			const converted = await convertHeic(file);
+			const converted = await convertHeicToJpeg(file, HEIC_MAX_EDGE);
 			const transfer = new DataTransfer();
 			transfer.items.add(converted);
 			input.files = transfer.files;
@@ -215,7 +169,7 @@
 					bind:this={fileInput}
 					type="file"
 					name="image"
-					accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+					accept={IMAGE_ACCEPT}
 					class="sr-only"
 					aria-label="Choose a cover image"
 					onchange={submitUpload}

@@ -1,13 +1,24 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types.js';
 import { AiRequestError } from '#lib/server/ai/client.js';
-import { aiConfig, isAiConfigured } from '#lib/server/ai/config.js';
+import {
+	aiConfig,
+	aiVisionConfig,
+	isAiConfigured,
+	isVisionConfigured
+} from '#lib/server/ai/config.js';
 import { fetchRecipeImage } from '#lib/server/import/fetch.js';
 import { importRecipeFromUrl, RecipeImportError } from '#lib/server/import/index.js';
+import { importRecipeFromPhoto } from '#lib/server/import/photo.js';
 import { ImportUrlError } from '#lib/server/import/url.js';
 import { createRecipe, RecipeCreateError } from '#lib/server/recipes/create.js';
+import {
+	detectImageType,
+	isHeif,
+	MAX_IMAGE_BYTES,
+	writeRecipeImage
+} from '#lib/server/recipes/image.js';
 import { getEntry, getIndex, invalidateRecipe } from '#lib/server/recipes/index.js';
-import { writeRecipeImage } from '#lib/server/recipes/image.js';
 import { previewRecipe, RecipeSourceError } from '#lib/server/recipes/parse.js';
 import { buildVocabulary } from '#lib/server/recipes/vocabulary.js';
 import type { ImportFailure, ImportedRecipeDraft } from '#lib/types/import.js';
@@ -40,6 +51,8 @@ export const load: PageServerLoad = async () => {
 	return {
 		aiConfigured: isAiConfigured(),
 		aiModel: aiConfig.model,
+		visionConfigured: isVisionConfigured(),
+		visionModel: aiVisionConfig.model || null,
 		vocabulary: buildVocabulary(index.entries),
 		folders: foldersFromPaths(index.entries.map((entry) => entry.relPath))
 	};
@@ -61,7 +74,7 @@ export const actions: Actions = {
 		if (!isAiConfigured()) {
 			return fail(503, {
 				message:
-					'AI import is not configured. Set AI_API_KEY (and optionally AI_BASE_URL and AI_MODEL), then restart the app.'
+					'AI import is not configured. Set AI_TEXT_API_KEY (and optionally AI_TEXT_BASE_URL and AI_TEXT_MODEL), then restart the app.'
 			} satisfies ImportFailure);
 		}
 
@@ -71,6 +84,8 @@ export const actions: Actions = {
 
 			return {
 				ok: true,
+				sourceKind: 'url',
+				photoName: null,
 				...imported
 			} satisfies ImportedRecipeDraft;
 		} catch (error) {
@@ -89,6 +104,64 @@ export const actions: Actions = {
 		}
 	},
 
+	importPhoto: async ({ request }) => {
+		if (!isVisionConfigured()) {
+			return fail(503, {
+				message:
+					'Photo import is not configured. Set AI_VISION_MODEL to a vision-capable model (and AI_VISION_BASE_URL/AI_VISION_API_KEY when it is not the text provider), then restart the app.'
+			} satisfies ImportFailure);
+		}
+
+		const data = await request.formData();
+		const upload = data.get('image');
+
+		if (!(upload instanceof File) || upload.size === 0) {
+			return fail(400, { message: 'Choose a photo of a recipe first.' } satisfies ImportFailure);
+		}
+
+		if (upload.size > MAX_IMAGE_BYTES) {
+			return fail(413, {
+				message: 'Photos must be 20 MB or smaller.'
+			} satisfies ImportFailure);
+		}
+
+		let bytes: Uint8Array;
+		try {
+			bytes = new Uint8Array(await upload.arrayBuffer());
+		} catch {
+			return fail(400, {
+				message: 'The photo could not be read. Please choose it again.'
+			} satisfies ImportFailure);
+		}
+
+		try {
+			const index = await getIndex();
+			const imported = await importRecipeFromPhoto(
+				bytes,
+				buildVocabulary(index.entries).ingredients
+			);
+
+			return {
+				ok: true,
+				sourceKind: 'photo',
+				sourceUrl: null,
+				imageUrl: null,
+				structured: false,
+				photoName: upload.name || 'Photo',
+				...imported
+			} satisfies ImportedRecipeDraft;
+		} catch (error) {
+			if (error instanceof RecipeImportError || error instanceof AiRequestError) {
+				return fail(422, { message: error.message } satisfies ImportFailure);
+			}
+
+			console.error('Photo import failed:', error);
+			return fail(500, {
+				message: 'The photo could not be imported. Try again or check the server log.'
+			} satisfies ImportFailure);
+		}
+	},
+
 	create: async ({ request }) => {
 		const data = await request.formData();
 		const source = formString(data, 'source');
@@ -96,6 +169,7 @@ export const actions: Actions = {
 		const filename = formString(data, 'filename').trim();
 		const folder = formString(data, 'folder').trim();
 		const imageUrl = formString(data, 'imageUrl').trim();
+		const coverUpload = data.get('coverImage');
 
 		if (!source.trim()) {
 			return fail(400, { message: 'A recipe cannot be created empty.' } satisfies ImportFailure);
@@ -149,7 +223,39 @@ export const actions: Actions = {
 			} satisfies ImportFailure);
 		}
 
-		if (imageUrl) {
+		// A photo chosen for import can double as the cover. It was already
+		// downscaled by the browser, so it is much smaller than the source file.
+		if (coverUpload instanceof File && coverUpload.size > 0) {
+			try {
+				if (coverUpload.size > MAX_IMAGE_BYTES) {
+					throw new Error('The photo is too large to use as a cover image.');
+				}
+
+				const bytes = new Uint8Array(await coverUpload.arrayBuffer());
+				const detected = detectImageType(bytes);
+				if (!detected) {
+					throw new Error(
+						isHeif(bytes)
+							? 'HEIC photos cannot be stored as a cover image.'
+							: 'The cover photo is not a JPEG, PNG or WebP image.'
+					);
+				}
+
+				const entry = await getEntry(created.slug);
+				if (!entry) throw new Error('The new recipe was not found in the index.');
+
+				await writeRecipeImage(entry, bytes, detected.extension);
+				invalidateRecipe(created.relPath);
+			} catch (error) {
+				// The recipe is the valuable part. A bad cover should not throw
+				// away a successful import; the user can add one from the recipe
+				// page, and the log records why it was skipped.
+				console.warn(
+					`Could not use the uploaded photo as a cover for "${created.relPath}":`,
+					error
+				);
+			}
+		} else if (imageUrl) {
 			try {
 				const image = await fetchRecipeImage(imageUrl);
 				const entry = await getEntry(created.slug);

@@ -1,17 +1,41 @@
 /**
  * Minimal OpenAI-compatible chat client.
  *
- * The importer needs exactly one thing from the provider -- a chat completion
- * for two messages -- so this avoids an SDK and the dependency surface that
- * comes with one. Any provider that speaks `/chat/completions` with a bearer
- * token works.
+ * The importer needs a chat completion for a couple of messages, sometimes
+ * with one image attached, so this avoids an SDK and the dependency surface
+ * that comes with one. Any provider that speaks `/chat/completions` with a
+ * bearer token works.
  */
 
-import { aiConfig, chatCompletionsUrl, isAiConfigured } from './config.js';
+import { aiConfig, chatCompletionsUrl } from './config.js';
+
+export interface ChatTextPart {
+	type: 'text';
+	text: string;
+}
+
+/** OpenAI-compatible image part. `url` may be an https URL or a data URL. */
+export interface ChatImagePart {
+	type: 'image_url';
+	image_url: {
+		url: string;
+		/** `high` keeps small print on a photographed recipe page legible. */
+		detail?: 'auto' | 'low' | 'high';
+	};
+}
+
+export type ChatContentPart = ChatTextPart | ChatImagePart;
 
 export interface ChatMessage {
 	role: 'system' | 'user' | 'assistant';
-	content: string;
+	content: string | ChatContentPart[];
+}
+
+/** Per-request overrides, used to send photo imports to the vision model. */
+export interface ChatOptions {
+	model?: string;
+	apiKey?: string;
+	baseUrl?: string;
 }
 
 /** A failure the import page can explain to the user. */
@@ -70,21 +94,28 @@ function decodeContent(content: unknown): string {
  * reduced to a short message: recipe content and the API key never appear in
  * an error surfaced to the client.
  */
-export async function chatCompletion(messages: readonly ChatMessage[]): Promise<string> {
-	if (!isAiConfigured()) {
+export async function chatCompletion(
+	messages: readonly ChatMessage[],
+	options: ChatOptions = {}
+): Promise<string> {
+	const model = options.model ?? aiConfig.model;
+	const apiKey = options.apiKey ?? aiConfig.apiKey;
+	const baseUrl = (options.baseUrl ?? aiConfig.baseUrl).replace(/\/+$/u, '');
+
+	if (!apiKey || !baseUrl || !model) {
 		throw new AiRequestError(
-			'AI import is not configured. Set AI_API_KEY (and optionally AI_BASE_URL and AI_MODEL) and restart the app.'
+			'AI import is not configured. Set AI_TEXT_API_KEY (and optionally AI_TEXT_BASE_URL and AI_TEXT_MODEL) and restart the app.'
 		);
 	}
 
-	const response = await fetch(chatCompletionsUrl(), {
+	const response = await fetch(chatCompletionsUrl(baseUrl), {
 		method: 'POST',
 		headers: {
-			Authorization: `Bearer ${aiConfig.apiKey}`,
+			Authorization: `Bearer ${apiKey}`,
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify({
-			model: aiConfig.model,
+			model,
 			messages,
 			temperature: 0.2,
 			max_tokens: aiConfig.maxTokens,
@@ -98,7 +129,7 @@ export async function chatCompletion(messages: readonly ChatMessage[]): Promise<
 			);
 		}
 		throw new AiRequestError(
-			`Could not reach the AI provider at ${aiConfig.baseUrl}. Check AI_BASE_URL and the server's network access.`
+			`Could not reach the AI provider at ${baseUrl}. Check the configured base URL and the server's network access.`
 		);
 	});
 

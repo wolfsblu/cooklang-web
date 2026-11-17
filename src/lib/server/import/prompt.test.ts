@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { CompletionTerm } from '#lib/types/editor.js';
 import type { ExtractedRecipe } from './extract';
-import { buildImportMessages } from '../ai/prompt';
+import { buildImportMessages, buildPhotoImportMessages, NO_RECIPE_MARKER } from '../ai/prompt';
+import type { ChatContentPart } from '../ai/client';
 
 const recipe: ExtractedRecipe = {
 	title: 'Bauerntopf',
@@ -67,5 +68,35 @@ describe('buildImportMessages', () => {
 
 		expect(system.content).toContain('tinned tomatoes');
 		expect(user.content).toContain('Fry onions.');
+	});
+});
+
+describe('buildPhotoImportMessages', () => {
+	const image = 'data:image/jpeg;base64,AAAA';
+
+	it('sends the photo as a high-detail image part', () => {
+		const [system, user] = buildPhotoImportMessages(vocabulary, image);
+
+		expect(system.role).toBe('system');
+		expect(system.content).toContain('transcribes recipe photos');
+		expect(system.content).toContain('tinned tomatoes');
+		expect(system.content).toContain('language used in the photo');
+		expect(system.content).toContain(NO_RECIPE_MARKER);
+		expect(system.content).not.toContain('The source page declares its language');
+
+		expect(Array.isArray(user.content)).toBe(true);
+		const parts = user.content as ChatContentPart[];
+		expect(parts[0]).toMatchObject({ type: 'text' });
+		expect(parts[1]).toEqual({
+			type: 'image_url',
+			image_url: { url: image, detail: 'high' }
+		});
+	});
+
+	it('does not invent a source URL for an upload', () => {
+		const [system] = buildPhotoImportMessages(vocabulary, image);
+
+		expect(system.content).toContain('Do not add a source field');
+		expect(system.content).not.toContain('source: https://example.com/pancakes');
 	});
 });

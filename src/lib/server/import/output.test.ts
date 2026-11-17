@@ -63,6 +63,19 @@ describe('ensureFrontmatter', () => {
 		expect(result).toContain('title: "A \\"quoted\\" \\\\ title"');
 		expect(result).toContain('source: "https://example.org/a\\"b"');
 	});
+
+	it('omits the source for an upload with no URL', () => {
+		expect(ensureFrontmatter('Mix the @flour{200%g}.', 'Soup', null)).toBe(
+			'---\ntitle: "Soup"\n---\n\nMix the @flour{200%g}.\n'
+		);
+	});
+
+	it('does not append a source to existing frontmatter when there is no URL', () => {
+		const result = ensureFrontmatter('---\nservings: 2\n---\n\nStep.', 'Soup', null);
+
+		expect(result).toContain('title: "Soup"');
+		expect(result).not.toContain('source:');
+	});
 });
 
 describe('stripRedundantAmounts', () => {
