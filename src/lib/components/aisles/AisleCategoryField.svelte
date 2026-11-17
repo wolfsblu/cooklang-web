@@ -16,6 +16,8 @@
 		class?: string;
 		/** `sm` fits dense rows such as the shopping list; `md` is the default. */
 		size?: 'sm' | 'md';
+		/** Stretch to fill the row instead of hugging the longest category. */
+		fullWidth?: boolean;
 		/** The submit action rendered inside the field's trailing edge. */
 		action: Snippet;
 	}
@@ -25,18 +27,19 @@
 		label,
 		class: className,
 		size = 'md',
+		fullWidth = false,
 		action: actionSnippet
 	}: Props = $props();
 </script>
 
 <FieldWithAction
 	chevron={size}
-	class="{size === 'sm' ? 'inline-block max-w-full' : 'w-full'} {className ?? ''}"
+	class="{size === 'sm' && !fullWidth ? 'inline-block max-w-full' : 'w-full'} {className ?? ''}"
 >
 	<select
 		name="category"
 		class="field appearance-none bg-none capitalize {size === 'sm'
-			? 'w-auto pr-24 text-xs'
+			? `pr-24 text-xs ${fullWidth ? 'w-full' : 'w-auto'}`
 			: 'w-full pr-32 text-sm'}"
 		aria-label={label}
 	>
