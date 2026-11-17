@@ -787,9 +787,11 @@
 											<div>
 												<p class="font-medium">AI import is not configured.</p>
 												<p class="mt-0.5">
-													Set <code class="font-mono text-xs">AI_API_KEY</code> in the environment
-													(and optionally <code class="font-mono text-xs">AI_BASE_URL</code> and
-													<code class="font-mono text-xs">AI_MODEL</code>), then restart the app.
+													Set <code class="font-mono text-xs">AI_TEXT_API_KEY</code> in the
+													environment (and optionally
+													<code class="font-mono text-xs">AI_TEXT_BASE_URL</code> and
+													<code class="font-mono text-xs">AI_TEXT_MODEL</code>), then restart the
+													app.
 												</p>
 											</div>
 										</div>

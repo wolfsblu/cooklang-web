@@ -74,7 +74,7 @@ export const actions: Actions = {
 		if (!isAiConfigured()) {
 			return fail(503, {
 				message:
-					'AI import is not configured. Set AI_API_KEY (and optionally AI_BASE_URL and AI_MODEL), then restart the app.'
+					'AI import is not configured. Set AI_TEXT_API_KEY (and optionally AI_TEXT_BASE_URL and AI_TEXT_MODEL), then restart the app.'
 			} satisfies ImportFailure);
 		}
 

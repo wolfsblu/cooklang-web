@@ -104,7 +104,7 @@ export async function chatCompletion(
 
 	if (!apiKey || !baseUrl || !model) {
 		throw new AiRequestError(
-			'AI import is not configured. Set AI_API_KEY (and optionally AI_BASE_URL and AI_MODEL) and restart the app.'
+			'AI import is not configured. Set AI_TEXT_API_KEY (and optionally AI_TEXT_BASE_URL and AI_TEXT_MODEL) and restart the app.'
 		);
 	}
 
@@ -129,7 +129,7 @@ export async function chatCompletion(
 			);
 		}
 		throw new AiRequestError(
-			`Could not reach the AI provider at ${baseUrl}. Check AI_BASE_URL and the server's network access.`
+			`Could not reach the AI provider at ${baseUrl}. Check the configured base URL and the server's network access.`
 		);
 	});
 

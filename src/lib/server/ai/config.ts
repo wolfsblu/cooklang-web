@@ -3,19 +3,25 @@
  *
  * The provider is whatever sits behind an OpenAI-compatible
  * `/chat/completions` endpoint. DeepSeek is the default, so in the common case
- * only `AI_API_KEY` has to be set.
+ * only `AI_TEXT_API_KEY` has to be set.
  *
- * Photo import needs a vision-capable model. It is configured separately
- * (`AI_VISION_MODEL`, with optional `AI_VISION_BASE_URL` and
+ * URL imports use the text model. Photo imports use a separately configured
+ * vision model (`AI_VISION_MODEL`, with optional `AI_VISION_BASE_URL` and
  * `AI_VISION_API_KEY` overrides) because the default text model cannot read
  * images, and because the vision model often lives on a different provider.
+ *
+ * The older `AI_API_KEY`, `AI_BASE_URL` and `AI_MODEL` names are still read as
+ * fallbacks for the text settings so existing deployments keep working.
  */
 
 import {
 	AI_API_KEY,
 	AI_BASE_URL,
-	AI_MAX_TOKENS,
 	AI_MODEL,
+	AI_TEXT_API_KEY,
+	AI_TEXT_BASE_URL,
+	AI_TEXT_MODEL,
+	AI_MAX_TOKENS,
 	AI_TIMEOUT_MS,
 	AI_VISION_API_KEY,
 	AI_VISION_BASE_URL,
@@ -34,14 +40,14 @@ function apiRoot(value: string | undefined, fallback: string): string {
 	return (value || fallback).replace(/\/+$/u, '');
 }
 
-const baseUrl = apiRoot(AI_BASE_URL, DEFAULT_BASE_URL);
+const baseUrl = apiRoot(AI_TEXT_BASE_URL || AI_BASE_URL, DEFAULT_BASE_URL);
 const timeoutMs = intFromEnv(AI_TIMEOUT_MS, 90_000);
 const maxTokens = intFromEnv(AI_MAX_TOKENS, 4_096);
 
 export const aiConfig = {
-	apiKey: AI_API_KEY || '',
+	apiKey: AI_TEXT_API_KEY || AI_API_KEY || '',
 	baseUrl,
-	model: AI_MODEL || 'deepseek-chat',
+	model: AI_TEXT_MODEL || AI_MODEL || 'deepseek-chat',
 	timeoutMs,
 	maxTokens
 } as const;

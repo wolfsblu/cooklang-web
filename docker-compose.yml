@@ -20,17 +20,21 @@ services:
       IMGPROXY_BASE_URL: /img
       IMGPROXY_KEY: ${IMGPROXY_KEY:?set IMGPROXY_KEY in .env}
       IMGPROXY_SALT: ${IMGPROXY_SALT:?set IMGPROXY_SALT in .env}
-      # Optional AI recipe import. Empty AI_API_KEY disables URL import; empty
-      # AI_VISION_MODEL disables photo import. The defaults for the text model
-      # target DeepSeek's OpenAI-compatible endpoint.
-      AI_API_KEY: ${AI_API_KEY:-}
-      AI_BASE_URL: ${AI_BASE_URL:-https://api.deepseek.com}
-      AI_MODEL: ${AI_MODEL:-deepseek-chat}
+      # Optional AI recipe import. Empty AI_TEXT_API_KEY disables URL import;
+      # empty AI_VISION_MODEL disables photo import. The text defaults target
+      # DeepSeek's OpenAI-compatible endpoint.
+      AI_TEXT_API_KEY: ${AI_TEXT_API_KEY:-}
+      AI_TEXT_BASE_URL: ${AI_TEXT_BASE_URL:-https://api.deepseek.com}
+      AI_TEXT_MODEL: ${AI_TEXT_MODEL:-deepseek-chat}
       # Photo import. Empty AI_VISION_MODEL keeps the feature disabled. The
       # base URL and key fall back to the text configuration when empty.
       AI_VISION_MODEL: ${AI_VISION_MODEL:-}
       AI_VISION_BASE_URL: ${AI_VISION_BASE_URL:-}
       AI_VISION_API_KEY: ${AI_VISION_API_KEY:-}
+      # Deprecated text-setting aliases, forwarded for existing .env files.
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_MODEL: ${AI_MODEL:-}
       AI_TIMEOUT_MS: ${AI_TIMEOUT_MS:-90000}
       AI_MAX_TOKENS: ${AI_MAX_TOKENS:-4096}
       # Required behind a proxy. SvelteKit rejects a form POST whose Origin

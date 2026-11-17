@@ -174,17 +174,21 @@ rules, data compatibility policy, and rollback steps.
 | `IMGPROXY_BASE_URL`   | _unset_                    | Where imgproxy is mounted. Unset serves originals from the app |
 | `IMGPROXY_KEY`        | _unset_                    | Hex URL-signing key                                            |
 | `IMGPROXY_SALT`       | _unset_                    | Hex URL-signing salt                                           |
-| `AI_API_KEY`          | _unset_                    | Enables AI import. Key for the chat-completions provider       |
-| `AI_BASE_URL`         | `https://api.deepseek.com` | OpenAI-compatible API root                                     |
-| `AI_MODEL`            | `deepseek-chat`            | Model used for URL imports                                     |
+| `AI_TEXT_API_KEY`     | _unset_                    | Enables URL import. Key for the text provider                  |
+| `AI_TEXT_BASE_URL`    | `https://api.deepseek.com` | OpenAI-compatible API root for the text model                  |
+| `AI_TEXT_MODEL`       | `deepseek-chat`            | Model used for URL imports                                     |
 | `AI_VISION_MODEL`     | _unset_                    | Vision model for photo imports; unset disables them            |
-| `AI_VISION_BASE_URL`  | `AI_BASE_URL`              | Optional API root for the vision model                         |
-| `AI_VISION_API_KEY`   | `AI_API_KEY`               | Optional key for the vision model                              |
+| `AI_VISION_BASE_URL`  | `AI_TEXT_BASE_URL`         | Optional API root for the vision model                         |
+| `AI_VISION_API_KEY`   | `AI_TEXT_API_KEY`          | Optional key for the vision model                              |
 | `AI_TIMEOUT_MS`       | `90000`                    | Timeout for one model request, in ms                           |
 | `AI_MAX_TOKENS`       | `4096`                     | Upper bound on the generated recipe                            |
 | `PROTOCOL_HEADER`     | _unset_                    | Proxy header carrying the scheme; set by compose               |
 | `HOST_HEADER`         | _unset_                    | Proxy header carrying the host; set by compose                 |
 | `ORIGIN`              | _unset_                    | Public URL, if your proxy sends neither of the above           |
+
+The older `AI_API_KEY`, `AI_BASE_URL` and `AI_MODEL` names are still read as
+deprecated fallbacks for the text settings, so existing deployments keep
+working.
 
 Both `IMGPROXY_KEY` and `IMGPROXY_SALT` must be set alongside
 `IMGPROXY_BASE_URL`; if they are not, the app logs a warning and falls back to
@@ -220,12 +224,12 @@ small wording differences. If the page publishes a cover image, it is
 downloaded and stored beside the recipe when the recipe is created. A photo
 used for import can also be kept as the recipe's cover with one toggle.
 
-Set `AI_API_KEY` to enable URL import. The defaults target DeepSeek:
+Set `AI_TEXT_API_KEY` to enable URL import. The defaults target DeepSeek:
 
 ```sh
-AI_API_KEY=sk-...
-# AI_BASE_URL=https://api.deepseek.com
-# AI_MODEL=deepseek-chat
+AI_TEXT_API_KEY=sk-...
+# AI_TEXT_BASE_URL=https://api.deepseek.com
+# AI_TEXT_MODEL=deepseek-chat
 ```
 
 Photo import needs a vision-capable model and is disabled until one is named.
