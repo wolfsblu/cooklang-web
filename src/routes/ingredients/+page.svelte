@@ -193,7 +193,7 @@
 										<AisleCategoryField
 											categories={moveTargets}
 											label="Move selected to aisle"
-											class="sm:w-80"
+											class="min-w-0 flex-1 sm:w-80 sm:flex-none"
 										>
 											{#snippet action()}
 												<Button
