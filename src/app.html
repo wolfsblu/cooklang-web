@@ -8,13 +8,20 @@
 		/>
 		<meta name="color-scheme" content="light dark" />
 		<script>
-			// Set the theme before first paint. This is the only copy; it used to
-			// be duplicated in +layout.svelte, where it ran too late to help.
+			// Follow the device before first paint, and keep following it: with
+			// no toggle there is no stored preference to win over the OS.
 			(() => {
-				const stored = localStorage.getItem('theme');
-				const system = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-				document.documentElement.dataset.theme =
-					stored === 'light' || stored === 'dark' ? stored : system;
+				const query = matchMedia('(prefers-color-scheme: dark)');
+				const apply = () => {
+					document.documentElement.dataset.theme = query.matches ? 'dark' : 'light';
+				};
+
+				// Drop the key left behind by the old theme toggle so a stale
+				// choice cannot shadow the device setting later.
+				localStorage.removeItem('theme');
+
+				apply();
+				query.addEventListener('change', apply);
 			})();
 		</script>
 		%sveltekit.head%
