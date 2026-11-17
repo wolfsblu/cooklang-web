@@ -9,6 +9,7 @@
 	} from '@lucide/svelte';
 	import type { RecipeDisplay } from '#lib/types/recipe.js';
 	import Badge from '#lib/components/ui/Badge.svelte';
+	import { buildTagUrl } from '#lib/utils/url-params.js';
 	import ServingsControl from './ServingsControl.svelte';
 
 	/**
@@ -154,7 +155,17 @@
 				<dt class="sr-only">Tags</dt>
 				<dd class="flex min-w-0 flex-wrap gap-1">
 					{#each recipe.tags as tag (tag)}
-						<Badge>{tag}</Badge>
+						<!-- The tag doubles as a shortcut to the same tag in the recipe list's
+						     filters, so the badges only need to read as links, not look like buttons. -->
+						<a
+							href={buildTagUrl(tag)}
+							class="inline-flex rounded-full"
+							aria-label="Recipes tagged {tag}"
+						>
+							<Badge class="hover:bg-accent-soft hover:text-accent-soft-fg transition-colors"
+								>{tag}</Badge
+							>
+						</a>
 					{/each}
 				</dd>
 			</div>

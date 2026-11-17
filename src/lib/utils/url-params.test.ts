@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	buildFilterUrl,
 	buildSortUrl,
+	buildTagUrl,
 	EMPTY_FILTER_STATE,
 	filterStateFromDraft,
 	MAX_FILTER_SERVINGS,
@@ -106,6 +107,19 @@ describe('filter drafts', () => {
 		});
 
 		expect(filters).toEqual(EMPTY_FILTER_STATE);
+	});
+});
+
+describe('buildTagUrl', () => {
+	it('points at the recipe list, not the current page', () => {
+		expect(buildTagUrl('quick')).toBe('/?tags=quick');
+	});
+
+	it('escapes tags that need it', () => {
+		expect(buildTagUrl('one pot')).toBe('/?tags=one+pot');
+		expect(parseFilterParams(new URLSearchParams(buildTagUrl('one pot').slice(1))).tags).toEqual([
+			'one pot'
+		]);
 	});
 });
 
