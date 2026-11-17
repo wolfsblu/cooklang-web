@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.1.0](https://github.com/wolfsblu/cooklang-web/compare/v1.0.1...v1.1.0) (2026-11-17)
+
+
+### Features
+
+* add a new-recipe split button to the header ([#14](https://github.com/wolfsblu/cooklang-web/issues/14)) ([961fc5e](https://github.com/wolfsblu/cooklang-web/commit/961fc5e149c6cd23b0647ce0514c1f214346c2a2))
+* add AI photo import ([#13](https://github.com/wolfsblu/cooklang-web/issues/13)) ([879f95a](https://github.com/wolfsblu/cooklang-web/commit/879f95a8163eec6a9507ebb3fa8942cbeebb70c6))
+* add navigation submenus and restructure ingredients pages ([#17](https://github.com/wolfsblu/cooklang-web/issues/17)) ([2fbe2cb](https://github.com/wolfsblu/cooklang-web/commit/2fbe2cb6fb1f273cce38fa4c1530c411e9f08180))
+* add settings page with theme preference ([#18](https://github.com/wolfsblu/cooklang-web/issues/18)) ([0171ed0](https://github.com/wolfsblu/cooklang-web/commit/0171ed024928b641b649c8548adf586476d97881))
+* link recipe tags to the filtered recipe list ([#15](https://github.com/wolfsblu/cooklang-web/issues/15)) ([a2c584f](https://github.com/wolfsblu/cooklang-web/commit/a2c584f4ca47f0576a497a5aef8ad98ec5ecfd01))
+
+
+### Bug Fixes
+
+* lay out aisle assignment controls across the row ([#19](https://github.com/wolfsblu/cooklang-web/issues/19)) ([6b9b179](https://github.com/wolfsblu/cooklang-web/commit/6b9b179f54e994758ca5f42d7ffee0b90a080257))
+
+
+### Build System
+
+* align Node 26 across local, CI and Docker ([#11](https://github.com/wolfsblu/cooklang-web/issues/11)) ([5ec4f2d](https://github.com/wolfsblu/cooklang-web/commit/5ec4f2da09528d070c0c7be4d54c9f4a0ebdb310))
+
 ## [1.0.1](https://github.com/wolfsblu/cooklang-web/compare/v1.0.0...v1.0.1) (2026-11-16)
 
 
