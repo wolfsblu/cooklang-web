@@ -39,12 +39,12 @@
 	method="POST"
 	action="/ingredients/unassigned?/assign"
 	use:enhance={submit}
-	class="flex shrink-0 items-center gap-1.5"
+	class="flex w-full shrink-0 items-center gap-1.5"
 >
 	<input type="hidden" name="name" value={itemName} />
 	<input type="hidden" name="returnTo" value={returnTo} />
 
-	<AisleCategoryField {categories} label="Aisle for {itemName}" size="sm">
+	<AisleCategoryField {categories} label="Aisle for {itemName}" size="sm" fullWidth>
 		{#snippet action()}
 			<Button type="submit" size="sm" variant="soft" class="h-full px-2 text-xs">Assign</Button>
 		{/snippet}

@@ -306,8 +306,8 @@
 						{@const done = doneIn(category)}
 						{@const categoryDone = done === category.items.length}
 						{@const placeable = category.name === UNCATEGORIZED && aisleCategories.length > 0}
-						<!-- A placeable aisle carries a select and a button in every row,
-					     which leaves no room for the name inside a column. -->
+						<!-- A placeable aisle carries a select and a button under every row,
+					     which needs the width of a whole column. -->
 						<section
 							class="border-border break-inside-avoid border-t {placeable
 								? '[column-span:all]'
@@ -430,7 +430,7 @@
 										</label>
 
 										{#if placeable}
-											<div class="ml-auto">
+											<div class="w-full px-2 pb-2">
 												<ShoppingAislePicker
 													itemName={item.name}
 													categories={aisleCategories}
