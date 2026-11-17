@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { ChefHatIcon, SearchIcon } from '@lucide/svelte';
+	import { ChefHatIcon, SearchIcon, SettingsIcon } from '@lucide/svelte';
 	import SearchDialog from '#lib/components/search/SearchDialog.svelte';
 	import NewRecipeMenu from './NewRecipeMenu.svelte';
 
@@ -77,7 +77,16 @@
 			</kbd>
 		</a>
 
-		<div class="ml-auto">
+		<div class="ml-auto flex items-center gap-2">
+			<a
+				href="/settings"
+				class="border-border bg-surface text-fg-muted hover:bg-surface-muted hover:text-fg flex size-9 shrink-0 items-center justify-center rounded-md border transition-colors duration-150"
+				aria-label="Settings"
+				title="Settings"
+			>
+				<SettingsIcon class="size-4" />
+			</a>
+
 			<NewRecipeMenu />
 		</div>
 	</div>

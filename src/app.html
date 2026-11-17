@@ -8,20 +8,32 @@
 		/>
 		<meta name="color-scheme" content="light dark" />
 		<script>
-			// Follow the device before first paint, and keep following it: with
-			// no toggle there is no stored preference to win over the OS.
+			// Paint the right palette before hydration. `system` follows the OS;
+			// the listener below keeps following it while that preference is
+			// selected. Keep the key and values in step with `$lib/theme`.
 			(() => {
+				const key = 'theme';
 				const query = matchMedia('(prefers-color-scheme: dark)');
-				const apply = () => {
-					document.documentElement.dataset.theme = query.matches ? 'dark' : 'light';
+
+				const stored = () => {
+					try {
+						const value = localStorage.getItem(key);
+						return value === 'light' || value === 'dark' || value === 'system' ? value : 'system';
+					} catch {
+						return 'system';
+					}
 				};
 
-				// Drop the key left behind by the old theme toggle so a stale
-				// choice cannot shadow the device setting later.
-				localStorage.removeItem('theme');
+				const apply = () => {
+					const preference = stored();
+					document.documentElement.dataset.theme =
+						preference === 'system' ? (query.matches ? 'dark' : 'light') : preference;
+				};
 
 				apply();
-				query.addEventListener('change', apply);
+				query.addEventListener('change', () => {
+					if (stored() === 'system') apply();
+				});
 			})();
 		</script>
 		%sveltekit.head%
