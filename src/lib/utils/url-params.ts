@@ -124,6 +124,16 @@ export function buildFilterUrl(
 }
 
 /**
+ * Link to the recipe list filtered by a single tag.
+ *
+ * Absolute, not a bare query string: tags are also rendered on the recipe
+ * detail page, where `?tags=` would filter that route instead of the list.
+ */
+export function buildTagUrl(tag: string): string {
+	return `/?${new URLSearchParams({ tags: tag })}`;
+}
+
+/**
  * Change only the sort field/order, keeping search and filters.
  *
  * Re-sorting reshuffles the whole list, so page 3 of the old order is dropped.
