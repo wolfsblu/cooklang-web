@@ -98,7 +98,7 @@ describe('searchCatalog', () => {
 
 		expect(ingredients?.hits[0]).toMatchObject({
 			title: 'milk',
-			href: '/aisles/ingredients?category=dairy'
+			href: '/ingredients?category=dairy'
 		});
 		expect(ingredients?.hits[0].subtitle).toContain('whole milk');
 	});
@@ -109,7 +109,7 @@ describe('searchCatalog', () => {
 
 		expect(aisles?.hits[0]).toMatchObject({
 			title: 'fruit and veg',
-			href: '/aisles/ingredients?category=fruit%20and%20veg'
+			href: '/ingredients?category=fruit%20and%20veg'
 		});
 	});
 

@@ -17,7 +17,7 @@
 	/**
 	 * The action redirects back to `returnTo` on success, and redirects are
 	 * always followed. A failure, though, carries this form's location
-	 * (`/aisles/unassigned`), which SvelteKit 3 would navigate to; `navigate:
+	 * (`/ingredients/unassigned`), which SvelteKit 3 would navigate to; `navigate:
 	 * false` applies failures to the current page instead.
 	 */
 	const submit: SubmitFunction =
@@ -37,7 +37,7 @@
 -->
 <form
 	method="POST"
-	action="/aisles/unassigned?/assign"
+	action="/ingredients/unassigned?/assign"
 	use:enhance={submit}
 	class="flex shrink-0 items-center gap-1.5"
 >

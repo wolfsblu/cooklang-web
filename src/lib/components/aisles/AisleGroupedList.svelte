@@ -19,7 +19,7 @@
 	});
 
 	function href(category: string): string {
-		return `/aisles/ingredients?category=${encodeURIComponent(category)}`;
+		return `/ingredients?category=${encodeURIComponent(category)}`;
 	}
 </script>
 
@@ -49,7 +49,7 @@
 			{:else}
 				<p class="text-fg-subtle px-4 pb-3 text-sm">
 					Nothing here yet — assign ingredients from the
-					<a href="/aisles/unassigned" class="link">Unassigned</a> tab.
+					<a href="/ingredients/unassigned" class="link">Unassigned</a> page.
 				</p>
 			{/if}
 		</section>

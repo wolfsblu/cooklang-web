@@ -29,7 +29,7 @@
 		returnTo?: string;
 	}
 
-	const { items, categories, returnTo = '/aisles/unassigned' }: Props = $props();
+	const { items, categories, returnTo = '/ingredients/unassigned' }: Props = $props();
 
 	const selected = new SvelteSet<string>();
 
@@ -154,7 +154,7 @@
 				)} in one pass."
 			>
 				{#snippet actions()}
-					<Button href="/aisles">Manage aisles</Button>
+					<Button href="/ingredients/aisles">Manage aisles</Button>
 				{/snippet}
 			</EmptyState>
 		</div>
@@ -185,7 +185,7 @@
 				{/if}
 			</p>
 			<div class="mt-5 flex flex-wrap items-center justify-center gap-2">
-				<Button href="/aisles/ingredients" variant="outline" size="sm">Browse aisles</Button>
+				<Button href="/ingredients" variant="outline" size="sm">Browse ingredients</Button>
 				<Button href="/shopping" size="sm">Shopping list</Button>
 			</div>
 		</div>

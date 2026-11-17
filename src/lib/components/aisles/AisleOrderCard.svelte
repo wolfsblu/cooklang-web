@@ -117,7 +117,7 @@
 	}
 
 	function href(name: string): string {
-		return `/aisles/ingredients?category=${encodeURIComponent(name)}`;
+		return `/ingredients?category=${encodeURIComponent(name)}`;
 	}
 
 	/** Spelled out: a bare number here read as an unexplained code. */
@@ -127,7 +127,7 @@
 </script>
 
 <!--
-	The Manage tab's core control: this list is the order the shopping list groups
+	The Aisles page's core control: this list is the order the shopping list groups
 	by, which is the reason to edit the file at all. Reordering is drag-and-drop
 	on one pointer path (mouse, touch and pen alike) with keyboard arrows on the
 	focused handle as an accessible, no-pointer fallback.
