@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/wolfsblu/cooklang-web/compare/v1.1.0...v1.2.0) (2026-11-19)
+
+
+### Features
+
+* add a weekly meal planner ([#21](https://github.com/wolfsblu/cooklang-web/issues/21)) ([e2f4bc6](https://github.com/wolfsblu/cooklang-web/commit/e2f4bc69b2fabd71e6544285d9f055e3544108d1))
+
 ## [1.1.0](https://github.com/wolfsblu/cooklang-web/compare/v1.0.1...v1.1.0) (2026-11-17)
 
 
