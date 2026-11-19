@@ -19,11 +19,20 @@
 		open: boolean;
 		title: string;
 		side?: 'left' | 'right';
+		/** Let the content own its padding, for panes that are already inset. */
+		flush?: boolean;
 		children: Snippet;
 		footer?: Snippet;
 	};
 
-	let { open = $bindable(), title, side = 'left', children, footer }: Props = $props();
+	let {
+		open = $bindable(),
+		title,
+		side = 'left',
+		flush = false,
+		children,
+		footer
+	}: Props = $props();
 
 	// The dialog has no Bits trigger of its own, so remember what was focused
 	// when it opened and put focus back there once the close animation ends.
@@ -63,7 +72,7 @@
 				</Dialog.Close>
 			</header>
 
-			<div class="flex-1 overflow-y-auto p-4">
+			<div class="flex-1 overflow-y-auto {flush ? '' : 'p-4'}">
 				{@render children()}
 			</div>
 

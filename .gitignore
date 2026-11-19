@@ -25,3 +25,5 @@ vite.config.ts.timestamp-*
 # Runtime state written into the recipe directory
 recipes/.shopping-list.json
 recipes/.shopping-list.json.*
+recipes/.meal-plan.json
+recipes/.meal-plan.json.*
