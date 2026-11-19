@@ -7,6 +7,23 @@
    the system preference. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* The desktop rail is icon-only below `xl` unless it was explicitly expanded.
+   The preference sits on `<html>` so the inline script in `app.html` can apply
+   it before first paint. */
+@custom-variant rail-wide {
+	@media (min-width: 48rem) {
+		:root[data-nav-rail='expanded'] & {
+			@slot;
+		}
+	}
+
+	@media (min-width: 80rem) {
+		:root:not([data-nav-rail='collapsed']) & {
+			@slot;
+		}
+	}
+}
+
 @layer base {
 	html {
 		background-color: var(--color-canvas);

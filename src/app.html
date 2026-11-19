@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light" data-nav-rail="auto">
 	<head>
 		<meta charset="utf-8" />
 		<meta
@@ -34,6 +34,20 @@
 				query.addEventListener('change', () => {
 					if (stored() === 'system') apply();
 				});
+			})();
+		</script>
+		<script>
+			// Apply the desktop rail preference before first paint too, so a
+			// collapsed rail never flashes open while the app hydrates. `auto`
+			// lives in CSS and follows the breakpoint.
+			(() => {
+				try {
+					const value = localStorage.getItem('cooklang-nav-rail');
+					document.documentElement.dataset.navRail =
+						value === 'expanded' || value === 'collapsed' ? value : 'auto';
+				} catch {
+					document.documentElement.dataset.navRail = 'auto';
+				}
 			})();
 		</script>
 		%sveltekit.head%
