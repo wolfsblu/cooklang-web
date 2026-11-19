@@ -19,6 +19,14 @@ export interface StoredSelection {
 	scale: number;
 }
 
+/** What a merge did, expressed in distinct recipes. */
+export interface MergeResult {
+	/** Recipes that were not in the list before. */
+	added: number;
+	/** Existing recipes whose scale changed. */
+	updated: number;
+}
+
 interface ShoppingListFileV2 {
 	version: 2;
 	recipes: StoredSelection[];
@@ -42,6 +50,57 @@ function clampScale(value: unknown): number {
 	const scale = Number(value);
 	if (!Number.isFinite(scale) || scale <= 0) return 1;
 	return Math.min(Math.max(scale, 0.5), 100);
+}
+
+/**
+ * Merge planned recipes into the current selections without losing work.
+ *
+ * A slug that is already present has its scale added, not replaced: planning
+ * the same recipe twice really does mean cooking it twice. Incoming entries
+ * are aggregated first, so a week that plans one recipe on two days counts as
+ * one added recipe with one final scale.
+ *
+ * Unknown slugs are ignored rather than written, matching upsertSelection's
+ * refusal to store an entry no page can resolve. Existing entries are kept
+ * even if the index no longer knows them; this function only adds, and a
+ * later read is free to resolve them however it likes.
+ *
+ * Exported separately from the file-backed wrapper so the arithmetic can be
+ * tested without a recipe directory.
+ */
+export function mergeStoredSelections(
+	existing: readonly StoredSelection[],
+	incoming: readonly StoredSelection[],
+	isKnownSlug: (slug: string) => boolean
+): { recipes: StoredSelection[]; added: number; updated: number } {
+	const recipes = existing.map((selection) => ({ ...selection }));
+
+	const totals = new Map<string, number>();
+	for (const entry of incoming) {
+		if (!isKnownSlug(entry.slug)) {
+			console.warn(`Ignoring unknown recipe "${entry.slug}" when merging the meal plan`);
+			continue;
+		}
+
+		totals.set(entry.slug, (totals.get(entry.slug) ?? 0) + clampScale(entry.scale));
+	}
+
+	let added = 0;
+	let updated = 0;
+
+	for (const [slug, total] of totals) {
+		const current = recipes.find((recipe) => recipe.slug === slug);
+
+		if (current) {
+			current.scale = clampScale(current.scale + total);
+			updated += 1;
+		} else {
+			recipes.push({ slug, scale: clampScale(total) });
+			added += 1;
+		}
+	}
+
+	return { recipes, added, updated };
 }
 
 /**
@@ -158,6 +217,29 @@ export async function upsertSelection(slug: string, scale: number): Promise<bool
 	});
 
 	return true;
+}
+
+/**
+ * Add every recipe from a planned week, summing scales where they overlap.
+ *
+ * The read that the counts come from happens under the same lock as the write,
+ * so "3 recipes added, 1 updated" describes the file as it actually was when
+ * the merge ran, not a stale read from earlier in the request.
+ */
+export async function mergeSelections(entries: readonly StoredSelection[]): Promise<MergeResult> {
+	const index = await getIndex();
+	let result: MergeResult = { added: 0, updated: 0 };
+
+	await withLock(async () => {
+		const recipes = await readFile();
+		const merged = mergeStoredSelections(recipes, entries, (slug) => index.bySlug.has(slug));
+
+		result = { added: merged.added, updated: merged.updated };
+		// Nothing valid to merge: do not touch the file at all.
+		if (merged.added > 0 || merged.updated > 0) await writeFile(merged.recipes);
+	});
+
+	return result;
 }
 
 export async function removeSelection(slug: string): Promise<void> {

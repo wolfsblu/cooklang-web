@@ -21,6 +21,8 @@ are deducted from that list.
   vocabulary.
 - **Shopping lists**: combine recipes at any scale, with quantities merged
   across them and grouped by supermarket aisle.
+- **Meal planning**: plan a week of dishes on a seven-day board, adjust each
+  recipe's scale, and merge the whole week into the shopping list.
 - **Aisles**: edit `aisle.conf` from the app. Arrange the aisles in the order
   you walk the shop, see which ingredients have no aisle yet, and give one an
   aisle straight from the shopping list.
